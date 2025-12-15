@@ -1,0 +1,156 @@
+package goroutinederiveand
+
+import (
+	"context"
+	"sync"
+
+	"github.com/newrelic/go-agent/v3/newrelic"
+)
+
+// =============================================================================
+// ADVANCED: AND (plus) - complex patterns
+// Test flag: -goroutine-deriver=github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine+github.com/newrelic/go-agent/v3/newrelic.NewContext
+// =============================================================================
+
+// ===== SHOULD NOT REPORT =====
+
+// DA20: AND - defer with both derivers.
+func a20AndDeferWithBothDerivers(ctx context.Context, txn *newrelic.Transaction) {
+	go func() {
+		defer func() {
+			recover()
+		}()
+		txn = txn.NewGoroutine()
+		ctx = newrelic.NewContext(ctx, txn)
+		_ = ctx
+	}()
+}
+
+// DA21: AND - for loop with both derivers.
+func a21AndForLoopWithBothDerivers(ctx context.Context, txn *newrelic.Transaction) {
+	for i := 0; i < 3; i++ {
+		go func() {
+			txn = txn.NewGoroutine()
+			ctx = newrelic.NewContext(ctx, txn)
+			_ = ctx
+		}()
+	}
+}
+
+// DA22: AND - WaitGroup pattern with both derivers.
+func a22AndWaitGroupWithBothDerivers(ctx context.Context, txn *newrelic.Transaction) {
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		txn = txn.NewGoroutine()
+		ctx = newrelic.NewContext(ctx, txn)
+		_ = ctx
+	}()
+	wg.Wait()
+}
+
+// DA23: AND - conditional with both derivers in both branches.
+func a23AndConditionalBothBranches(ctx context.Context, txn *newrelic.Transaction, cond bool) {
+	if cond {
+		go func() {
+			txn = txn.NewGoroutine()
+			ctx = newrelic.NewContext(ctx, txn)
+			_ = ctx
+		}()
+	} else {
+		go func() {
+			ctx = newrelic.NewContext(ctx, txn)
+			txn = txn.NewGoroutine()
+			_ = ctx
+			_ = txn
+		}()
+	}
+}
+
+// DA24: AND - higher-order go fn()() where returned func has both derivers.
+func a24AndHigherOrderReturnedFuncWithBothDerivers(ctx context.Context, txn *newrelic.Transaction) {
+	makeWorker := func() func() {
+		return func() {
+			txn = txn.NewGoroutine()
+			ctx = newrelic.NewContext(ctx, txn)
+			_ = ctx
+		}
+	}
+	go makeWorker()() // Returned func calls both derivers
+}
+
+// DA25: AND - higher-order go fn() where fn is variable with both derivers.
+func a25AndHigherOrderVariableWithBothDerivers(ctx context.Context, txn *newrelic.Transaction) {
+	fn := func() {
+		txn = txn.NewGoroutine()
+		ctx = newrelic.NewContext(ctx, txn)
+		_ = ctx
+	}
+	go fn() // Variable func calls both derivers
+}
+
+// ===== SHOULD REPORT =====
+
+// DA26: AND - defer with only one deriver.
+func a26AndDeferWithOneDeriver(ctx context.Context, txn *newrelic.Transaction) {
+	go func() { // want "goroutine should call github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine\\+github.com/newrelic/go-agent/v3/newrelic.NewContext to derive context"
+		defer func() {
+			recover()
+		}()
+		ctx = newrelic.NewContext(ctx, txn)
+		_ = ctx
+	}()
+}
+
+// DA27: AND - for loop with only one deriver.
+func a27AndForLoopWithOneDeriver(ctx context.Context, txn *newrelic.Transaction) {
+	for i := 0; i < 3; i++ {
+		go func() { // want "goroutine should call github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine\\+github.com/newrelic/go-agent/v3/newrelic.NewContext to derive context"
+			ctx = newrelic.NewContext(ctx, txn)
+			_ = ctx
+		}()
+	}
+}
+
+// DA28: AND - WaitGroup pattern with only one deriver.
+func a28AndWaitGroupWithOneDeriver(ctx context.Context, txn *newrelic.Transaction) {
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() { // want "goroutine should call github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine\\+github.com/newrelic/go-agent/v3/newrelic.NewContext to derive context"
+		defer wg.Done()
+		txn = txn.NewGoroutine()
+		_ = ctx
+		_ = txn
+	}()
+	wg.Wait()
+}
+
+// DA29: AND - conditional with one branch incomplete.
+func a29AndConditionalOneBranchIncomplete(ctx context.Context, txn *newrelic.Transaction, cond bool) {
+	if cond {
+		go func() {
+			txn = txn.NewGoroutine()
+			ctx = newrelic.NewContext(ctx, txn)
+			_ = ctx
+		}()
+	} else {
+		go func() { // want "goroutine should call github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine\\+github.com/newrelic/go-agent/v3/newrelic.NewContext to derive context"
+			ctx = newrelic.NewContext(ctx, txn)
+			_ = ctx
+		}()
+	}
+}
+
+// DA30: AND - multiple goroutines, one incomplete.
+func a30AndMultipleGoroutinesOneIncomplete(ctx context.Context, txn *newrelic.Transaction) {
+	go func() {
+		txn = txn.NewGoroutine()
+		ctx = newrelic.NewContext(ctx, txn)
+		_ = ctx
+	}()
+	go func() { // want "goroutine should call github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine\\+github.com/newrelic/go-agent/v3/newrelic.NewContext to derive context"
+		ctx = newrelic.NewContext(ctx, txn)
+		_ = ctx
+	}()
+}
