@@ -317,30 +317,34 @@ Available flags:
 
 ### `-spawnerlabel`
 
-When enabled, checks that functions calling spawn methods have the `//goroutinectx:spawner` directive:
+When enabled, checks that functions calling spawn methods with func arguments have the `//goroutinectx:spawner` directive:
 
 ```go
-// Bad: calls errgroup.Group.Go but missing directive
-func runTasks() {  // Warning: should have //goroutinectx:spawner
+// Bad: calls errgroup.Group.Go with func argument but missing directive
+func runTask(task func() error) {  // Warning: should have //goroutinectx:spawner
     g := new(errgroup.Group)
-    g.Go(func() error {
-        return doWork()
-    })
+    g.Go(task)
     _ = g.Wait()
 }
 
 // Good: properly labeled
 //goroutinectx:spawner
-func runTasks() {
+func runTask(task func() error) {
     g := new(errgroup.Group)
-    g.Go(func() error {
-        return doWork()
-    })
+    g.Go(task)
     _ = g.Wait()
 }
 ```
 
-Also warns about unnecessary labels on functions that don't spawn and have no func parameters.
+Also warns about unnecessary labels on functions that don't spawn and have no func parameters:
+
+```go
+// Bad: unnecessary directive (no spawn calls, no func parameters)
+//goroutinectx:spawner
+func simpleHelper() {  // Warning: unnecessary //goroutinectx:spawner
+    fmt.Println("hello")
+}
+```
 
 ## Design Principles
 
