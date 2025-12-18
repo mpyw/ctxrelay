@@ -232,7 +232,7 @@ When a function has a context carrier parameter, goroutinectx will check that it
 
 ### Checker Enable/Disable Flags
 
-All checkers are enabled by default. Use these flags to disable specific checkers:
+Most checkers are enabled by default. Use these flags to enable or disable specific checkers:
 
 Available flags:
 - `-goroutine` (default: true)
