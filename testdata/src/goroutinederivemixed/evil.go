@@ -14,8 +14,10 @@ import (
 
 // ===== SHOULD NOT REPORT =====
 
-// DM40: Mixed - nested 2-level, outer satisfies AND group, inner satisfies OR alternative.
-func m40MixedNested2LevelDifferentApproaches(ctx context.Context, txn *newrelic.Transaction) {
+// [GOOD]: Mixed - nested 2-level, outer satisfies AND group, inner satisfies OR alternative.
+//
+// Nested goroutines where both levels call required derivers.
+func goodMixedNested2LevelDifferentApproaches(ctx context.Context, txn *newrelic.Transaction) {
 	go func() {
 		txn = txn.NewGoroutine()
 		ctx = newrelic.NewContext(ctx, txn)
@@ -27,8 +29,10 @@ func m40MixedNested2LevelDifferentApproaches(ctx context.Context, txn *newrelic.
 	}()
 }
 
-// DM41: Mixed - nested 2-level, outer satisfies OR alternative, inner satisfies AND group.
-func m41MixedNested2LevelReversedApproaches(ctx context.Context, txn *newrelic.Transaction) {
+// [GOOD]: Mixed - nested 2-level, outer satisfies OR alternative, inner satisfies AND group.
+//
+// Nested goroutines where both levels call required derivers.
+func goodMixedNested2LevelReversedApproaches(ctx context.Context, txn *newrelic.Transaction) {
 	go func() {
 		ctx = apm.NewGoroutineContext(ctx)
 		go func() {
@@ -42,8 +46,10 @@ func m41MixedNested2LevelReversedApproaches(ctx context.Context, txn *newrelic.T
 
 // ===== SHOULD REPORT =====
 
-// DM42: Mixed - nested 2-level, inner satisfies neither.
-func m42MixedNested2LevelInnerSatisfiesNeither(ctx context.Context, txn *newrelic.Transaction) {
+// [GOOD]: Mixed - nested 2-level, inner satisfies neither.
+//
+// Inner goroutine satisfies neither OR nor AND requirement (outer handles).
+func goodMixedNested2LevelInnerSatisfiesNeither(ctx context.Context, txn *newrelic.Transaction) {
 	go func() {
 		ctx = apm.NewGoroutineContext(ctx)
 		go func() { // want "goroutine should call github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine\\+github.com/newrelic/go-agent/v3/newrelic.NewContext,github.com/my-example-app/telemetry/apm.NewGoroutineContext to derive context"
@@ -54,8 +60,10 @@ func m42MixedNested2LevelInnerSatisfiesNeither(ctx context.Context, txn *newreli
 	}()
 }
 
-// DM43: Mixed - AND group split between outer and IIFE.
-func m43MixedSplitDeriversAcrossLevels(ctx context.Context, txn *newrelic.Transaction) {
+// [GOOD]: Mixed - AND group split between outer and IIFE.
+//
+// IIFE pattern with AND group deriver requirements.
+func goodMixedSplitDeriversAcrossLevels(ctx context.Context, txn *newrelic.Transaction) {
 	go func() { // want "goroutine should call github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine\\+github.com/newrelic/go-agent/v3/newrelic.NewContext,github.com/my-example-app/telemetry/apm.NewGoroutineContext to derive context"
 		txn = txn.NewGoroutine() // Only first of AND
 		func() {
@@ -66,8 +74,10 @@ func m43MixedSplitDeriversAcrossLevels(ctx context.Context, txn *newrelic.Transa
 	}()
 }
 
-// DM44: Mixed - OR alternative only in nested IIFE.
-func m44MixedOrAlternativeInNestedIIFE(ctx context.Context) {
+// [GOOD]: Mixed - OR alternative only in nested IIFE.
+//
+// Satisfies the mixed requirement via OR alternative path.
+func goodMixedOrAlternativeInNestedIIFE(ctx context.Context) {
 	go func() { // want "goroutine should call github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine\\+github.com/newrelic/go-agent/v3/newrelic.NewContext,github.com/my-example-app/telemetry/apm.NewGoroutineContext to derive context"
 		func() {
 			ctx = apm.NewGoroutineContext(ctx)
@@ -76,8 +86,10 @@ func m44MixedOrAlternativeInNestedIIFE(ctx context.Context) {
 	}()
 }
 
-// DM45: Mixed - nested 3-level, outer only has first of AND.
-func m45MixedNested3LevelOuterPartial(ctx context.Context, txn *newrelic.Transaction) {
+// [BAD]: Mixed - nested 3-level, outer only has first of AND.
+//
+// Nested pattern where outer only calls first deriver of AND group.
+func badMixedNested3LevelOuterPartial(ctx context.Context, txn *newrelic.Transaction) {
 	go func() { // want "goroutine should call github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine\\+github.com/newrelic/go-agent/v3/newrelic.NewContext,github.com/my-example-app/telemetry/apm.NewGoroutineContext to derive context"
 		txn = txn.NewGoroutine() // Only first of AND
 		go func() { // want "goroutine should call github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine\\+github.com/newrelic/go-agent/v3/newrelic.NewContext,github.com/my-example-app/telemetry/apm.NewGoroutineContext to derive context"
@@ -93,8 +105,10 @@ func m45MixedNested3LevelOuterPartial(ctx context.Context, txn *newrelic.Transac
 
 // ===== HIGHER-ORDER PATTERNS =====
 
-// DM46: Higher-order go fn()() - returned func only has first of AND, not OR alternative.
-func m46HigherOrderReturnedFuncPartialDeriver(ctx context.Context, txn *newrelic.Transaction) {
+// [BAD]: Higher-order go fn()() - only first of AND
+//
+// Higher-order go fn()() - returned func only has first of AND, not OR alternative.
+func badHigherOrderReturnedFuncPartialDeriver(ctx context.Context, txn *newrelic.Transaction) {
 	makeWorker := func() func() {
 		return func() {
 			txn = txn.NewGoroutine() // Only first of AND, not OR alt
@@ -107,8 +121,13 @@ func m46HigherOrderReturnedFuncPartialDeriver(ctx context.Context, txn *newrelic
 
 // ===== VARIABLE REASSIGNMENT =====
 
-// DM47: Variable reassignment - last assignment with incomplete derivers should warn.
-func m47ReassignedFuncIncompleteDeriver(ctx context.Context, txn *newrelic.Transaction) {
+// [BAD]: Variable reassignment - last assignment with incomplete derivers should warn.
+//
+// Last reassigned value has incomplete deriver calls.
+//
+// See also:
+//   goroutinederiveand: badReassignedFuncIncompleteDeriver
+func badReassignedFuncIncompleteDeriver(ctx context.Context, txn *newrelic.Transaction) {
 	fn := func() {
 		txn = txn.NewGoroutine()
 		ctx = newrelic.NewContext(ctx, txn)
@@ -122,8 +141,10 @@ func m47ReassignedFuncIncompleteDeriver(ctx context.Context, txn *newrelic.Trans
 	go fn() // want "goroutine should call github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine\\+github.com/newrelic/go-agent/v3/newrelic.NewContext,github.com/my-example-app/telemetry/apm.NewGoroutineContext to derive context"
 }
 
-// DM48: Variable reassignment - last assignment satisfies OR alternative should pass.
-func m48ReassignedFuncOrAlternative(ctx context.Context) {
+// [GOOD]: Variable reassignment - last assignment satisfies OR alternative should pass.
+//
+// Last reassigned value satisfies OR alternative requirement.
+func goodReassignedFuncOrAlternative(ctx context.Context) {
 	fn := func() {
 		_ = ctx // First assignment has no deriver
 	}

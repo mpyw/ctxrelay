@@ -14,8 +14,10 @@ import (
 
 // ===== SHOULD NOT REPORT =====
 
-// DM01: Mixed - satisfies first AND group (both Transaction.NewGoroutine and NewContext).
-func m01MixedSatisfiesAndGroup(ctx context.Context, txn *newrelic.Transaction) {
+// [GOOD]: Mixed - satisfies first AND group (both Transaction.NewGoroutine and NewContext).
+//
+// Both required deriver functions are called, satisfying AND condition.
+func goodMixedSatisfiesAndGroup(ctx context.Context, txn *newrelic.Transaction) {
 	go func() {
 		txn = txn.NewGoroutine()
 		ctx = newrelic.NewContext(ctx, txn)
@@ -23,16 +25,20 @@ func m01MixedSatisfiesAndGroup(ctx context.Context, txn *newrelic.Transaction) {
 	}()
 }
 
-// DM02: Mixed - satisfies OR alternative (NewGoroutineContext).
-func m02MixedSatisfiesOrAlternative(ctx context.Context) {
+// [GOOD]: Mixed - satisfies OR alternative (NewGoroutineContext).
+//
+// Satisfies the mixed requirement via OR alternative path.
+func goodMixedSatisfiesOrAlternative(ctx context.Context) {
 	go func() {
 		ctx = apm.NewGoroutineContext(ctx)
 		_ = ctx
 	}()
 }
 
-// DM03: Mixed - satisfies both (AND group and OR alternative).
-func m03MixedSatisfiesBoth(ctx context.Context, txn *newrelic.Transaction) {
+// [GOOD]: Mixed - satisfies both (AND group and OR alternative).
+//
+// Both required deriver functions are called, satisfying AND condition.
+func goodMixedSatisfiesBoth(ctx context.Context, txn *newrelic.Transaction) {
 	go func() {
 		txn = txn.NewGoroutine()
 		ctx = newrelic.NewContext(ctx, txn)
@@ -41,8 +47,10 @@ func m03MixedSatisfiesBoth(ctx context.Context, txn *newrelic.Transaction) {
 	}()
 }
 
-// DM04: Mixed - has own context param.
-func m04MixedOwnContextParam(ctx context.Context) {
+// [NOTCHECKED]: Mixed - has own context param.
+//
+// Function with own context parameter is not checked.
+func notCheckedMixedOwnContextParam(ctx context.Context) {
 	go func(ctx context.Context) {
 		_ = ctx
 	}(ctx)
@@ -50,8 +58,10 @@ func m04MixedOwnContextParam(ctx context.Context) {
 
 // ===== SHOULD REPORT =====
 
-// DM05: Mixed - only calls first of AND group (incomplete).
-func m05MixedOnlyFirstOfAnd(ctx context.Context, txn *newrelic.Transaction) {
+// [BAD]: Mixed - only calls first of AND group (incomplete).
+//
+// Only one of the required deriver functions is called.
+func badMixedOnlyFirstOfAnd(ctx context.Context, txn *newrelic.Transaction) {
 	go func() { // want "goroutine should call github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine\\+github.com/newrelic/go-agent/v3/newrelic.NewContext,github.com/my-example-app/telemetry/apm.NewGoroutineContext to derive context"
 		txn = txn.NewGoroutine()
 		_ = ctx
@@ -59,16 +69,20 @@ func m05MixedOnlyFirstOfAnd(ctx context.Context, txn *newrelic.Transaction) {
 	}()
 }
 
-// DM06: Mixed - only calls second of AND group (incomplete).
-func m06MixedOnlySecondOfAnd(ctx context.Context, txn *newrelic.Transaction) {
+// [BAD]: Mixed - only calls second of AND group (incomplete).
+//
+// Only one of the required deriver functions is called.
+func badMixedOnlySecondOfAnd(ctx context.Context, txn *newrelic.Transaction) {
 	go func() { // want "goroutine should call github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine\\+github.com/newrelic/go-agent/v3/newrelic.NewContext,github.com/my-example-app/telemetry/apm.NewGoroutineContext to derive context"
 		ctx = newrelic.NewContext(ctx, txn)
 		_ = ctx
 	}()
 }
 
-// DM07: Mixed - calls nothing.
-func m07MixedCallsNothing(ctx context.Context) {
+// [BAD]: Mixed - calls nothing.
+//
+// Goroutine does not call any deriver function.
+func badMixedCallsNothing(ctx context.Context) {
 	go func() { // want "goroutine should call github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine\\+github.com/newrelic/go-agent/v3/newrelic.NewContext,github.com/my-example-app/telemetry/apm.NewGoroutineContext to derive context"
 		_ = ctx
 	}()

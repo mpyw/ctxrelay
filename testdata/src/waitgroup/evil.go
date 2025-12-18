@@ -12,19 +12,26 @@ import (
 
 // ===== HIGHER-ORDER FUNCTION PATTERNS =====
 
+//vt:helper
 func makeWorker() func() {
 	return func() {
 		fmt.Println("worker")
 	}
 }
 
+//vt:helper
 func makeWorkerWithCtx(ctx context.Context) func() {
 	return func() {
 		_ = ctx
 	}
 }
 
-// GW12: Variable func without ctx
+// [BAD]: Variable func without ctx
+//
+// Function stored in variable does not capture context.
+//
+// See also:
+//   errgroup: badVariableFunc
 func badVariableFunc(ctx context.Context) {
 	var wg sync.WaitGroup
 	fn := func() {
@@ -34,7 +41,12 @@ func badVariableFunc(ctx context.Context) {
 	wg.Wait()
 }
 
-// GW12b: Variable func with ctx
+// [GOOD]: Variable func with ctx
+//
+// Function stored in variable captures and uses context.
+//
+// See also:
+//   errgroup: goodVariableFuncWithCtx
 func goodVariableFuncWithCtx(ctx context.Context) {
 	var wg sync.WaitGroup
 	fn := func() {
@@ -44,14 +56,24 @@ func goodVariableFuncWithCtx(ctx context.Context) {
 	wg.Wait()
 }
 
-// GW13: Higher-order func without ctx
+// [BAD]: Higher-order func without ctx
+//
+// Function returned by factory does not use context.
+//
+// See also:
+//   errgroup: badHigherOrderFunc
 func badHigherOrderFunc(ctx context.Context) {
 	var wg sync.WaitGroup
 	wg.Go(makeWorker()) // want `sync.WaitGroup.Go\(\) closure should use context "ctx"`
 	wg.Wait()
 }
 
-// GW13b: Higher-order func with ctx
+// [GOOD]: Higher-order func with ctx
+//
+// Factory function is called with context, enabling propagation.
+//
+// See also:
+//   errgroup: goodHigherOrderFuncWithCtx
 func goodHigherOrderFuncWithCtx(ctx context.Context) {
 	var wg sync.WaitGroup
 	wg.Go(makeWorkerWithCtx(ctx)) // OK - makeWorkerWithCtx captures ctx
@@ -61,11 +83,16 @@ func goodHigherOrderFuncWithCtx(ctx context.Context) {
 // ===== STRUCT FIELD / SLICE / MAP TRACKING =====
 // These patterns CAN be tracked when defined in the same function.
 
-// GW18: Struct field with ctx
 type taskHolderWithCtx struct {
 	task func()
 }
 
+// [GOOD]: Struct field with ctx
+//
+// Function stored in struct field captures context.
+//
+// See also:
+//   errgroup: goodStructFieldWithCtx
 func goodStructFieldWithCtx(ctx context.Context) {
 	var wg sync.WaitGroup
 	holder := taskHolderWithCtx{
@@ -77,7 +104,12 @@ func goodStructFieldWithCtx(ctx context.Context) {
 	wg.Wait()
 }
 
-// GW15: Slice index with ctx
+// [GOOD]: Slice index with ctx
+//
+// Function in slice element captures context.
+//
+// See also:
+//   errgroup: goodSliceIndexWithCtx
 func goodSliceIndexWithCtx(ctx context.Context) {
 	var wg sync.WaitGroup
 	tasks := []func(){
@@ -89,7 +121,12 @@ func goodSliceIndexWithCtx(ctx context.Context) {
 	wg.Wait()
 }
 
-// GW16: Map key with ctx
+// [GOOD]: Map key with ctx
+//
+// Function in map value captures context.
+//
+// See also:
+//   errgroup: goodMapKeyWithCtx
 func goodMapKeyWithCtx(ctx context.Context) {
 	var wg sync.WaitGroup
 	tasks := map[string]func(){
@@ -104,7 +141,6 @@ func goodMapKeyWithCtx(ctx context.Context) {
 // ===== INTERFACE METHOD PATTERNS =====
 // ctx passed as argument to interface method IS detected by the analyzer.
 
-// GW100: Interface method with ctx argument (good)
 // When ctx is passed as argument, analyzer detects ctx usage.
 type WorkerFactory interface {
 	CreateWorker(ctx context.Context) func()
@@ -112,12 +148,19 @@ type WorkerFactory interface {
 
 type myFactory struct{}
 
+//vt:helper
 func (f *myFactory) CreateWorker(ctx context.Context) func() {
 	return func() {
 		_ = ctx // Implementation captures ctx
 	}
 }
 
+// [GOOD]: Interface method with ctx argument
+//
+// Context is passed as argument to interface method.
+//
+// See also:
+//   errgroup: goodInterfaceMethodWithCtxArg
 func goodInterfaceMethodWithCtxArg(ctx context.Context, factory WorkerFactory) {
 	var wg sync.WaitGroup
 	// ctx IS passed as argument to CreateWorker - analyzer detects ctx usage
@@ -125,11 +168,16 @@ func goodInterfaceMethodWithCtxArg(ctx context.Context, factory WorkerFactory) {
 	wg.Wait()
 }
 
-// GW100b: Interface method without ctx argument (bad)
 type WorkerFactoryNoCtx interface {
 	CreateWorker() func()
 }
 
+// [BAD]: Interface method without ctx argument
+//
+// Interface method call without context argument.
+//
+// See also:
+//   errgroup: badInterfaceMethodWithoutCtxArg
 func badInterfaceMethodWithoutCtxArg(ctx context.Context, factory WorkerFactoryNoCtx) {
 	var wg sync.WaitGroup
 	// ctx NOT passed to CreateWorker - expected to fail
@@ -141,14 +189,17 @@ func badInterfaceMethodWithoutCtxArg(ctx context.Context, factory WorkerFactoryN
 // These patterns cannot be tracked statically.
 // LIMITATION = false positive: ctx IS used but analyzer can't detect it.
 
-// GW101: Function passed through parameter - NOW SUPPORTED via directive
-//
-//goroutinectx:goroutine_creator
+//goroutinectx:goroutine_creator //vt:helper
 func runWithWaitGroup(wg *sync.WaitGroup, fn func()) {
 	wg.Go(fn)
 }
 
-// GW101a: Function with ctx passed through creator - should pass
+// [GOOD]: Function with ctx passed through creator
+//
+// Function with ctx passed through creator - should pass
+//
+// See also:
+//   errgroup: goodFuncPassedThroughCreator
 func goodFuncPassedThroughCreator(ctx context.Context) {
 	var wg sync.WaitGroup
 	fn := func() {
@@ -158,7 +209,12 @@ func goodFuncPassedThroughCreator(ctx context.Context) {
 	wg.Wait()
 }
 
-// GW101b: Function without ctx passed through creator - should report
+// [BAD]: Function without ctx passed through creator
+//
+// Function without ctx passed through creator - should report
+//
+// See also:
+//   errgroup: badFuncPassedThroughCreator
 func badFuncPassedThroughCreator(ctx context.Context) {
 	var wg sync.WaitGroup
 	fn := func() {
@@ -168,7 +224,12 @@ func badFuncPassedThroughCreator(ctx context.Context) {
 	wg.Wait()
 }
 
-// GW102: LIMITATION - Function from channel - ctx captured but not traced
+// [LIMITATION]: Function from channel - ctx captured but not traced
+//
+// Function received from channel cannot be traced statically.
+//
+// See also:
+//   errgroup: limitationFuncFromChannel
 func limitationFuncFromChannel(ctx context.Context) {
 	var wg sync.WaitGroup
 	ch := make(chan func(), 1)
@@ -181,11 +242,16 @@ func limitationFuncFromChannel(ctx context.Context) {
 	wg.Wait()
 }
 
-// GW103: Function from struct field without ctx - NOW TRACKED
 type taskHolder struct {
 	task func()
 }
 
+// [BAD]: Function from struct field without ctx
+//
+// Function stored in struct field does not capture context.
+//
+// See also:
+//   errgroup: badStructFieldWithoutCtx
 func badStructFieldWithoutCtx(ctx context.Context) {
 	var wg sync.WaitGroup
 	holder := taskHolder{
@@ -197,7 +263,12 @@ func badStructFieldWithoutCtx(ctx context.Context) {
 	wg.Wait()
 }
 
-// GW104: Function from map without ctx - NOW TRACKED
+// [BAD]: Function from map without ctx
+//
+// Function from map without ctx - NOW TRACKED
+//
+// See also:
+//   errgroup: badMapValueWithoutCtx
 func badMapValueWithoutCtx(ctx context.Context) {
 	var wg sync.WaitGroup
 	tasks := map[string]func(){
@@ -207,7 +278,12 @@ func badMapValueWithoutCtx(ctx context.Context) {
 	wg.Wait()
 }
 
-// GW105: Function from slice without ctx - NOW TRACKED
+// [BAD]: Function from slice without ctx
+//
+// Function from slice without ctx - NOW TRACKED
+//
+// See also:
+//   errgroup: badSliceValueWithoutCtx
 func badSliceValueWithoutCtx(ctx context.Context) {
 	var wg sync.WaitGroup
 	tasks := []func(){
@@ -217,7 +293,12 @@ func badSliceValueWithoutCtx(ctx context.Context) {
 	wg.Wait()
 }
 
-// GW108: LIMITATION - Function through interface{} type assertion - ctx captured but not traced
+// [LIMITATION]: Function through interface{} - ctx captured but not traced
+//
+// Context captured but lost through interface type assertion.
+//
+// See also:
+//   errgroup: limitationFuncThroughInterfaceWithCtx
 func limitationFuncThroughInterfaceWithCtx(ctx context.Context) {
 	var wg sync.WaitGroup
 
@@ -232,7 +313,12 @@ func limitationFuncThroughInterfaceWithCtx(ctx context.Context) {
 	wg.Wait()
 }
 
-// Control: same pattern without ctx
+// [BAD]: Function through interface without ctx
+//
+// Interface method call without context argument.
+//
+// See also:
+//   errgroup: badFuncThroughInterfaceWithoutCtx
 func badFuncThroughInterfaceWithoutCtx(ctx context.Context) {
 	var wg sync.WaitGroup
 
@@ -247,7 +333,13 @@ func badFuncThroughInterfaceWithoutCtx(ctx context.Context) {
 
 // ===== MULTIPLE CONTEXT EVIL PATTERNS =====
 
-// GW70: Three contexts - uses middle one (good)
+// [GOOD]: Three contexts - uses middle one
+//
+// Using the middle of multiple context parameters is valid.
+//
+// See also:
+//   goroutine: goodUsesMiddleOfThreeContexts
+//   errgroup: goodUsesMiddleOfThreeContexts
 func goodUsesMiddleOfThreeContexts(ctx1, ctx2, ctx3 context.Context) {
 	var wg sync.WaitGroup
 	wg.Go(func() {
@@ -256,7 +348,13 @@ func goodUsesMiddleOfThreeContexts(ctx1, ctx2, ctx3 context.Context) {
 	wg.Wait()
 }
 
-// GW71: Three contexts - uses last one (good)
+// [GOOD]: Three contexts - uses last one
+//
+// Using the last of multiple context parameters is valid.
+//
+// See also:
+//   goroutine: goodUsesLastOfThreeContexts
+//   errgroup: goodUsesLastOfThreeContexts
 func goodUsesLastOfThreeContexts(ctx1, ctx2, ctx3 context.Context) {
 	var wg sync.WaitGroup
 	wg.Go(func() {
@@ -265,7 +363,13 @@ func goodUsesLastOfThreeContexts(ctx1, ctx2, ctx3 context.Context) {
 	wg.Wait()
 }
 
-// GW72: Multiple ctx in separate param groups (good)
+// [GOOD]: Multiple ctx in separate param groups
+//
+// Context in separate parameter group is detected and used.
+//
+// See also:
+//   goroutine: goodMultipleCtxSeparateGroups
+//   errgroup: goodMultipleCtxSeparateGroups
 func goodMultipleCtxSeparateGroups(a int, ctx1 context.Context, b string, ctx2 context.Context) {
 	var wg sync.WaitGroup
 	wg.Go(func() {
@@ -274,7 +378,13 @@ func goodMultipleCtxSeparateGroups(a int, ctx1 context.Context, b string, ctx2 c
 	wg.Wait()
 }
 
-// GW73: Multiple ctx in separate param groups - none used (bad)
+// [BAD]: Multiple ctx in separate param groups - none used
+//
+// Context in separate parameter group is not used.
+//
+// See also:
+//   goroutine: badMultipleCtxSeparateGroups
+//   errgroup: badMultipleCtxSeparateGroups
 func badMultipleCtxSeparateGroups(a int, ctx1 context.Context, b string, ctx2 context.Context) {
 	var wg sync.WaitGroup
 	wg.Go(func() { // want `sync.WaitGroup.Go\(\) closure should use context "ctx1"`
@@ -283,7 +393,13 @@ func badMultipleCtxSeparateGroups(a int, ctx1 context.Context, b string, ctx2 co
 	wg.Wait()
 }
 
-// GW74: Both contexts used (good)
+// [GOOD]: Both contexts used
+//
+// When multiple contexts exist, using any one satisfies the check.
+//
+// See also:
+//   goroutine: goodUsesBothContexts
+//   errgroup: goodUsesBothContexts
 func goodUsesBothContexts(ctx1, ctx2 context.Context) {
 	var wg sync.WaitGroup
 	wg.Go(func() {
@@ -293,14 +409,26 @@ func goodUsesBothContexts(ctx1, ctx2 context.Context) {
 	wg.Wait()
 }
 
-// GW85: Higher-order with multiple ctx - factory receives ctx1 (good)
+// [GOOD]: Higher-order with multiple ctx - factory receives ctx1
+//
+// Factory function receives first context parameter.
+//
+// See also:
+//   goroutine: goodHigherOrderMultipleCtx
+//   errgroup: goodHigherOrderMultipleCtx
 func goodHigherOrderMultipleCtx(ctx1, ctx2 context.Context) {
 	var wg sync.WaitGroup
 	wg.Go(makeWorkerWithCtx(ctx1)) // factory uses ctx1
 	wg.Wait()
 }
 
-// GW86: Higher-order with multiple ctx - factory receives ctx2 (good)
+// [GOOD]: Higher-order with multiple ctx - factory receives ctx2
+//
+// Factory function receives second context parameter.
+//
+// See also:
+//   goroutine: goodHigherOrderMultipleCtxSecond
+//   errgroup: goodHigherOrderMultipleCtxSecond
 func goodHigherOrderMultipleCtxSecond(ctx1, ctx2 context.Context) {
 	var wg sync.WaitGroup
 	wg.Go(makeWorkerWithCtx(ctx2)) // factory uses ctx2
@@ -309,7 +437,12 @@ func goodHigherOrderMultipleCtxSecond(ctx1, ctx2 context.Context) {
 
 // ===== ADVANCED NESTED PATTERNS (SHADOWING, ARGUMENT PASSING) =====
 
-// Shadowing - inner ctx shadows outer
+// [BAD]: Shadowing - inner ctx shadows outer
+//
+// Inner function's context parameter shadows the outer one.
+//
+// See also:
+//   errgroup: evilShadowingInnerHasCtx
 func evilShadowingInnerHasCtx(outerCtx context.Context) {
 	innerFunc := func(ctx context.Context) {
 		var wg sync.WaitGroup
@@ -321,6 +454,12 @@ func evilShadowingInnerHasCtx(outerCtx context.Context) {
 	innerFunc(outerCtx)
 }
 
+// [BAD]: Shadowing - inner ignores ctx
+//
+// Inner function ignores the shadowed context.
+//
+// See also:
+//   errgroup: evilShadowingInnerIgnoresCtx
 func evilShadowingInnerIgnoresCtx(outerCtx context.Context) {
 	innerFunc := func(ctx context.Context) {
 		var wg sync.WaitGroup
@@ -331,7 +470,12 @@ func evilShadowingInnerIgnoresCtx(outerCtx context.Context) {
 	innerFunc(outerCtx)
 }
 
-// Two levels of shadowing
+// [BAD]: Two levels of shadowing
+//
+// Context is shadowed through two levels of function nesting.
+//
+// See also:
+//   errgroup: evilShadowingTwoLevels
 func evilShadowingTwoLevels(ctx1 context.Context) {
 	func(ctx2 context.Context) {
 		func(ctx3 context.Context) {
@@ -344,6 +488,12 @@ func evilShadowingTwoLevels(ctx1 context.Context) {
 	}(ctx1)
 }
 
+// [BAD]: Two levels of shadowing
+//
+// Context is shadowed through two levels of function nesting.
+//
+// See also:
+//   errgroup: evilShadowingTwoLevelsBad
 func evilShadowingTwoLevelsBad(ctx1 context.Context) {
 	func(ctx2 context.Context) {
 		func(ctx3 context.Context) {
@@ -357,6 +507,13 @@ func evilShadowingTwoLevelsBad(ctx1 context.Context) {
 
 // ===== MIDDLE LAYER INTRODUCES CTX (OUTER HAS NONE) =====
 
+// [GOOD]: Middle layer introduces ctx - goroutine uses it
+//
+// Middle layer introduces context that inner goroutine uses.
+//
+// See also:
+//   goroutine: goodMiddleLayerIntroducesCtxUsed
+//   errgroup: evilMiddleLayerIntroducesCtx
 func evilMiddleLayerIntroducesCtx() {
 	func(ctx context.Context) {
 		var wg sync.WaitGroup
@@ -371,6 +528,12 @@ func evilMiddleLayerIntroducesCtx() {
 	}(context.Background())
 }
 
+// [GOOD]: Middle layer introduces ctx
+//
+// Middle layer introduces context that inner goroutine uses.
+//
+// See also:
+//   errgroup: evilMiddleLayerIntroducesCtxGood
 func evilMiddleLayerIntroducesCtxGood() {
 	func(ctx context.Context) {
 		var wg sync.WaitGroup
@@ -385,6 +548,12 @@ func evilMiddleLayerIntroducesCtxGood() {
 
 // ===== INTERLEAVED LAYERS (ctx -> no ctx -> ctx shadowing) =====
 
+// [BAD]: Interleaved layers
+//
+// Nested function layers where goroutine ignores available context.
+//
+// See also:
+//   errgroup: evilInterleavedLayers
 func evilInterleavedLayers(outerCtx context.Context) {
 	func() {
 		func(middleCtx context.Context) {
@@ -398,6 +567,12 @@ func evilInterleavedLayers(outerCtx context.Context) {
 	}()
 }
 
+// [GOOD]: Interleaved layers
+//
+// Nested function layers with context shadowing handled correctly.
+//
+// See also:
+//   errgroup: evilInterleavedLayersGood
 func evilInterleavedLayersGood(outerCtx context.Context) {
 	func() {
 		func(middleCtx context.Context) {

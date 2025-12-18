@@ -13,8 +13,10 @@ import (
 
 // ===== SHOULD NOT REPORT =====
 
-// DA01: AND - calls both functions.
-func a01AndCallsBoth(ctx context.Context, txn *newrelic.Transaction) {
+// [GOOD]: AND - Calls both functions.
+//
+// AND - calls both functions.
+func goodAndCallsBoth(ctx context.Context, txn *newrelic.Transaction) {
 	go func() {
 		txn = txn.NewGoroutine()
 		ctx = newrelic.NewContext(ctx, txn)
@@ -22,8 +24,10 @@ func a01AndCallsBoth(ctx context.Context, txn *newrelic.Transaction) {
 	}()
 }
 
-// DA02: AND - calls both in different order.
-func a02AndCallsBothReversed(ctx context.Context, txn *newrelic.Transaction) {
+// [GOOD]: AND - Calls both in different order.
+//
+// AND - calls both in different order.
+func goodAndCallsBothReversed(ctx context.Context, txn *newrelic.Transaction) {
 	go func() {
 		ctx = newrelic.NewContext(ctx, txn)
 		txn = txn.NewGoroutine()
@@ -32,8 +36,10 @@ func a02AndCallsBothReversed(ctx context.Context, txn *newrelic.Transaction) {
 	}()
 }
 
-// DA03: AND - calls both with other code between.
-func a03AndCallsBothInterleaved(ctx context.Context, txn *newrelic.Transaction) {
+// [GOOD]: AND - Calls both with other code between.
+//
+// AND - calls both with other code between.
+func goodAndCallsBothInterleaved(ctx context.Context, txn *newrelic.Transaction) {
 	go func() {
 		txn = txn.NewGoroutine()
 		doSomething()
@@ -42,8 +48,10 @@ func a03AndCallsBothInterleaved(ctx context.Context, txn *newrelic.Transaction) 
 	}()
 }
 
-// DA04: AND - has own context param.
-func a04AndOwnContextParam(ctx context.Context) {
+// [NOTCHECKED]: AND - Has own context param.
+//
+// AND - has own context param.
+func notCheckedAndOwnContextParam(ctx context.Context) {
 	go func(ctx context.Context) {
 		_ = ctx
 	}(ctx)
@@ -51,8 +59,10 @@ func a04AndOwnContextParam(ctx context.Context) {
 
 // ===== SHOULD REPORT =====
 
-// DA05: AND - calls only first (method).
-func a05AndCallsOnlyFirst(ctx context.Context, txn *newrelic.Transaction) {
+// [BAD]: AND - Calls only first (method).
+//
+// AND - calls only first (method).
+func badAndCallsOnlyFirst(ctx context.Context, txn *newrelic.Transaction) {
 	go func() { // want "goroutine should call github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine\\+github.com/newrelic/go-agent/v3/newrelic.NewContext to derive context"
 		txn = txn.NewGoroutine()
 		_ = ctx
@@ -60,19 +70,24 @@ func a05AndCallsOnlyFirst(ctx context.Context, txn *newrelic.Transaction) {
 	}()
 }
 
-// DA06: AND - calls only second (function).
-func a06AndCallsOnlySecond(ctx context.Context, txn *newrelic.Transaction) {
+// [BAD]: AND - Calls only second (function).
+//
+// AND - calls only second (function).
+func badAndCallsOnlySecond(ctx context.Context, txn *newrelic.Transaction) {
 	go func() { // want "goroutine should call github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine\\+github.com/newrelic/go-agent/v3/newrelic.NewContext to derive context"
 		ctx = newrelic.NewContext(ctx, txn)
 		_ = ctx
 	}()
 }
 
-// DA07: AND - calls neither function.
-func a07AndCallsNeither(ctx context.Context) {
+// [BAD]: AND - Calls neither function.
+//
+// AND - calls neither function.
+func badAndCallsNeither(ctx context.Context) {
 	go func() { // want "goroutine should call github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine\\+github.com/newrelic/go-agent/v3/newrelic.NewContext to derive context"
 		_ = ctx
 	}()
 }
 
+//vt:helper
 func doSomething() {}

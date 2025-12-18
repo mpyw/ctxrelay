@@ -10,16 +10,20 @@ import (
 
 // ===== SHOULD NOT REPORT =====
 
-// DD01: Basic - calls deriver.
-func d01CallsDeriver(ctx context.Context) {
+// [GOOD]: Basic - calls deriver.
+//
+// Goroutine properly calls the required context deriver function.
+func goodCallsDeriver(ctx context.Context) {
 	go func() {
 		ctx := apm.NewGoroutineContext(ctx)
 		_ = ctx
 	}()
 }
 
-// DD02: Basic - nested goroutines both call deriver.
-func d02NestedBothCallDeriver(ctx context.Context) {
+// [GOOD]: Basic - nested goroutines both call deriver.
+//
+// Both outer and inner goroutines call the deriver function.
+func goodNestedBothCallDeriver(ctx context.Context) {
 	go func() {
 		ctx := apm.NewGoroutineContext(ctx)
 		go func() {
@@ -30,41 +34,52 @@ func d02NestedBothCallDeriver(ctx context.Context) {
 	}()
 }
 
-// DD03: Basic - has own context param.
-func d03OwnContextParam(ctx context.Context) {
+// [NOTCHECKED]: Basic - has own context param.
+//
+// Function declares its own context parameter, so outer context not required.
+func notCheckedOwnContextParam(ctx context.Context) {
 	go func(ctx context.Context) {
 		_ = ctx
 	}(ctx)
 }
 
-// DD04: Basic - named function call (not checked).
-func d04NamedFuncCall(ctx context.Context) {
+// [NOTCHECKED]: Basic - named function call (not checked).
+//
+// Named function call pattern is not checked for deriver.
+func notCheckedNamedFuncCall(ctx context.Context) {
 	go namedFunc(ctx)
 }
 
+//vt:helper
 func namedFunc(ctx context.Context) {
 	_ = ctx
 }
 
 // ===== SHOULD REPORT =====
 
-// DD05: Basic - no deriver call.
-func d05NoDeriverCall(ctx context.Context) {
+// [BAD]: Basic - no deriver call.
+//
+// Goroutine does not call the required context deriver function.
+func badNoDeriverCall(ctx context.Context) {
 	go func() { // want "goroutine should call github.com/my-example-app/telemetry/apm.NewGoroutineContext to derive context"
 		_ = ctx
 	}()
 }
 
-// DD06: Basic - uses different function (not deriver).
-func d06UsesDifferentFunc(ctx context.Context) {
+// [BAD]: Basic - uses different function (not deriver).
+//
+// Goroutine calls a function, but not the required deriver.
+func badUsesDifferentFunc(ctx context.Context) {
 	go func() { // want "goroutine should call github.com/my-example-app/telemetry/apm.NewGoroutineContext to derive context"
 		ctx := context.WithValue(ctx, "key", "value")
 		_ = ctx
 	}()
 }
 
-// DD07: Basic - nested, inner missing deriver.
-func d07NestedInnerMissingDeriver(ctx context.Context) {
+// [BAD]: Basic - nested, inner missing deriver.
+//
+// Inner goroutine does not call the required deriver.
+func badNestedInnerMissingDeriver(ctx context.Context) {
 	go func() {
 		ctx := apm.NewGoroutineContext(ctx)
 		go func() { // want "goroutine should call github.com/my-example-app/telemetry/apm.NewGoroutineContext to derive context"

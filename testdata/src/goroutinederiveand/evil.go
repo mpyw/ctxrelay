@@ -13,8 +13,10 @@ import (
 
 // ===== SHOULD NOT REPORT =====
 
-// DA40: AND - nested 2-level, both have both derivers.
-func a40AndNested2LevelBothHaveBothDerivers(ctx context.Context, txn *newrelic.Transaction) {
+// [GOOD]: AND - Nested 2-level, both have both derivers.
+//
+// AND - nested 2-level, both have both derivers.
+func goodAndNested2LevelBothHaveBothDerivers(ctx context.Context, txn *newrelic.Transaction) {
 	go func() {
 		txn = txn.NewGoroutine()
 		ctx = newrelic.NewContext(ctx, txn)
@@ -27,8 +29,10 @@ func a40AndNested2LevelBothHaveBothDerivers(ctx context.Context, txn *newrelic.T
 	}()
 }
 
-// DA41: AND - both derivers in different order across conditional branches.
-func a41AndDifferentOrderInBranches(ctx context.Context, txn *newrelic.Transaction, cond bool) {
+// [GOOD]: AND - Both derivers in different order across conditional branches.
+//
+// AND - both derivers in different order across conditional branches.
+func goodAndDifferentOrderInBranches(ctx context.Context, txn *newrelic.Transaction, cond bool) {
 	go func() {
 		if cond {
 			txn = txn.NewGoroutine()
@@ -44,8 +48,10 @@ func a41AndDifferentOrderInBranches(ctx context.Context, txn *newrelic.Transacti
 
 // ===== SHOULD REPORT =====
 
-// DA42: AND - nested 2-level, inner missing one deriver.
-func a42AndNested2LevelInnerMissingOneDeriver(ctx context.Context, txn *newrelic.Transaction) {
+// [BAD]: AND - Nested 2-level, inner missing one deriver.
+//
+// AND - nested 2-level, inner missing one deriver.
+func badAndNested2LevelInnerMissingOneDeriver(ctx context.Context, txn *newrelic.Transaction) {
 	go func() {
 		txn = txn.NewGoroutine()
 		ctx = newrelic.NewContext(ctx, txn)
@@ -57,8 +63,10 @@ func a42AndNested2LevelInnerMissingOneDeriver(ctx context.Context, txn *newrelic
 	}()
 }
 
-// DA43: AND - both derivers in nested IIFE (not at outer level).
-func a43AndBothDeriverInNestedIIFE(ctx context.Context, txn *newrelic.Transaction) {
+// [GOOD]: AND - Both derivers in nested IIFE (not at outer level).
+//
+// AND - both derivers in nested IIFE (not at outer level).
+func goodAndBothDeriverInNestedIIFE(ctx context.Context, txn *newrelic.Transaction) {
 	go func() { // want "goroutine should call github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine\\+github.com/newrelic/go-agent/v3/newrelic.NewContext to derive context"
 		func() {
 			txn = txn.NewGoroutine()
@@ -68,8 +76,10 @@ func a43AndBothDeriverInNestedIIFE(ctx context.Context, txn *newrelic.Transactio
 	}()
 }
 
-// DA44: AND - split derivers across levels (outer has first, IIFE has second).
-func a44AndSplitDeriversAcrossLevels(ctx context.Context, txn *newrelic.Transaction) {
+// [GOOD]: AND - Split derivers across levels (outer has first, IIFE has second).
+//
+// AND - split derivers across levels (outer has first, IIFE has second).
+func goodAndSplitDeriversAcrossLevels(ctx context.Context, txn *newrelic.Transaction) {
 	go func() { // want "goroutine should call github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine\\+github.com/newrelic/go-agent/v3/newrelic.NewContext to derive context"
 		txn = txn.NewGoroutine() // First deriver at outer level
 		func() {
@@ -80,8 +90,10 @@ func a44AndSplitDeriversAcrossLevels(ctx context.Context, txn *newrelic.Transact
 	}()
 }
 
-// DA45: AND - nested 3-level, outer only has first deriver.
-func a45AndNested3LevelOuterPartial(ctx context.Context, txn *newrelic.Transaction) {
+// [BAD]: AND - Nested 3-level, outer only has first deriver.
+//
+// AND - nested 3-level, outer only has first deriver.
+func badAndNested3LevelOuterPartial(ctx context.Context, txn *newrelic.Transaction) {
 	go func() { // want "goroutine should call github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine\\+github.com/newrelic/go-agent/v3/newrelic.NewContext to derive context"
 		txn = txn.NewGoroutine() // Only first deriver
 		go func() { // want "goroutine should call github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine\\+github.com/newrelic/go-agent/v3/newrelic.NewContext to derive context"
@@ -97,8 +109,10 @@ func a45AndNested3LevelOuterPartial(ctx context.Context, txn *newrelic.Transacti
 
 // ===== HIGHER-ORDER PATTERNS =====
 
-// DA46: Higher-order go fn()() - returned func only has first deriver.
-func a46HigherOrderReturnedFuncPartialDeriver(ctx context.Context, txn *newrelic.Transaction) {
+// [BAD]: Higher-order go fn()()
+//
+// Higher-order go fn()() - returned func only has first deriver.
+func badHigherOrderReturnedFuncPartialDeriver(ctx context.Context, txn *newrelic.Transaction) {
 	makeWorker := func() func() {
 		return func() {
 			txn = txn.NewGoroutine() // Only first deriver, missing NewContext
@@ -111,8 +125,13 @@ func a46HigherOrderReturnedFuncPartialDeriver(ctx context.Context, txn *newrelic
 
 // ===== VARIABLE REASSIGNMENT =====
 
-// DA47: Variable reassignment - last assignment with incomplete derivers should warn.
-func a47ReassignedFuncIncompleteDeriver(ctx context.Context, txn *newrelic.Transaction) {
+// [BAD]: Variable reassignment - last assignment with incomplete derivers should warn.
+//
+// Last reassigned value has incomplete deriver calls.
+//
+// See also:
+//   goroutinederivemixed: badReassignedFuncIncompleteDeriver
+func badReassignedFuncIncompleteDeriver(ctx context.Context, txn *newrelic.Transaction) {
 	fn := func() {
 		txn = txn.NewGoroutine()
 		ctx = newrelic.NewContext(ctx, txn)
@@ -126,8 +145,10 @@ func a47ReassignedFuncIncompleteDeriver(ctx context.Context, txn *newrelic.Trans
 	go fn() // want "goroutine should call github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine\\+github.com/newrelic/go-agent/v3/newrelic.NewContext to derive context"
 }
 
-// DA48: Variable reassignment - last assignment with both derivers should pass.
-func a48ReassignedFuncBothDerivers(ctx context.Context, txn *newrelic.Transaction) {
+// [GOOD]: Variable reassignment - last assignment with both derivers should pass.
+//
+// Last reassigned value calls both required derivers.
+func goodReassignedFuncBothDerivers(ctx context.Context, txn *newrelic.Transaction) {
 	fn := func() {
 		_ = ctx // First assignment has no deriver
 	}

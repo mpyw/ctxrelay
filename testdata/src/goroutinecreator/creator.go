@@ -11,12 +11,12 @@ import (
 
 // ===== GOROUTINE CREATOR FUNCTIONS =====
 
-//goroutinectx:goroutine_creator
+//goroutinectx:goroutine_creator //vt:helper
 func runWithGroup(g *errgroup.Group, fn func() error) {
 	g.Go(fn)
 }
 
-//goroutinectx:goroutine_creator
+//goroutinectx:goroutine_creator //vt:helper
 func runWithWaitGroup(wg *sync.WaitGroup, fn func()) {
 	wg.Add(1)
 	go func() {
@@ -25,7 +25,7 @@ func runWithWaitGroup(wg *sync.WaitGroup, fn func()) {
 	}()
 }
 
-//goroutinectx:goroutine_creator
+//goroutinectx:goroutine_creator //vt:helper
 func runMultipleFuncs(fn1, fn2 func()) {
 	go fn1()
 	go fn2()
@@ -33,7 +33,9 @@ func runMultipleFuncs(fn1, fn2 func()) {
 
 // ===== SHOULD REPORT =====
 
-// GC01: Basic - func doesn't use ctx
+// [BAD]: Basic errgroup - func doesn't use ctx
+//
+// Basic - func doesn't use ctx
 func badBasicErrgroup(ctx context.Context) {
 	g := new(errgroup.Group)
 	fn := func() error {
@@ -44,7 +46,9 @@ func badBasicErrgroup(ctx context.Context) {
 	_ = g.Wait()
 }
 
-// GC02: Basic - func doesn't use ctx (waitgroup)
+// [BAD]: Basic waitgroup - func doesn't use ctx
+//
+// Basic - func doesn't use ctx (waitgroup)
 func badBasicWaitGroup(ctx context.Context) {
 	var wg sync.WaitGroup
 	fn := func() {
@@ -54,7 +58,9 @@ func badBasicWaitGroup(ctx context.Context) {
 	wg.Wait()
 }
 
-// GC03: Inline func literal doesn't use ctx
+// [BAD]: Inline func literal doesn't use ctx
+//
+// Inline function literal does not use context.
 func badInlineFuncLiteral(ctx context.Context) {
 	g := new(errgroup.Group)
 	runWithGroup(g, func() error { // want `runWithGroup\(\) func argument should use context "ctx"`
@@ -64,7 +70,9 @@ func badInlineFuncLiteral(ctx context.Context) {
 	_ = g.Wait()
 }
 
-// GC04: Multiple func args - both bad
+// [BAD]: Multiple func args - both bad
+//
+// Multiple function arguments, none use context.
 func badMultipleFuncs(ctx context.Context) {
 	runMultipleFuncs(
 		func() { fmt.Println("no ctx 1") }, // want `runMultipleFuncs\(\) func argument should use context "ctx"`
@@ -72,7 +80,9 @@ func badMultipleFuncs(ctx context.Context) {
 	)
 }
 
-// GC05: Multiple func args - first bad
+// [BAD]: Multiple func args - first bad
+//
+// First function argument does not use context.
 func badFirstFuncOnly(ctx context.Context) {
 	runMultipleFuncs(
 		func() { fmt.Println("no ctx") }, // want `runMultipleFuncs\(\) func argument should use context "ctx"`
@@ -80,7 +90,9 @@ func badFirstFuncOnly(ctx context.Context) {
 	)
 }
 
-// GC06: Multiple func args - second bad
+// [BAD]: Multiple func args - second bad
+//
+// Second function argument does not use context.
 func badSecondFuncOnly(ctx context.Context) {
 	runMultipleFuncs(
 		func() { _ = ctx },
@@ -90,7 +102,9 @@ func badSecondFuncOnly(ctx context.Context) {
 
 // ===== SHOULD NOT REPORT =====
 
-// GC10: Basic - func uses ctx
+// [GOOD]: Basic errgroup - func uses ctx
+//
+// Basic - func uses ctx
 func goodBasicErrgroup(ctx context.Context) {
 	g := new(errgroup.Group)
 	fn := func() error {
@@ -101,7 +115,9 @@ func goodBasicErrgroup(ctx context.Context) {
 	_ = g.Wait()
 }
 
-// GC11: Basic - func uses ctx (waitgroup)
+// [GOOD]: Basic waitgroup - func uses ctx
+//
+// Basic - func uses ctx (waitgroup)
 func goodBasicWaitGroup(ctx context.Context) {
 	var wg sync.WaitGroup
 	fn := func() {
@@ -111,7 +127,9 @@ func goodBasicWaitGroup(ctx context.Context) {
 	wg.Wait()
 }
 
-// GC12: Inline func literal uses ctx
+// [GOOD]: Inline func literal uses ctx
+//
+// Inline function literal properly uses context.
 func goodInlineFuncLiteral(ctx context.Context) {
 	g := new(errgroup.Group)
 	runWithGroup(g, func() error {
@@ -121,7 +139,9 @@ func goodInlineFuncLiteral(ctx context.Context) {
 	_ = g.Wait()
 }
 
-// GC13: Multiple func args - both good
+// [GOOD]: Multiple func args - both good
+//
+// Multiple function arguments, all use context.
 func goodMultipleFuncs(ctx context.Context) {
 	runMultipleFuncs(
 		func() { _ = ctx },
@@ -129,7 +149,9 @@ func goodMultipleFuncs(ctx context.Context) {
 	) // OK
 }
 
-// GC14: No ctx param - not checked
+// [GOOD]: No ctx param
+//
+// No ctx param - not checked
 func goodNoCtxParam() {
 	g := new(errgroup.Group)
 	runWithGroup(g, func() error {
@@ -139,7 +161,9 @@ func goodNoCtxParam() {
 	_ = g.Wait()
 }
 
-// GC15: Func has own ctx param
+// [GOOD]: Func has own ctx param
+//
+// Function declares own context parameter, outer context not required.
 func goodFuncHasOwnCtx(ctx context.Context) {
 	g := new(errgroup.Group)
 	fn := func(innerCtx context.Context) error {
@@ -154,11 +178,14 @@ func goodFuncHasOwnCtx(ctx context.Context) {
 
 // ===== NON-CREATOR FUNCTIONS (should not be checked) =====
 
+//vt:helper
 func normalHelper(g *errgroup.Group, fn func() error) {
 	g.Go(fn)
 }
 
-// GC20: Call to non-creator function - not checked
+// [GOOD]: Call to non-creator function
+//
+// Call to non-creator function - not checked
 func goodNonCreatorFunction(ctx context.Context) {
 	g := new(errgroup.Group)
 	fn := func() error {

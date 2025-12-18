@@ -1,0 +1,14 @@
+{
+  "targets": [
+    "goroutine",
+    "errgroup",
+    "waitgroup",
+    "goroutinecreator",
+    "goroutinederive",
+    "goroutinederiveand",
+    "goroutinederivemixed",
+    "gotask",
+    "carrier"
+  ],
+  "tests": {}
+}

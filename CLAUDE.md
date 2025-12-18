@@ -248,7 +248,14 @@ go fmt ./...
 ./scripts/verify-test-patterns.pl        # Check for inconsistencies
 ./scripts/verify-test-patterns.pl -v     # Verbose: show all patterns
 ./scripts/verify-test-patterns.pl -q     # Quiet: exit code only (for CI)
+
+# Run test metadata validation (IMPORTANT: Must specify file path)
+go test ./testdata/metatest/validation_test.go           # Run validation
+go test -v ./testdata/metatest/validation_test.go        # Verbose output
+go test -v -run TestStructureValidation/AllFunctionsAccountedFor ./testdata/metatest/validation_test.go
 ```
+
+**IMPORTANT:** The validation test MUST be run with the file path `./testdata/metatest/validation_test.go`. Running `go test ./testdata/metatest` or `cd testdata/metatest && go test` will NOT execute the test due to its special structure.
 
 ## Adding a New Checker
 

@@ -15,8 +15,10 @@ import (
 
 // ===== SHOULD NOT REPORT =====
 
-// DM20: Mixed - defer satisfies AND group.
-func m20MixedDeferSatisfiesAndGroup(ctx context.Context, txn *newrelic.Transaction) {
+// [GOOD]: Mixed - defer satisfies AND group.
+//
+// Closure with defer statement properly uses context.
+func goodMixedDeferSatisfiesAndGroup(ctx context.Context, txn *newrelic.Transaction) {
 	go func() {
 		defer func() {
 			recover()
@@ -27,8 +29,10 @@ func m20MixedDeferSatisfiesAndGroup(ctx context.Context, txn *newrelic.Transacti
 	}()
 }
 
-// DM21: Mixed - defer satisfies OR alternative.
-func m21MixedDeferSatisfiesOrAlternative(ctx context.Context) {
+// [GOOD]: Mixed - defer satisfies OR alternative.
+//
+// Closure with defer statement properly uses context.
+func goodMixedDeferSatisfiesOrAlternative(ctx context.Context) {
 	go func() {
 		defer func() {
 			recover()
@@ -38,8 +42,10 @@ func m21MixedDeferSatisfiesOrAlternative(ctx context.Context) {
 	}()
 }
 
-// DM22: Mixed - for loop satisfies AND group.
-func m22MixedForLoopSatisfiesAndGroup(ctx context.Context, txn *newrelic.Transaction) {
+// [GOOD]: Mixed - for loop satisfies AND group.
+//
+// Goroutines in loop properly capture and use context.
+func goodMixedForLoopSatisfiesAndGroup(ctx context.Context, txn *newrelic.Transaction) {
 	for i := 0; i < 3; i++ {
 		go func() {
 			txn = txn.NewGoroutine()
@@ -49,8 +55,10 @@ func m22MixedForLoopSatisfiesAndGroup(ctx context.Context, txn *newrelic.Transac
 	}
 }
 
-// DM23: Mixed - WaitGroup satisfies OR alternative.
-func m23MixedWaitGroupSatisfiesOrAlternative(ctx context.Context) {
+// [GOOD]: Mixed - WaitGroup satisfies OR alternative.
+//
+// Satisfies the mixed requirement via OR alternative path.
+func goodMixedWaitGroupSatisfiesOrAlternative(ctx context.Context) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
@@ -61,8 +69,10 @@ func m23MixedWaitGroupSatisfiesOrAlternative(ctx context.Context) {
 	wg.Wait()
 }
 
-// DM24: Mixed - conditional with different valid approaches per branch.
-func m24MixedConditionalDifferentApproaches(ctx context.Context, txn *newrelic.Transaction, cond bool) {
+// [GOOD]: Mixed - conditional with different valid approaches per branch.
+//
+// All conditional branches properly use context in goroutines.
+func goodMixedConditionalDifferentApproaches(ctx context.Context, txn *newrelic.Transaction, cond bool) {
 	if cond {
 		// Satisfies via AND group
 		go func() {
@@ -79,8 +89,10 @@ func m24MixedConditionalDifferentApproaches(ctx context.Context, txn *newrelic.T
 	}
 }
 
-// DM25: Mixed - multiple goroutines with different valid approaches.
-func m25MixedMultipleGoroutinesDifferentApproaches(ctx context.Context, txn *newrelic.Transaction) {
+// [GOOD]: Mixed - multiple goroutines with different valid approaches.
+//
+// Multiple goroutines each satisfying requirements differently.
+func goodMixedMultipleGoroutinesDifferentApproaches(ctx context.Context, txn *newrelic.Transaction) {
 	go func() {
 		txn = txn.NewGoroutine()
 		ctx = newrelic.NewContext(ctx, txn)
@@ -92,8 +104,10 @@ func m25MixedMultipleGoroutinesDifferentApproaches(ctx context.Context, txn *new
 	}()
 }
 
-// DM26: Mixed - higher-order go fn()() where returned func satisfies AND group.
-func m26MixedHigherOrderReturnedFuncSatisfiesAndGroup(ctx context.Context, txn *newrelic.Transaction) {
+// [GOOD]: Mixed - higher-order go fn()() where returned func satisfies AND group.
+//
+// Satisfies the mixed requirement by completing AND group.
+func goodMixedHigherOrderReturnedFuncSatisfiesAndGroup(ctx context.Context, txn *newrelic.Transaction) {
 	makeWorker := func() func() {
 		return func() {
 			txn = txn.NewGoroutine()
@@ -104,8 +118,10 @@ func m26MixedHigherOrderReturnedFuncSatisfiesAndGroup(ctx context.Context, txn *
 	go makeWorker()() // Returned func satisfies AND group
 }
 
-// DM27: Mixed - higher-order go fn()() where returned func satisfies OR alternative.
-func m27MixedHigherOrderReturnedFuncSatisfiesOrAlternative(ctx context.Context) {
+// [GOOD]: Mixed - higher-order go fn()() where returned func satisfies OR alternative.
+//
+// Satisfies the mixed requirement via OR alternative path.
+func goodMixedHigherOrderReturnedFuncSatisfiesOrAlternative(ctx context.Context) {
 	makeWorker := func() func() {
 		return func() {
 			ctx = apm.NewGoroutineContext(ctx)
@@ -115,8 +131,10 @@ func m27MixedHigherOrderReturnedFuncSatisfiesOrAlternative(ctx context.Context) 
 	go makeWorker()() // Returned func satisfies OR alternative
 }
 
-// DM28: Mixed - higher-order go fn() where fn is variable satisfying AND group.
-func m28MixedHigherOrderVariableSatisfiesAndGroup(ctx context.Context, txn *newrelic.Transaction) {
+// [GOOD]: Mixed - higher-order go fn() where fn is variable satisfying AND group.
+//
+// Satisfies the mixed requirement by completing AND group.
+func goodMixedHigherOrderVariableSatisfiesAndGroup(ctx context.Context, txn *newrelic.Transaction) {
 	fn := func() {
 		txn = txn.NewGoroutine()
 		ctx = newrelic.NewContext(ctx, txn)
@@ -127,8 +145,10 @@ func m28MixedHigherOrderVariableSatisfiesAndGroup(ctx context.Context, txn *newr
 
 // ===== SHOULD REPORT =====
 
-// DM29: Mixed - defer with only first of AND group.
-func m29MixedDeferOnlyFirstOfAndGroup(ctx context.Context, txn *newrelic.Transaction) {
+// [BAD]: Mixed - defer with only first of AND group.
+//
+// Closure with defer statement does not use context.
+func badMixedDeferOnlyFirstOfAndGroup(ctx context.Context, txn *newrelic.Transaction) {
 	go func() { // want "goroutine should call github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine\\+github.com/newrelic/go-agent/v3/newrelic.NewContext,github.com/my-example-app/telemetry/apm.NewGoroutineContext to derive context"
 		defer func() {
 			recover()
@@ -139,8 +159,10 @@ func m29MixedDeferOnlyFirstOfAndGroup(ctx context.Context, txn *newrelic.Transac
 	}()
 }
 
-// DM30: Mixed - for loop with incomplete AND group.
-func m30MixedForLoopIncompleteAndGroup(ctx context.Context, txn *newrelic.Transaction) {
+// [BAD]: Mixed - for loop with incomplete AND group.
+//
+// Goroutines spawned in loop iterations do not use context.
+func badMixedForLoopIncompleteAndGroup(ctx context.Context, txn *newrelic.Transaction) {
 	for i := 0; i < 3; i++ {
 		go func() { // want "goroutine should call github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine\\+github.com/newrelic/go-agent/v3/newrelic.NewContext,github.com/my-example-app/telemetry/apm.NewGoroutineContext to derive context"
 			ctx = newrelic.NewContext(ctx, txn)
@@ -149,8 +171,10 @@ func m30MixedForLoopIncompleteAndGroup(ctx context.Context, txn *newrelic.Transa
 	}
 }
 
-// DM31: Mixed - WaitGroup with nothing.
-func m31MixedWaitGroupWithNothing(ctx context.Context) {
+// [BAD]: Mixed - WaitGroup with nothing.
+//
+// WaitGroup pattern without any deriver calls.
+func badMixedWaitGroupWithNothing(ctx context.Context) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() { // want "goroutine should call github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine\\+github.com/newrelic/go-agent/v3/newrelic.NewContext,github.com/my-example-app/telemetry/apm.NewGoroutineContext to derive context"
@@ -160,8 +184,10 @@ func m31MixedWaitGroupWithNothing(ctx context.Context) {
 	wg.Wait()
 }
 
-// DM32: Mixed - conditional with one branch failing both conditions.
-func m32MixedConditionalOneBranchFails(ctx context.Context, txn *newrelic.Transaction, cond bool) {
+// [BAD]: Mixed - conditional with one branch failing both conditions.
+//
+// Conditional branches spawn goroutines without using context.
+func badMixedConditionalOneBranchFails(ctx context.Context, txn *newrelic.Transaction, cond bool) {
 	if cond {
 		go func() {
 			txn = txn.NewGoroutine()
@@ -176,8 +202,10 @@ func m32MixedConditionalOneBranchFails(ctx context.Context, txn *newrelic.Transa
 	}
 }
 
-// DM33: Mixed - multiple goroutines, one fails.
-func m33MixedMultipleGoroutinesOneFails(ctx context.Context, txn *newrelic.Transaction) {
+// [BAD]: Mixed - multiple goroutines, one fails.
+//
+// One of multiple goroutines fails to meet deriver requirements.
+func badMixedMultipleGoroutinesOneFails(ctx context.Context, txn *newrelic.Transaction) {
 	go func() {
 		ctx = apm.NewGoroutineContext(ctx)
 		_ = ctx

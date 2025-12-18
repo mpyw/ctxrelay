@@ -10,7 +10,9 @@ import (
 
 // ===== VARIADIC EXPANSION - SHOULD REPORT =====
 
-// EV01: Variadic expansion without deriver
+// [BAD]: Variadic expansion without deriver
+//
+// Task function does not call the required context deriver.
 func badVariadicExpansion(ctx context.Context) {
 	tasks := []func(context.Context) error{
 		func(ctx context.Context) error { return nil },
@@ -21,7 +23,9 @@ func badVariadicExpansion(ctx context.Context) {
 
 // ===== VARIABLE TASK - SHOULD REPORT =====
 
-// EV10: Task stored in variable (func literal without deriver)
+// [BAD]: Task stored in variable (func literal without deriver)
+//
+// Task function does not call the required context deriver.
 func badVariableTaskNoDeriver(ctx context.Context) {
 	fn := func(ctx context.Context) error {
 		return nil
@@ -29,7 +33,9 @@ func badVariableTaskNoDeriver(ctx context.Context) {
 	_ = gotask.DoAllFnsSettled(ctx, fn) // want `gotask\.DoAllFnsSettled\(\) 2nd argument should call goroutine deriver`
 }
 
-// EV11: NewTask stored in variable
+// [BAD]: NewTask stored in variable
+//
+// NewTask wrapper without context derivation inside.
 func badNewTaskVariableNoDeriver(ctx context.Context) {
 	task := gotask.NewTask(func(ctx context.Context) error {
 		return nil
@@ -39,8 +45,9 @@ func badNewTaskVariableNoDeriver(ctx context.Context) {
 
 // ===== NESTED CLOSURE - SHOULD REPORT (deriver in nested closure doesn't count) =====
 
-// EV20: Deriver only in nested closure
-// By design: We check the func body but don't traverse into nested closures
+// [BAD]: Deriver only in nested closure
+//
+// Deriver in nested closure is not detected by the analyzer.
 func badDerivedInNestedClosure(ctx context.Context) {
 	_ = gotask.DoAllFnsSettled( // want `gotask\.DoAllFnsSettled\(\) 2nd argument should call goroutine deriver`
 		ctx,
@@ -56,7 +63,9 @@ func badDerivedInNestedClosure(ctx context.Context) {
 
 // ===== CONDITIONAL DERIVER - SHOULD NOT REPORT =====
 
-// EV30: Deriver in if branch (any presence should satisfy)
+// [GOOD]: Deriver in if branch (any presence should satisfy)
+//
+// Deriver call in any branch satisfies the requirement.
 func goodDerivedInIfBranch(ctx context.Context) {
 	_ = gotask.DoAllFnsSettled(
 		ctx,
@@ -71,14 +80,18 @@ func goodDerivedInIfBranch(ctx context.Context) {
 
 // ===== METHOD CHAINING - SHOULD REPORT =====
 
-// EV40: Chained task creation - DoAsync on result of method chain
+// [BAD]: Chained task creation
+//
+// Chained task creation - DoAsync on result of method chain
 func badChainedTaskDoAsync(ctx context.Context) {
 	gotask.NewTask(func(ctx context.Context) error {
 		return nil
 	}).DoAsync(ctx, nil) // want `\(\*gotask\.Task\)\.DoAsync\(\) 1st argument should call goroutine deriver`
 }
 
-// EV41: Cancelable chain DoAsync without deriver
+// [BAD]: Cancelable chain DoAsync without deriver
+//
+// Task function does not call the required context deriver.
 func badCancelableChainDoAsync(ctx context.Context) {
 	gotask.NewTask(func(ctx context.Context) error {
 		return nil
@@ -87,14 +100,18 @@ func badCancelableChainDoAsync(ctx context.Context) {
 
 // ===== METHOD CHAINING - SHOULD NOT REPORT =====
 
-// EV50: Chained task creation with derived ctx
+// [GOOD]: Chained task creation with derived ctx
+//
+// Chained task creation with proper context derivation.
 func goodChainedTaskDoAsyncWithDeriver(ctx context.Context) {
 	gotask.NewTask(func(ctx context.Context) error {
 		return nil
 	}).DoAsync(apm.NewGoroutineContext(ctx), nil)
 }
 
-// EV51: Cancelable chain DoAsync with derived ctx
+// [GOOD]: Cancelable chain DoAsync with derived ctx
+//
+// DoAsync is called with a properly derived context.
 func goodCancelableChainDoAsyncWithDeriver(ctx context.Context) {
 	gotask.NewTask(func(ctx context.Context) error {
 		return nil
@@ -103,7 +120,9 @@ func goodCancelableChainDoAsyncWithDeriver(ctx context.Context) {
 
 // ===== VARIADIC EXPANSION FROM VARIABLE - LIMITATION (can't trace variable) =====
 
-// LIMITATION: Variable slice expansion can't be traced
+// [LIMITATION]: Variable slice expansion
+//
+// Function in slice element does not capture context.
 func limitationVariadicExpansionVariable(ctx context.Context) {
 	tasks := []func(context.Context) error{
 		func(ctx context.Context) error {
@@ -117,7 +136,9 @@ func limitationVariadicExpansionVariable(ctx context.Context) {
 
 // ===== VARIABLE TASK - SHOULD NOT REPORT (variable tracing works) =====
 
-// EV80: Variable func assignment with deriver is traced correctly
+// [GOOD]: Variable func assignment with deriver is traced correctly
+//
+// Function stored in variable captures and uses context.
 func goodVariableTaskWithDeriver(ctx context.Context) {
 	fn := func(ctx context.Context) error {
 		_ = apm.NewGoroutineContext(ctx)
@@ -126,7 +147,9 @@ func goodVariableTaskWithDeriver(ctx context.Context) {
 	_ = gotask.DoAllFnsSettled(ctx, fn)
 }
 
-// EV81: NewTask in variable with deriver is traced correctly
+// [GOOD]: NewTask in variable with deriver is traced correctly
+//
+// Task function properly calls the context deriver.
 func goodNewTaskVariableWithDeriver(ctx context.Context) {
 	task := gotask.NewTask(func(ctx context.Context) error {
 		_ = apm.NewGoroutineContext(ctx)
@@ -137,7 +160,9 @@ func goodNewTaskVariableWithDeriver(ctx context.Context) {
 
 // ===== DERIVER IN DEFER CLOSURE - LIMITATION (defer closure is a nested FuncLit) =====
 
-// LIMITATION: defer closure is treated as nested FuncLit, not traversed
+// [LIMITATION]: Defer closure not traversed
+//
+// Deriver call in deferred closure is not detected by analyzer.
 func limitationDerivedInDeferClosure(ctx context.Context) {
 	_ = gotask.DoAllFnsSettled( // want `gotask\.DoAllFnsSettled\(\) 2nd argument should call goroutine deriver`
 		ctx,
@@ -153,7 +178,9 @@ func limitationDerivedInDeferClosure(ctx context.Context) {
 
 // ===== MIXED DERIVER AND NON-DERIVER - SHOULD REPORT =====
 
-// EV90: Multiple tasks, only some have deriver
+// [BAD]: Multiple tasks, only some have deriver
+//
+// Multiple task arguments with inconsistent deriver usage.
 func badMixedDerivers(ctx context.Context) {
 	_ = gotask.DoAllSettled( // want `gotask\.DoAllSettled\(\) 3rd argument should call goroutine deriver`
 		ctx,
@@ -169,7 +196,9 @@ func badMixedDerivers(ctx context.Context) {
 
 // ===== DOASYNC ON POINTER - SHOULD REPORT =====
 
-// EV100: Task pointer DoAsync
+// [BAD]: Task pointer DoAsync with deriver
+//
+// Task pointer DoAsync
 func badTaskPointerDoAsync(ctx context.Context) {
 	task := gotask.NewTask(func(ctx context.Context) error {
 		return nil
@@ -180,7 +209,9 @@ func badTaskPointerDoAsync(ctx context.Context) {
 
 // ===== DOASYNC ON POINTER - SHOULD NOT REPORT =====
 
-// EV110: Task pointer DoAsync with deriver
+// [GOOD]: Task pointer DoAsync with deriver
+//
+// Task function properly calls the context deriver.
 func goodTaskPointerDoAsyncWithDeriver(ctx context.Context) {
 	task := gotask.NewTask(func(ctx context.Context) error {
 		return nil
@@ -191,7 +222,9 @@ func goodTaskPointerDoAsyncWithDeriver(ctx context.Context) {
 
 // ===== HIGHER-ORDER FUNCTIONS - SHOULD REPORT/NOT REPORT =====
 
-// EV82: Higher-order function returning task WITHOUT deriver - should report
+// [BAD]: Higher-order function returning task WITH deriver
+//
+// Higher-order function returning task WITHOUT deriver - should report
 func badHigherOrderTaskFactoryNoDeriver(ctx context.Context) {
 	makeTask := func() gotask.Task[error] {
 		return gotask.NewTask(func(ctx context.Context) error {
@@ -201,7 +234,9 @@ func badHigherOrderTaskFactoryNoDeriver(ctx context.Context) {
 	_ = gotask.DoAllSettled(ctx, makeTask()) // want `gotask\.DoAllSettled\(\) 2nd argument should call goroutine deriver`
 }
 
-// EV83: Higher-order function returning task WITH deriver - should NOT report
+// [GOOD]: Higher-order function returning task WITH deriver
+//
+// Higher-order function returning task WITH deriver - should NOT report
 func goodHigherOrderTaskFactoryWithDeriver(ctx context.Context) {
 	makeTask := func() gotask.Task[error] {
 		return gotask.NewTask(func(ctx context.Context) error {
@@ -218,7 +253,9 @@ type taskMaker interface {
 	MakeTask() gotask.Task[error]
 }
 
-// LIMITATION: Interface method returns can't be traced
+// [LIMITATION]: Interface method returns
+//
+// Context captured but lost through interface type assertion.
 func limitationInterfaceTaskMaker(ctx context.Context, maker taskMaker) {
 	// Reports because maker.MakeTask() can't be traced
 	_ = gotask.DoAllSettled(ctx, maker.MakeTask()) // want `gotask\.DoAllSettled\(\) 2nd argument should call goroutine deriver`
@@ -226,27 +263,35 @@ func limitationInterfaceTaskMaker(ctx context.Context, maker taskMaker) {
 
 // ===== EDGE CASES - SHOULD NOT REPORT (not gotask or edge behavior) =====
 
-// Edge case: Empty call (less than 2 args) - not checked
+// [GOOD]: Edge case: Empty call (less than 2 args)
+//
+// Function call with insufficient arguments is not checked.
 func goodEmptyDoAll(ctx context.Context) {
 	_ = gotask.DoAll[int](ctx)
 }
 
-// Edge case: Only ctx arg - not checked
+// [GOOD]: Edge case: Only ctx arg
+//
+// Function with only context argument is handled correctly.
 func goodOnlyCtxArg(ctx context.Context) {
 	// This would be invalid Go code if DoAll required args, but tests analyzer edge
 }
 
-// Edge case: Multiple DoAsync calls in same function - should report each independently
+// [BAD]: Edge case: Multiple DoAsync calls
+//
+// DoAsync is called without deriving the context first.
 func badMultipleDoAsync(ctx context.Context) {
 	task1 := gotask.NewTask(func(ctx context.Context) error { return nil })
 	task2 := gotask.NewTask(func(ctx context.Context) error { return nil })
 
-	task1.DoAsync(ctx, nil)                         // want `\(\*gotask\.Task\)\.DoAsync\(\) 1st argument should call goroutine deriver`
+	task1.DoAsync(ctx, nil)                          // want `\(\*gotask\.Task\)\.DoAsync\(\) 1st argument should call goroutine deriver`
 	task2.DoAsync(apm.NewGoroutineContext(ctx), nil) // OK - has deriver
-	task1.DoAsync(ctx, nil)                         // want `\(\*gotask\.Task\)\.DoAsync\(\) 1st argument should call goroutine deriver`
+	task1.DoAsync(ctx, nil)                          // want `\(\*gotask\.Task\)\.DoAsync\(\) 1st argument should call goroutine deriver`
 }
 
-// Edge case: Context with different param name
+// [BAD]: Edge case: Context with different param name
+//
+// Context parameter with non-standard naming is detected.
 func badDifferentCtxName(c context.Context) {
 	_ = gotask.DoAllFnsSettled( // want `gotask\.DoAllFnsSettled\(\) 2nd argument should call goroutine deriver`
 		c,
@@ -256,7 +301,9 @@ func badDifferentCtxName(c context.Context) {
 	)
 }
 
-// Edge case: Context param with unusual name
+// [BAD]: Edge case: Context param with unusual name
+//
+// Context parameter with non-standard naming is detected.
 func badContextParamUnusualName(myCtx context.Context) {
 	_ = gotask.DoAllFnsSettled( // want `gotask\.DoAllFnsSettled\(\) 2nd argument should call goroutine deriver`
 		myCtx,
@@ -266,7 +313,9 @@ func badContextParamUnusualName(myCtx context.Context) {
 	)
 }
 
-// Edge case: Good with different ctx param names
+// [GOOD]: Edge case: Good with different ctx param names
+//
+// Non-standard context parameter names are properly detected.
 func goodDifferentCtxNames(c context.Context) {
 	_ = gotask.DoAllFnsSettled(
 		c,
@@ -279,7 +328,9 @@ func goodDifferentCtxNames(c context.Context) {
 
 // ===== RECURSIVE TASKS - SHOULD REPORT =====
 
-// Edge case: Task that creates another task (nested gotask call)
+// [BAD]: Edge case: Nested task creation
+//
+// Nested task creation pattern requires careful tracing.
 func badNestedTaskCreation(ctx context.Context) {
 	_ = gotask.DoAllFnsSettled( // want `gotask\.DoAllFnsSettled\(\) 2nd argument should call goroutine deriver`
 		ctx,
@@ -299,7 +350,9 @@ func badNestedTaskCreation(ctx context.Context) {
 
 // ===== DERIVER CALL IN EXPRESSION CONTEXT =====
 
-// Good: Deriver result used directly in expression
+// [GOOD]: Deriver result used directly in expression
+//
+// Deriver result used inline without storing in variable.
 func goodDerivedUsedInExpression(ctx context.Context) {
 	_ = gotask.DoAllFnsSettled(
 		ctx,
@@ -311,9 +364,12 @@ func goodDerivedUsedInExpression(ctx context.Context) {
 	)
 }
 
+//vt:helper
 func doSomethingWithContext(_ context.Context) {}
 
-// Good: Deriver result stored and used
+// [GOOD]: Deriver result stored and used
+//
+// Deriver result stored in variable and used.
 func goodDerivedStoredAndUsed(ctx context.Context) {
 	_ = gotask.DoAllFnsSettled(
 		ctx,
@@ -327,7 +383,9 @@ func goodDerivedStoredAndUsed(ctx context.Context) {
 
 // ===== EARLY RETURN PATHS =====
 
-// Good: Deriver called before early return
+// [GOOD]: Deriver called before early return
+//
+// Deriver is called before function returns early.
 func goodDerivedBeforeEarlyReturn(ctx context.Context) {
 	_ = gotask.DoAllFnsSettled(
 		ctx,
@@ -341,7 +399,9 @@ func goodDerivedBeforeEarlyReturn(ctx context.Context) {
 	)
 }
 
-// Bad: Deriver only on one branch (but we still detect it - any call counts)
+// [GOOD]: Deriver only on one branch (but detected)
+//
+// Deriver on single branch detected as valid.
 func goodDerivedOnOneBranch(ctx context.Context) {
 	_ = gotask.DoAllFnsSettled(
 		ctx,
