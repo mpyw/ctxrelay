@@ -86,6 +86,20 @@ func TestSpawner(t *testing.T) {
 	analysistest.Run(t, testdata, goroutinectx.Analyzer, "spawner")
 }
 
+func TestSpawnerlabel(t *testing.T) {
+	testdata := analysistest.TestData()
+
+	if err := goroutinectx.Analyzer.Flags.Set("spawnerlabel", "true"); err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() {
+		_ = goroutinectx.Analyzer.Flags.Set("spawnerlabel", "false")
+	}()
+
+	analysistest.Run(t, testdata, goroutinectx.Analyzer, "spawnerlabel")
+}
+
 func TestGotask(t *testing.T) {
 	testdata := analysistest.TestData()
 

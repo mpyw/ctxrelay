@@ -17,6 +17,7 @@ import (
 	"github.com/mpyw/goroutinectx/internal/checkers/goroutinederive"
 	"github.com/mpyw/goroutinectx/internal/checkers/gotask"
 	"github.com/mpyw/goroutinectx/internal/checkers/spawner"
+	"github.com/mpyw/goroutinectx/internal/checkers/spawnerlabel"
 	"github.com/mpyw/goroutinectx/internal/checkers/waitgroup"
 	"github.com/mpyw/goroutinectx/internal/context"
 	"github.com/mpyw/goroutinectx/internal/directives/carrier"
@@ -30,11 +31,12 @@ var (
 	contextCarriers  string
 
 	// Checker enable/disable flags (all enabled by default).
-	enableErrgroup  bool
-	enableWaitgroup bool
-	enableGoroutine bool
-	enableSpawner   bool
-	enableGotask    bool
+	enableErrgroup     bool
+	enableWaitgroup    bool
+	enableGoroutine    bool
+	enableSpawner      bool
+	enableGotask       bool
+	enableSpawnerlabel bool
 )
 
 func init() {
@@ -49,6 +51,7 @@ func init() {
 	Analyzer.Flags.BoolVar(&enableGoroutine, "goroutine", true, "enable goroutine checker")
 	Analyzer.Flags.BoolVar(&enableSpawner, "spawner", true, "enable spawner checker")
 	Analyzer.Flags.BoolVar(&enableGotask, "gotask", true, "enable gotask checker (requires -goroutine-deriver)")
+	Analyzer.Flags.BoolVar(&enableSpawnerlabel, "spawnerlabel", false, "check that spawner functions are properly labeled")
 }
 
 // Analyzer is the main analyzer for goroutinectx.
@@ -79,6 +82,12 @@ func run(pass *analysis.Pass) (any, error) {
 
 	// Run AST-based checks (goroutine, errgroup, waitgroup)
 	runASTChecks(pass, insp, ignoreMaps, carriers, spawners)
+
+	// Run spawnerlabel checker if enabled
+	if enableSpawnerlabel {
+		spawnerlabelChecker := spawnerlabel.New(spawners)
+		spawnerlabelChecker.Check(pass, ignoreMaps)
+	}
 
 	return nil, nil
 }
