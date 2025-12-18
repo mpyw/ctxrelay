@@ -1,7 +1,7 @@
 # goroutinectx
 
 > [!CAUTION]
-> This project is under heavy construction. The repository will be renamed from `ctxrelay` to `goroutinectx` before the first release. See [TASK_ARCH_REFACTOR.md](./TASK_ARCH_REFACTOR.md) for details.
+> This project is under heavy construction. The repository has been renamed from `ctxrelay` to `goroutinectx`. See [TASK_ARCH_REFACTOR.md](./TASK_ARCH_REFACTOR.md) for details.
 
 > [!NOTE]
 > This project was 99% written by AI (Claude Code).
@@ -10,12 +10,12 @@ A Go linter that checks goroutine context propagation.
 
 ## Overview
 
-`ctxrelay` detects cases where a `context.Context` is available in function parameters but not properly passed to downstream calls that should receive it.
+`goroutinectx` detects cases where a `context.Context` is available in function parameters but not properly passed to downstream calls that should receive it.
 
 ## Installation
 
 ```bash
-go install github.com/mpyw/ctxrelay/cmd/ctxrelay@latest
+go install github.com/mpyw/goroutinectx/cmd/goroutinectx@latest
 ```
 
 ## Usage
@@ -23,13 +23,13 @@ go install github.com/mpyw/ctxrelay/cmd/ctxrelay@latest
 ### Standalone
 
 ```bash
-ctxrelay ./...
+goroutinectx ./...
 ```
 
 ### With go vet
 
 ```bash
-go vet -vettool=$(which ctxrelay) ./...
+go vet -vettool=$(which goroutinectx) ./...
 ```
 
 ## What It Checks
@@ -188,13 +188,13 @@ func handler(ctx context.Context) {
 
 ## Directives
 
-### `//ctxrelay:ignore`
+### `//goroutinectx:ignore`
 
 Suppress warnings for a specific line:
 
 ```go
 func handler(ctx context.Context) {
-    //ctxrelay:ignore - intentionally not passing context
+    //goroutinectx:ignore - intentionally not passing context
     go func() {
         backgroundTask()
     }()
@@ -203,12 +203,12 @@ func handler(ctx context.Context) {
 
 The comment can be on the same line or the line above.
 
-### `//ctxrelay:goroutine_creator`
+### `//goroutinectx:goroutine_creator`
 
 Mark a function as one that spawns goroutines with its func arguments. The analyzer will check that func arguments passed to marked functions properly use context:
 
 ```go
-//ctxrelay:goroutine_creator
+//goroutinectx:goroutine_creator
 func runAsync(g *errgroup.Group, fn func() error) {
     g.Go(fn)
 }
@@ -238,13 +238,13 @@ Require goroutines to call a specific function to derive context. Useful for APM
 
 ```bash
 # Single deriver - require apm.NewGoroutineContext() in goroutines
-ctxrelay -goroutine-deriver=github.com/my-example-app/telemetry/apm.NewGoroutineContext ./...
+goroutinectx -goroutine-deriver=github.com/my-example-app/telemetry/apm.NewGoroutineContext ./...
 
 # AND (plus) - require BOTH txn.NewGoroutine() AND newrelic.NewContext()
-ctxrelay -goroutine-deriver='github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine+github.com/newrelic/go-agent/v3/newrelic.NewContext' ./...
+goroutinectx -goroutine-deriver='github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine+github.com/newrelic/go-agent/v3/newrelic.NewContext' ./...
 
 # Mixed AND/OR - (txn.NewGoroutine AND NewContext) OR apm.NewGoroutineContext
-ctxrelay -goroutine-deriver='github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine+github.com/newrelic/go-agent/v3/newrelic.NewContext,github.com/my-example-app/telemetry/apm.NewGoroutineContext' ./...
+goroutinectx -goroutine-deriver='github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine+github.com/newrelic/go-agent/v3/newrelic.NewContext,github.com/my-example-app/telemetry/apm.NewGoroutineContext' ./...
 ```
 
 **Format:**
@@ -259,13 +259,13 @@ Treat additional types as context carriers (like `context.Context`). Useful for 
 
 ```bash
 # Treat echo.Context as a context carrier
-ctxrelay -context-carriers=github.com/labstack/echo/v4.Context ./...
+goroutinectx -context-carriers=github.com/labstack/echo/v4.Context ./...
 
 # Multiple carriers (comma-separated)
-ctxrelay -context-carriers=github.com/labstack/echo/v4.Context,github.com/urfave/cli/v2.Context ./...
+goroutinectx -context-carriers=github.com/labstack/echo/v4.Context,github.com/urfave/cli/v2.Context ./...
 ```
 
-When a function has a context carrier parameter, ctxrelay will check that it's properly propagated to goroutines and other APIs.
+When a function has a context carrier parameter, goroutinectx will check that it's properly propagated to goroutines and other APIs.
 
 **Note**: This flag applies to AST-based checkers (slog, goroutine, errgroup, waitgroup). zerolog analysis only checks `context.Context` because `zerolog.Ctx()` only accepts `context.Context`.
 
@@ -275,10 +275,10 @@ All checkers are enabled by default. Use these flags to disable specific checker
 
 ```bash
 # Disable specific checkers
-ctxrelay -slog=false -zerolog=false ./...
+goroutinectx -slog=false -zerolog=false ./...
 
 # Run only goroutine-related checks
-ctxrelay -slog=false -zerolog=false ./...
+goroutinectx -slog=false -zerolog=false ./...
 ```
 
 Available flags:
@@ -300,9 +300,9 @@ Available flags:
 
 - [contextcheck](https://github.com/kkHAIKE/contextcheck) - Detects `context.Background()`/`context.TODO()` usage and missing context parameters
 
-`ctxrelay` is complementary to `contextcheck`:
+`goroutinectx` is complementary to `contextcheck`:
 - `contextcheck` warns about creating new contexts when one should be propagated
-- `ctxrelay` warns about not using an available context in specific APIs
+- `goroutinectx` warns about not using an available context in specific APIs
 
 ## License
 

@@ -434,7 +434,7 @@ The zerolog SSA analyzer has inherent limitations due to the complexity of stati
 ### Design Philosophy
 
 The analyzer follows **"false positives over false negatives"** principle:
-- False positives are annoying but safe (user adds `//ctxrelay:ignore`)
+- False positives are annoying but safe (user adds `//goroutinectx:ignore`)
 - False negatives are dangerous (bugs slip through silently)
 
 Implementing interprocedural analysis would significantly increase complexity and compilation time. The current intraprocedural approach provides good coverage for common patterns while maintaining fast analysis.

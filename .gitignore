@@ -24,4 +24,8 @@ Thumbs.db
 TASKS.md
 
 # Local config overrides
-.ctxrelay.local.yaml
+.goroutinectx.local.yaml
+
+# Build artifacts
+/goroutinectx
+/bin/

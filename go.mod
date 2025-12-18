@@ -1,4 +1,4 @@
-module github.com/mpyw/ctxrelay
+module github.com/mpyw/goroutinectx
 
 go 1.24.0
 

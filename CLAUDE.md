@@ -13,7 +13,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **goroutine**: Detect `go func()` that doesn't capture/use context
 - **errgroup**: Detect `errgroup.Group.Go()` closures without context
 - **waitgroup**: Detect `sync.WaitGroup.Go()` closures without context (Go 1.25+)
-- **goroutine-creator**: Detect calls to functions marked with `//ctxrelay:goroutine_creator` that pass closures without context
+- **goroutine-creator**: Detect calls to functions marked with `//goroutinectx:goroutine_creator` that pass closures without context
 - **goroutine-derive**: Detect goroutines that don't call a specified context-derivation function (e.g., `apm.NewGoroutineContext`)
   - Activated via flag: `-goroutine-deriver=pkg/path.Func` or `-goroutine-deriver=pkg/path.Type.Method`
   - OR (comma): `-goroutine-deriver=pkg1.Func1,pkg2.Func2` - at least one must be called
@@ -25,8 +25,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Directives
 
-- `//ctxrelay:ignore` - Suppress warnings for the next line or same line
-- `//ctxrelay:goroutine_creator` - Mark a function as spawning goroutines with its func arguments
+- `//goroutinectx:ignore` - Suppress warnings for the next line or same line
+- `//goroutinectx:goroutine_creator` - Mark a function as spawning goroutines with its func arguments
 
 ## Architecture
 
@@ -42,8 +42,8 @@ ctxrelay/
 │       ├── checkers/          # Individual checker implementations
 │       │   ├── checker.go     # CheckContext, ContextScope, CallChecker, GoStmtChecker
 │       │   ├── typeutil.go    # Type checking utilities
-│       │   ├── ignore.go      # IgnoreMap for //ctxrelay:ignore
-│       │   ├── directive.go   # GoroutineCreatorMap for //ctxrelay:goroutine_creator
+│       │   ├── ignore.go      # IgnoreMap for //goroutinectx:ignore
+│       │   ├── directive.go   # GoroutineCreatorMap for //goroutinectx:goroutine_creator
 │       │   ├── deriver.go     # DeriveMatcher for OR/AND deriver function matching
 │       │   ├── slogchecker/           # slog checker
 │       │   ├── errgroupchecker/       # errgroup checker
@@ -127,18 +127,18 @@ Four checkers handle goroutine context propagation:
 | goroutine | `go func(){}()` | `*ast.GoStmt` | Yes (`go fn()()`) |
 | errgroup | `g.Go(func(){})` | `*ast.CallExpr` | Yes (`g.Go(fn)`, `g.Go(make())`) |
 | waitgroup | `wg.Go(func(){})` | `*ast.CallExpr` | Yes (`wg.Go(fn)`, `wg.Go(make())`) |
-| goroutine-creator | `//ctxrelay:goroutine_creator` marked funcs | `*ast.CallExpr` | Yes (func args checked) |
+| goroutine-creator | `//goroutinectx:goroutine_creator` marked funcs | `*ast.CallExpr` | Yes (func args checked) |
 
 **Supported patterns:**
 - Literal: `g.Go(func() { ... })`
 - Variable: `g.Go(fn)` where `fn := func() { ... }`
 - Call result: `g.Go(makeWorker())` where `makeWorker` returns a func
 - Call with ctx: `g.Go(makeWorker(ctx))` - ctx passed to factory
-- Directive: Functions marked with `//ctxrelay:goroutine_creator` check their func arguments
+- Directive: Functions marked with `//goroutinectx:goroutine_creator` check their func arguments
 
 **goroutine_creator Directive:**
 ```go
-//ctxrelay:goroutine_creator
+//goroutinectx:goroutine_creator
 func runWithGroup(g *errgroup.Group, fn func() error) {
     g.Go(fn)  // fn is spawned as goroutine
 }
@@ -374,7 +374,7 @@ Classification is based on **human intuition** - "would a developer write this d
    - Simple good/bad cases (direct context use vs. no use)
    - 1-level goroutine (`go func() { ... }()`)
    - Variable shadowing
-   - Ignore directives (`//ctxrelay:ignore`)
+   - Ignore directives (`//goroutinectx:ignore`)
    - Multiple context parameters
    - Direct function calls (`go doSomething(ctx)`)
 
@@ -526,7 +526,7 @@ Test cases use 2-letter prefixes to identify checker groups:
 - `GW` - waitgroup checker (`wg.Go(func(){})`)
 
 **Creator Group** (goroutine_creator directive):
-- `GC` - goroutinecreator (`//ctxrelay:goroutine_creator` marked functions)
+- `GC` - goroutinecreator (`//goroutinectx:goroutine_creator` marked functions)
 
 **Derive Group** (deriver function call check):
 - `DD` - goroutinederive (single deriver)
@@ -550,8 +550,8 @@ Derive group patterns intentionally diverge (DD/DA/DM test different semantics).
 | 03 | No ctx param | GO03 | GE03 | GW03 | Not checked |
 | 04 | Shadow with non-ctx type | GO04 | GE04 | GW04 | Shadows ctx with different type |
 | 05 | Uses ctx before shadow | GO05 | GE05 | GW05 | Valid usage before shadowing |
-| 06 | Ignore directive (same line) | GO06 | GE06 | GW06 | `//ctxrelay:ignore` |
-| 07 | Ignore directive (prev line) | GO07 | GE07 | GW07 | `//ctxrelay:ignore` |
+| 06 | Ignore directive (same line) | GO06 | GE06 | GW06 | `//goroutinectx:ignore` |
+| 07 | Ignore directive (prev line) | GO07 | GE07 | GW07 | `//goroutinectx:ignore` |
 | 08 | Multiple ctx params (bad) | GO08 | GE08 | GW08 | Reports first ctx when none used |
 | 09 | Multiple ctx params (good) | GO09 | GE09 | GW09 | Uses one of multiple ctx params |
 | 10 | Inner func has own ctx param | GO10 | GE10 | GW10 | Closure has own ctx param |
@@ -588,7 +588,7 @@ Derive group patterns intentionally diverge (DD/DA/DM test different semantics).
 
 ### Creator Group Patterns (GC)
 
-GC patterns test the `//ctxrelay:goroutine_creator` directive:
+GC patterns test the `//goroutinectx:goroutine_creator` directive:
 
 | # | Pattern | GC | Description |
 |---|---------|----|----|
@@ -630,7 +630,7 @@ GT patterns test gotask library checker (requires `-goroutine-deriver`):
 | 50-51 | DoAsync with deriver | GT50-51 | Good Task/CancelableTask |
 | 60-63 | Other Do* without deriver | GT60-63 | DoAll, DoAllFns, DoRace, DoRaceFns |
 | 70-73 | Other Do* with deriver | GT70-73 | Good other Do* |
-| 80-81 | Ignore directive | GT80-81 | `//ctxrelay:ignore` |
+| 80-81 | Ignore directive | GT80-81 | `//goroutinectx:ignore` |
 | 90 | No ctx param | GT90 | Not checked |
 
 Evil patterns (EV01-EV110):
