@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "structure.schema.json",
+  "title": "Test Structure",
+  "description": "Schema for ctxrelay test metadata structure",
+  "type": "object",
+  "required": ["targets", "tests"],
+  "additionalProperties": false,
+  "properties": {
+    "targets": {
+      "type": "array",
+      "description": "List of available checker targets",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "tests": {
+      "type": "object",
+      "description": "Map of test name to test definition",
+      "additionalProperties": {
+        "$ref": "#/$defs/test"
+      },
+      "minProperties": 1
+    }
+  },
+  "$defs": {
+    "test": {
+      "type": "object",
+      "required": ["title", "targets", "level", "variants"],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Human-readable test title (heading-like)",
+          "minLength": 1
+        },
+        "targets": {
+          "type": "array",
+          "description": "List of checker targets this test applies to",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "level": {
+          "type": "string",
+          "description": "Complexity level of the test",
+          "enum": ["basic", "advanced", "evil", "carrier", "creator", "goroutinederive"]
+        },
+        "variants": {
+          "type": "object",
+          "description": "Map of variant name to variant definition (null means variant not applicable)",
+          "additionalProperties": {
+            "oneOf": [
+              { "$ref": "#/$defs/variant" },
+              { "type": "null" }
+            ]
+          },
+          "minProperties": 1
+        }
+      }
+    },
+    "variant": {
+      "type": "object",
+      "required": ["description", "functions"],
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Explanatory description of this variant",
+          "minLength": 1
+        },
+        "functions": {
+          "type": "object",
+          "description": "Map of target to function name",
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minProperties": 1
+        }
+      }
+    }
+  }
+}
