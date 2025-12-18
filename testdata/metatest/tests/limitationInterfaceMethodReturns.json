@@ -1,0 +1,15 @@
+{
+  "title": "Interface method returns",
+  "targets": [
+    "gotask"
+  ],
+  "variants": {
+    "limitation": {
+      "description": "Context captured but lost through interface type assertion.",
+      "functions": {
+        "gotask": "limitationInterfaceTaskMaker"
+      }
+    }
+  },
+  "level": "evil"
+}

@@ -1,0 +1,16 @@
+{
+  "title": "Type assertion without ctx",
+  "targets": [
+    "goroutine"
+  ],
+  "variants": {
+    "bad": {
+      "description": "Function retrieved via type assertion without context.",
+      "functions": {
+        "goroutine": "badGoroutineWithTypeAssertion"
+      }
+    },
+    "good": null
+  },
+  "level": "evil"
+}

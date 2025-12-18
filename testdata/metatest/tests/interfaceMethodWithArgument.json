@@ -1,0 +1,24 @@
+{
+  "title": "Interface method with argument",
+  "targets": [
+    "errgroup",
+    "waitgroup"
+  ],
+  "level": "evil",
+  "variants": {
+    "good": {
+      "description": "Context is passed as argument to interface method.",
+      "functions": {
+        "errgroup": "goodInterfaceMethodWithCtxArg",
+        "waitgroup": "goodInterfaceMethodWithCtxArg"
+      }
+    },
+    "bad": {
+      "description": "Interface method call without context argument.",
+      "functions": {
+        "errgroup": "badInterfaceMethodWithoutCtxArg",
+        "waitgroup": "badInterfaceMethodWithoutCtxArg"
+      }
+    }
+  }
+}

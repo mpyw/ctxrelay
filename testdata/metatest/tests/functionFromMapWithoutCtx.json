@@ -1,0 +1,18 @@
+{
+  "title": "Function from map without ctx",
+  "targets": [
+    "errgroup",
+    "waitgroup"
+  ],
+  "variants": {
+    "bad": {
+      "description": "Function from map without ctx - NOW TRACKED",
+      "functions": {
+        "errgroup": "badMapValueWithoutCtx",
+        "waitgroup": "badMapValueWithoutCtx"
+      }
+    },
+    "good": null
+  },
+  "level": "evil"
+}

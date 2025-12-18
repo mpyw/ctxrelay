@@ -340,8 +340,8 @@ func badFuncThroughInterfaceWithoutCtx(ctx context.Context) {
 // Using the middle of multiple context parameters is valid.
 //
 // See also:
-//   goroutine: goodUsesMiddleOfThreeContexts
 //   errgroup: goodUsesMiddleOfThreeContexts
+//   goroutine: goodUsesMiddleOfThreeContexts
 func goodUsesMiddleOfThreeContexts(ctx1, ctx2, ctx3 context.Context) {
 	var wg sync.WaitGroup
 	wg.Go(func() {
@@ -355,8 +355,8 @@ func goodUsesMiddleOfThreeContexts(ctx1, ctx2, ctx3 context.Context) {
 // Using the last of multiple context parameters is valid.
 //
 // See also:
-//   goroutine: goodUsesLastOfThreeContexts
 //   errgroup: goodUsesLastOfThreeContexts
+//   goroutine: goodUsesLastOfThreeContexts
 func goodUsesLastOfThreeContexts(ctx1, ctx2, ctx3 context.Context) {
 	var wg sync.WaitGroup
 	wg.Go(func() {
@@ -370,8 +370,8 @@ func goodUsesLastOfThreeContexts(ctx1, ctx2, ctx3 context.Context) {
 // Context in separate parameter group is detected and used.
 //
 // See also:
-//   goroutine: goodMultipleCtxSeparateGroups
 //   errgroup: goodMultipleCtxSeparateGroups
+//   goroutine: goodMultipleCtxSeparateGroups
 func goodMultipleCtxSeparateGroups(a int, ctx1 context.Context, b string, ctx2 context.Context) {
 	var wg sync.WaitGroup
 	wg.Go(func() {
@@ -385,8 +385,8 @@ func goodMultipleCtxSeparateGroups(a int, ctx1 context.Context, b string, ctx2 c
 // Context in separate parameter group is not used.
 //
 // See also:
-//   goroutine: badMultipleCtxSeparateGroups
 //   errgroup: badMultipleCtxSeparateGroups
+//   goroutine: badMultipleCtxSeparateGroups
 func badMultipleCtxSeparateGroups(a int, ctx1 context.Context, b string, ctx2 context.Context) {
 	var wg sync.WaitGroup
 	wg.Go(func() { // want `sync.WaitGroup.Go\(\) closure should use context "ctx1"`
@@ -400,8 +400,8 @@ func badMultipleCtxSeparateGroups(a int, ctx1 context.Context, b string, ctx2 co
 // When multiple contexts exist, using any one satisfies the check.
 //
 // See also:
-//   goroutine: goodUsesBothContexts
 //   errgroup: goodUsesBothContexts
+//   goroutine: goodUsesBothContexts
 func goodUsesBothContexts(ctx1, ctx2 context.Context) {
 	var wg sync.WaitGroup
 	wg.Go(func() {
@@ -416,8 +416,8 @@ func goodUsesBothContexts(ctx1, ctx2 context.Context) {
 // Factory function receives first context parameter.
 //
 // See also:
-//   goroutine: goodHigherOrderMultipleCtx
 //   errgroup: goodHigherOrderMultipleCtx
+//   goroutine: goodHigherOrderMultipleCtx
 func goodHigherOrderMultipleCtx(ctx1, ctx2 context.Context) {
 	var wg sync.WaitGroup
 	wg.Go(makeWorkerWithCtx(ctx1)) // factory uses ctx1
@@ -429,8 +429,8 @@ func goodHigherOrderMultipleCtx(ctx1, ctx2 context.Context) {
 // Factory function receives second context parameter.
 //
 // See also:
-//   goroutine: goodHigherOrderMultipleCtxSecond
 //   errgroup: goodHigherOrderMultipleCtxSecond
+//   goroutine: goodHigherOrderMultipleCtxSecond
 func goodHigherOrderMultipleCtxSecond(ctx1, ctx2 context.Context) {
 	var wg sync.WaitGroup
 	wg.Go(makeWorkerWithCtx(ctx2)) // factory uses ctx2
@@ -514,8 +514,8 @@ func evilShadowingTwoLevelsBad(ctx1 context.Context) {
 // Middle layer introduces context that inner goroutine uses.
 //
 // See also:
-//   goroutine: goodMiddleLayerIntroducesCtxUsed
 //   errgroup: evilMiddleLayerIntroducesCtx
+//   goroutine: goodMiddleLayerIntroducesCtxUsed
 func evilMiddleLayerIntroducesCtx() {
 	func(ctx context.Context) {
 		var wg sync.WaitGroup

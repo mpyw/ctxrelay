@@ -1,0 +1,18 @@
+{
+  "title": "Function with ctx passed through spawner",
+  "targets": [
+    "errgroup",
+    "waitgroup"
+  ],
+  "variants": {
+    "good": {
+      "description": "Function with ctx passed through spawner - should pass",
+      "functions": {
+        "errgroup": "goodFuncPassedThroughSpawner",
+        "waitgroup": "goodFuncPassedThroughSpawner"
+      }
+    },
+    "bad": null
+  },
+  "level": "evil"
+}

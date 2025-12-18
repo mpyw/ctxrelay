@@ -1,0 +1,16 @@
+{
+  "title": "AND - Conditional with one branch incomplete.",
+  "targets": [
+    "goroutinederiveand"
+  ],
+  "variants": {
+    "bad": {
+      "description": "AND - conditional with one branch incomplete.",
+      "functions": {
+        "goroutinederiveand": "badAndConditionalOneBranchIncomplete"
+      }
+    },
+    "good": null
+  },
+  "level": "advanced"
+}

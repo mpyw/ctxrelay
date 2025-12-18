@@ -1,0 +1,16 @@
+{
+  "title": "Call to non-spawner function",
+  "targets": [
+    "spawner"
+  ],
+  "variants": {
+    "good": {
+      "description": "Call to non-spawner function - not checked",
+      "functions": {
+        "spawner": "goodNonSpawnerFunction"
+      }
+    },
+    "bad": null
+  },
+  "level": "spawner"
+}

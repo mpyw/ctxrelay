@@ -1,0 +1,16 @@
+{
+  "title": "Mixed - only calls second of AND group (incomplete).",
+  "targets": [
+    "goroutinederivemixed"
+  ],
+  "variants": {
+    "bad": {
+      "description": "Only one of the required deriver functions is called.",
+      "functions": {
+        "goroutinederivemixed": "badMixedOnlySecondOfAnd"
+      }
+    },
+    "good": null
+  },
+  "level": "basic"
+}

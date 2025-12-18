@@ -1,0 +1,15 @@
+{
+  "title": "Mixed - has own context param.",
+  "targets": [
+    "goroutinederivemixed"
+  ],
+  "variants": {
+    "notChecked": {
+      "description": "Function with own context parameter is not checked.",
+      "functions": {
+        "goroutinederivemixed": "notCheckedMixedOwnContextParam"
+      }
+    }
+  },
+  "level": "basic"
+}

@@ -1,0 +1,16 @@
+{
+  "title": "Traditional WaitGroup pattern (Add/Done) - not spawn method",
+  "targets": [
+    "spawnerlabel"
+  ],
+  "level": "waitgroup_go125",
+  "variants": {
+    "good": {
+      "description": "Traditional Add/Done pattern is not spawn",
+      "functions": {
+        "spawnerlabel": "goodTraditionalWaitgroup"
+      }
+    },
+    "bad": null
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "title": "No ctx param (local var)",
+  "targets": [
+    "goroutine"
+  ],
+  "variants": {
+    "notChecked": {
+      "description": "No ctx param (local var) - not checked",
+      "functions": {
+        "goroutine": "notCheckedLocalContextVariable"
+      }
+    }
+  },
+  "level": "basic"
+}

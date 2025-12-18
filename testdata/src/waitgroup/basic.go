@@ -19,8 +19,8 @@ import (
 // Literal without ctx - basic bad case
 //
 // See also:
-//   goroutine: badGoroutineNoCapture
 //   errgroup: badErrgroupGo
+//   goroutine: badGoroutineNoCapture
 func badWaitGroupGo(ctx context.Context) {
 	var wg sync.WaitGroup
 	wg.Go(func() { // want `sync.WaitGroup.Go\(\) closure should use context "ctx"`
@@ -62,8 +62,8 @@ func badWaitGroupGoMultiple(ctx context.Context) {
 // Closure directly references the context variable from enclosing scope.
 //
 // See also:
-//   goroutine: goodGoroutineCapturesCtx
 //   errgroup: goodErrgroupGoWithCtx
+//   goroutine: goodGoroutineCapturesCtx
 func goodWaitGroupGoWithCtx(ctx context.Context) {
 	var wg sync.WaitGroup
 	wg.Go(func() {
@@ -77,8 +77,8 @@ func goodWaitGroupGoWithCtx(ctx context.Context) {
 // Context is passed to helper function inside closure.
 //
 // See also:
-//   goroutine: goodGoroutineUsesCtxInCall
 //   errgroup: goodErrgroupGoCallsWithCtx
+//   goroutine: goodGoroutineUsesCtxInCall
 func goodWaitGroupGoCallsWithCtx(ctx context.Context) {
 	var wg sync.WaitGroup
 	wg.Go(func() {
@@ -92,8 +92,8 @@ func goodWaitGroupGoCallsWithCtx(ctx context.Context) {
 // No ctx param - not checked
 //
 // See also:
-//   goroutine: goodNoContextParam
 //   errgroup: goodNoContextParam
+//   goroutine: goodNoContextParam
 func goodNoContextParam() {
 	var wg sync.WaitGroup
 	wg.Go(func() {
@@ -122,8 +122,8 @@ func goodTraditionalPattern(ctx context.Context) {
 // Shadow with non-ctx type (string)
 //
 // See also:
-//   goroutine: badShadowingNonContext
 //   errgroup: badShadowingNonContext
+//   goroutine: badShadowingNonContext
 func badShadowingNonContext(ctx context.Context) {
 	var wg sync.WaitGroup
 	wg.Go(func() { // want `sync.WaitGroup.Go\(\) closure should use context "ctx"`
@@ -138,8 +138,8 @@ func badShadowingNonContext(ctx context.Context) {
 // Uses ctx before shadow - valid usage
 //
 // See also:
-//   goroutine: goodUsesCtxBeforeShadowing
 //   errgroup: goodUsesCtxBeforeShadowing
+//   goroutine: goodUsesCtxBeforeShadowing
 func goodUsesCtxBeforeShadowing(ctx context.Context) {
 	var wg sync.WaitGroup
 	wg.Go(func() {
@@ -157,8 +157,8 @@ func goodUsesCtxBeforeShadowing(ctx context.Context) {
 // The //goroutinectx:ignore directive suppresses the warning.
 //
 // See also:
-//   goroutine: goodIgnoredSameLine
 //   errgroup: goodIgnoredSameLine
+//   goroutine: goodIgnoredSameLine
 func goodIgnoredSameLine(ctx context.Context) {
 	var wg sync.WaitGroup
 	wg.Go(func() { //goroutinectx:ignore
@@ -171,8 +171,8 @@ func goodIgnoredSameLine(ctx context.Context) {
 // The //goroutinectx:ignore directive suppresses the warning.
 //
 // See also:
-//   goroutine: goodIgnoredPreviousLine
 //   errgroup: goodIgnoredPreviousLine
+//   goroutine: goodIgnoredPreviousLine
 func goodIgnoredPreviousLine(ctx context.Context) {
 	var wg sync.WaitGroup
 	//goroutinectx:ignore
@@ -188,8 +188,8 @@ func goodIgnoredPreviousLine(ctx context.Context) {
 // Multiple context parameters available but none are used.
 //
 // See also:
-//   goroutine: twoContextParams
 //   errgroup: twoContextParams
+//   goroutine: twoContextParams
 func twoContextParams(ctx1, ctx2 context.Context) {
 	var wg sync.WaitGroup
 	wg.Go(func() { // want `sync.WaitGroup.Go\(\) closure should use context "ctx1"`
@@ -202,8 +202,8 @@ func twoContextParams(ctx1, ctx2 context.Context) {
 // One of the available context parameters is properly used.
 //
 // See also:
-//   goroutine: goodUsesOneOfTwoContexts
 //   errgroup: goodUsesOneOfTwoContexts
+//   goroutine: goodUsesOneOfTwoContexts
 func goodUsesOneOfTwoContexts(ctx1, ctx2 context.Context) {
 	var wg sync.WaitGroup
 	wg.Go(func() {
@@ -217,8 +217,8 @@ func goodUsesOneOfTwoContexts(ctx1, ctx2 context.Context) {
 // One of the available context parameters is properly used.
 //
 // See also:
-//   goroutine: goodUsesSecondOfTwoContexts
 //   errgroup: goodUsesSecondOfTwoContexts
+//   goroutine: goodUsesSecondOfTwoContexts
 func goodUsesSecondOfTwoContexts(ctx1, ctx2 context.Context) {
 	var wg sync.WaitGroup
 	wg.Go(func() {
@@ -232,8 +232,8 @@ func goodUsesSecondOfTwoContexts(ctx1, ctx2 context.Context) {
 // Context is detected and used even when not the first parameter.
 //
 // See also:
-//   goroutine: goodCtxAsSecondParam
 //   errgroup: goodCtxAsSecondParam
+//   goroutine: goodCtxAsSecondParam
 func goodCtxAsSecondParam(logger interface{}, ctx context.Context) {
 	var wg sync.WaitGroup
 	wg.Go(func() {
@@ -247,8 +247,8 @@ func goodCtxAsSecondParam(logger interface{}, ctx context.Context) {
 // Context parameter exists but is not used in the closure.
 //
 // See also:
-//   goroutine: badCtxAsSecondParam
 //   errgroup: badCtxAsSecondParam
+//   goroutine: badCtxAsSecondParam
 func badCtxAsSecondParam(logger interface{}, ctx context.Context) {
 	var wg sync.WaitGroup
 	wg.Go(func() { // want `sync.WaitGroup.Go\(\) closure should use context "ctx"`

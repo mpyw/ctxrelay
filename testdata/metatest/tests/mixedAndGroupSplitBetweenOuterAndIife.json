@@ -1,0 +1,16 @@
+{
+  "title": "Mixed - AND group split between outer and IIFE.",
+  "targets": [
+    "goroutinederivemixed"
+  ],
+  "variants": {
+    "good": {
+      "description": "IIFE pattern with AND group deriver requirements.",
+      "functions": {
+        "goroutinederivemixed": "goodMixedSplitDeriversAcrossLevels"
+      }
+    },
+    "bad": null
+  },
+  "level": "evil"
+}

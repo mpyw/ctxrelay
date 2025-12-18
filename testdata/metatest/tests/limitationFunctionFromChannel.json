@@ -1,0 +1,17 @@
+{
+  "title": "Function from channel - ctx captured but not traced",
+  "targets": [
+    "errgroup",
+    "waitgroup"
+  ],
+  "variants": {
+    "limitation": {
+      "description": "Function received from channel cannot be traced statically.",
+      "functions": {
+        "errgroup": "limitationFuncFromChannel",
+        "waitgroup": "limitationFuncFromChannel"
+      }
+    }
+  },
+  "level": "evil"
+}

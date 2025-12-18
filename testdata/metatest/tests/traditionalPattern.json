@@ -1,0 +1,16 @@
+{
+  "title": "Traditional pattern (Add/Done)",
+  "targets": [
+    "waitgroup"
+  ],
+  "variants": {
+    "good": {
+      "description": "Traditional pattern (Add/Done) - not checked by waitgroup checker",
+      "functions": {
+        "waitgroup": "goodTraditionalPattern"
+      }
+    },
+    "bad": null
+  },
+  "level": "basic"
+}

@@ -1,0 +1,15 @@
+{
+  "title": "Basic - named function call (not checked).",
+  "targets": [
+    "goroutinederive"
+  ],
+  "variants": {
+    "notChecked": {
+      "description": "Named function call pattern is not checked for deriver.",
+      "functions": {
+        "goroutinederive": "notCheckedNamedFuncCall"
+      }
+    }
+  },
+  "level": "goroutinederive"
+}

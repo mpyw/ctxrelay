@@ -1,0 +1,16 @@
+{
+  "title": "Shadow with non-ctx type - function",
+  "targets": [
+    "goroutine"
+  ],
+  "variants": {
+    "bad": {
+      "description": "Shadow with non-ctx type (function)",
+      "functions": {
+        "goroutine": "badShadowingWithFunction"
+      }
+    },
+    "good": null
+  },
+  "level": "basic"
+}

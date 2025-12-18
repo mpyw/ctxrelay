@@ -1,0 +1,16 @@
+{
+  "title": "Mixed - defer with only first of AND group.",
+  "targets": [
+    "goroutinederivemixed"
+  ],
+  "variants": {
+    "bad": {
+      "description": "Closure with defer statement does not use context.",
+      "functions": {
+        "goroutinederivemixed": "badMixedDeferOnlyFirstOfAndGroup"
+      }
+    },
+    "good": null
+  },
+  "level": "advanced"
+}

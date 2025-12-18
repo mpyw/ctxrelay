@@ -1,0 +1,16 @@
+{
+  "title": "Literal without ctx - variant",
+  "targets": [
+    "goroutine"
+  ],
+  "variants": {
+    "bad": {
+      "description": "Closure variation that does not capture context.",
+      "functions": {
+        "goroutine": "badGoroutineIgnoresCtx"
+      }
+    },
+    "good": null
+  },
+  "level": "basic"
+}

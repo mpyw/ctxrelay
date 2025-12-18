@@ -1,0 +1,20 @@
+{
+  "title": "Middle layer introduces ctx - goroutine uses it",
+  "targets": [
+    "goroutine",
+    "errgroup",
+    "waitgroup"
+  ],
+  "variants": {
+    "good": {
+      "description": "Middle layer introduces context that inner goroutine uses.",
+      "functions": {
+        "goroutine": "goodMiddleLayerIntroducesCtxUsed",
+        "errgroup": "evilMiddleLayerIntroducesCtx",
+        "waitgroup": "evilMiddleLayerIntroducesCtx"
+      }
+    },
+    "bad": null
+  },
+  "level": "evil"
+}

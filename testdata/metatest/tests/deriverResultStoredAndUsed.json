@@ -1,0 +1,16 @@
+{
+  "title": "Deriver result stored and used",
+  "targets": [
+    "gotask"
+  ],
+  "variants": {
+    "good": {
+      "description": "Deriver result stored in variable and used.",
+      "functions": {
+        "gotask": "goodDerivedStoredAndUsed"
+      }
+    },
+    "bad": null
+  },
+  "level": "evil"
+}

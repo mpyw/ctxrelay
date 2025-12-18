@@ -1,0 +1,16 @@
+{
+  "title": "AND - Split derivers across levels (outer has first, IIFE has second).",
+  "targets": [
+    "goroutinederiveand"
+  ],
+  "variants": {
+    "good": {
+      "description": "AND - split derivers across levels (outer has first, IIFE has second).",
+      "functions": {
+        "goroutinederiveand": "goodAndSplitDeriversAcrossLevels"
+      }
+    },
+    "bad": null
+  },
+  "level": "evil"
+}

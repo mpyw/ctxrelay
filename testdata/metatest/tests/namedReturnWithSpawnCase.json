@@ -1,0 +1,16 @@
+{
+  "title": "Named return with spawn",
+  "targets": [
+    "spawnerlabel"
+  ],
+  "level": "evil",
+  "variants": {
+    "good": null,
+    "bad": {
+      "description": "Named return function with spawn call",
+      "functions": {
+        "spawnerlabel": "namedReturnWithSpawn"
+      }
+    }
+  }
+}

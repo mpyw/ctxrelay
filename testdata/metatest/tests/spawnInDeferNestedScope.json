@@ -1,0 +1,16 @@
+{
+  "title": "Spawn in defer - nested closure has its own scope",
+  "targets": [
+    "spawnerlabel"
+  ],
+  "level": "evil",
+  "variants": {
+    "good": {
+      "description": "Spawn inside deferred closure - nested scope",
+      "functions": {
+        "spawnerlabel": "goodDeferSpawnNestedScope"
+      }
+    },
+    "bad": null
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "title": "Method calls another spawner method",
+  "targets": [
+    "spawnerlabel"
+  ],
+  "level": "evil",
+  "variants": {
+    "good": null,
+    "bad": {
+      "description": "Method calls another spawner method without label",
+      "functions": {
+        "spawnerlabel": "Wrapper"
+      }
+    }
+  }
+}

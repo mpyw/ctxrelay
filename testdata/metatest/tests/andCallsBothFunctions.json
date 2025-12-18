@@ -1,0 +1,16 @@
+{
+  "title": "AND - Calls both functions.",
+  "targets": [
+    "goroutinederiveand"
+  ],
+  "variants": {
+    "good": {
+      "description": "AND - calls both functions.",
+      "functions": {
+        "goroutinederiveand": "goodAndCallsBoth"
+      }
+    },
+    "bad": null
+  },
+  "level": "basic"
+}

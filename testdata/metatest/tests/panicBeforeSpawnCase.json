@@ -1,0 +1,16 @@
+{
+  "title": "Unreachable spawn after panic - still detected",
+  "targets": [
+    "spawnerlabel"
+  ],
+  "level": "evil",
+  "variants": {
+    "good": null,
+    "bad": {
+      "description": "Spawn call after panic - unreachable but detected",
+      "functions": {
+        "spawnerlabel": "panicBeforeSpawn"
+      }
+    }
+  }
+}

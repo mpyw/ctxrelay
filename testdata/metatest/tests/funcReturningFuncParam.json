@@ -1,0 +1,16 @@
+{
+  "title": "Function param is func returning func - justified label",
+  "targets": [
+    "spawnerlabel"
+  ],
+  "level": "evil",
+  "variants": {
+    "good": {
+      "description": "Function with func returning func param",
+      "functions": {
+        "spawnerlabel": "funcReturningFunc"
+      }
+    },
+    "bad": null
+  }
+}

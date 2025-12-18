@@ -1,0 +1,16 @@
+{
+  "title": "Multiple spawn types including WaitGroup.Go",
+  "targets": [
+    "spawnerlabel"
+  ],
+  "level": "waitgroup_go125",
+  "variants": {
+    "good": null,
+    "bad": {
+      "description": "Multiple spawn types including WaitGroup.Go",
+      "functions": {
+        "spawnerlabel": "multipleSpawnTypesWithWaitgroup"
+      }
+    }
+  }
+}

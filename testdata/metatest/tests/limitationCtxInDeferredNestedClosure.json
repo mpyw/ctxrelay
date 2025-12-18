@@ -1,0 +1,20 @@
+{
+  "title": "Ctx in deferred nested closure not detected",
+  "targets": [
+    "goroutine",
+    "errgroup",
+    "waitgroup"
+  ],
+  "variants": {
+    "limitation": {
+      "description": "Context used only in deferred nested closure is not detected.",
+      "functions": {
+        "goroutine": "limitationDeferNestedClosure",
+        "errgroup": "limitationDeferNestedClosure",
+        "waitgroup": "limitationDeferNestedClosure"
+      }
+    },
+    "good": null
+  },
+  "level": "advanced"
+}

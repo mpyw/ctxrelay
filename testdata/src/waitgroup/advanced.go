@@ -83,8 +83,8 @@ func goodNestedWithCtx(ctx context.Context) {
 // Inner function declares its own context parameter and uses it.
 //
 // See also:
-//   goroutine: goodShadowingInnerCtxParam
 //   errgroup: goodNestedInnerHasOwnCtx
+//   goroutine: goodShadowingInnerCtxParam
 func goodNestedInnerHasOwnCtx(outerCtx context.Context) {
 	innerFunc := func(ctx context.Context) {
 		var wg sync.WaitGroup
@@ -103,8 +103,8 @@ func goodNestedInnerHasOwnCtx(outerCtx context.Context) {
 // Conditional branches spawn goroutines without using context.
 //
 // See also:
-//   goroutine: badConditionalGoroutine
 //   errgroup: badConditionalGo
+//   goroutine: badConditionalGoroutine
 func badConditionalGo(ctx context.Context, flag bool) {
 	var wg sync.WaitGroup
 	if flag {
@@ -141,8 +141,8 @@ func goodConditionalGo(ctx context.Context, flag bool) {
 // Goroutines spawned in loop iterations do not use context.
 //
 // See also:
-//   goroutine: badGoroutinesInLoop
 //   errgroup: badLoopGo
+//   goroutine: badGoroutinesInLoop
 func badLoopGo(ctx context.Context) {
 	var wg sync.WaitGroup
 	for i := 0; i < 3; i++ {
@@ -170,8 +170,8 @@ func goodLoopGo(ctx context.Context) {
 // Goroutines spawned in loop iterations do not use context.
 //
 // See also:
-//   goroutine: badGoroutinesInRangeLoop
 //   errgroup: badRangeLoopGo
+//   goroutine: badGoroutinesInRangeLoop
 func badRangeLoopGo(ctx context.Context) {
 	var wg sync.WaitGroup
 	items := []int{1, 2, 3}
@@ -216,8 +216,8 @@ func goodDeferWithCtxDirect(ctx context.Context) {
 // Context used only in deferred nested closure is not detected.
 //
 // See also:
-//   goroutine: limitationDeferNestedClosure
 //   errgroup: limitationDeferNestedClosure
+//   goroutine: limitationDeferNestedClosure
 func limitationDeferNestedClosure(ctx context.Context) {
 	var wg sync.WaitGroup
 	wg.Go(func() { // want `sync.WaitGroup.Go\(\) closure should use context "ctx"`

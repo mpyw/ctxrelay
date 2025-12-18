@@ -1,0 +1,16 @@
+{
+  "title": "Nested goroutine - outer uses ctx, inner doesn't",
+  "targets": [
+    "goroutine"
+  ],
+  "variants": {
+    "bad": {
+      "description": "Outer goroutine uses context but inner does not.",
+      "functions": {
+        "goroutine": "badNestedInner"
+      }
+    },
+    "good": null
+  },
+  "level": "evil"
+}

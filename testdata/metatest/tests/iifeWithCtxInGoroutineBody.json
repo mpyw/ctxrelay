@@ -1,0 +1,16 @@
+{
+  "title": "IIFE with ctx in goroutine body",
+  "targets": [
+    "goroutine"
+  ],
+  "variants": {
+    "good": {
+      "description": "IIFE in goroutine body properly uses context.",
+      "functions": {
+        "goroutine": "goodIIFEWithCtxInGoroutineBody"
+      }
+    },
+    "bad": null
+  },
+  "level": "evil"
+}

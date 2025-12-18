@@ -127,6 +127,7 @@ func evilGotaskDoAllFns(ctx context.Context) { // want `function "evilGotaskDoAl
 
 // ===== LIMITATIONS =====
 
+//vt:helper
 // LIMITATION: Spawn in nested function literal - only direct children checked
 func limitationNestedFuncLitSpawn() {
 	outer := func() {
@@ -144,6 +145,7 @@ type Runner interface {
 	Run(fn func())
 }
 
+//vt:helper
 func limitationInterfaceCall(r Runner) {
 	r.Run(func() {
 		fmt.Println("work")
@@ -151,11 +153,13 @@ func limitationInterfaceCall(r Runner) {
 }
 
 // LIMITATION: Higher-order return - can't trace through function return
+//vt:helper
 func limitationHigherOrderReturn() {
 	fn := getSpawnerFunc()
 	fn()
 }
 
+//vt:helper
 func getSpawnerFunc() func() {
 	return func() {
 		g := new(errgroup.Group)
@@ -167,6 +171,7 @@ func getSpawnerFunc() func() {
 }
 
 // LIMITATION: Channel receive - can't trace func from channel
+//vt:helper
 func limitationChannelReceive(ch chan func()) {
 	fn := <-ch
 	_ = fn
@@ -265,15 +270,18 @@ type TaskHolder struct {
 	Task func() error
 }
 
+// [BAD]: Struct with func field - field does not count as func param
+//
 //goroutinectx:spawner
 func unnecessaryWithStructField() { // want `function "unnecessaryWithStructField" has unnecessary //goroutinectx:spawner directive`
 	h := TaskHolder{Task: func() error { return nil }}
 	_ = h.Task()
 }
 
-// [GOOD]: Method with func param - justified label
 type Executor struct{}
 
+// [GOOD]: Method with func param - justified label
+//
 //goroutinectx:spawner
 func (e *Executor) Execute(task func()) {
 	go task()
@@ -313,6 +321,7 @@ func onlyCreateGroup() {
 	_ = g.Wait()
 }
 
+//vt:helper
 // LIMITATION: Spawn in IIFE - nested FuncLit is skipped
 func limitationIIFEWithSpawn() {
 	g := new(errgroup.Group)

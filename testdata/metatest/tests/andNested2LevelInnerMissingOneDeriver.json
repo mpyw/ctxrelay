@@ -1,0 +1,16 @@
+{
+  "title": "AND - Nested 2-level, inner missing one deriver.",
+  "targets": [
+    "goroutinederiveand"
+  ],
+  "variants": {
+    "bad": {
+      "description": "AND - nested 2-level, inner missing one deriver.",
+      "functions": {
+        "goroutinederiveand": "badAndNested2LevelInnerMissingOneDeriver"
+      }
+    },
+    "good": null
+  },
+  "level": "evil"
+}

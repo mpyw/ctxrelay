@@ -1,0 +1,18 @@
+{
+  "title": "Shadowing - inner ctx shadows outer",
+  "targets": [
+    "errgroup",
+    "waitgroup"
+  ],
+  "variants": {
+    "bad": {
+      "description": "Inner function's context parameter shadows the outer one.",
+      "functions": {
+        "errgroup": "evilShadowingInnerHasCtx",
+        "waitgroup": "evilShadowingInnerHasCtx"
+      }
+    },
+    "good": null
+  },
+  "level": "evil"
+}

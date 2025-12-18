@@ -1,0 +1,16 @@
+{
+  "title": "Task - without deriver on ctx",
+  "targets": [
+    "gotask"
+  ],
+  "variants": {
+    "bad": {
+      "description": "Task.DoAsync without deriver on ctx",
+      "functions": {
+        "gotask": "badTaskDoAsyncNoDeriver"
+      }
+    },
+    "good": null
+  },
+  "level": "basic"
+}

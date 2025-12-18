@@ -1,0 +1,15 @@
+{
+  "title": "Variable slice expansion",
+  "targets": [
+    "gotask"
+  ],
+  "variants": {
+    "limitation": {
+      "description": "Function in slice element does not capture context.",
+      "functions": {
+        "gotask": "limitationVariadicExpansionVariable"
+      }
+    }
+  },
+  "level": "evil"
+}

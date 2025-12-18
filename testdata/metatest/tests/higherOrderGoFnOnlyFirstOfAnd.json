@@ -1,0 +1,16 @@
+{
+  "title": "Higher-order go fn()() - only first of AND",
+  "targets": [
+    "goroutinederivemixed"
+  ],
+  "variants": {
+    "bad": {
+      "description": "Higher-order go fn()() - returned func only has first of AND, not OR alternative.",
+      "functions": {
+        "goroutinederivemixed": "badHigherOrderReturnedFuncPartialDeriver"
+      }
+    },
+    "good": null
+  },
+  "level": "evil"
+}

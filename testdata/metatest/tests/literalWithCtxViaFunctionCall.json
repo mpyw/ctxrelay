@@ -1,0 +1,20 @@
+{
+  "title": "Literal with ctx - via function call",
+  "targets": [
+    "goroutine",
+    "errgroup",
+    "waitgroup"
+  ],
+  "variants": {
+    "good": {
+      "description": "Context is passed to helper function inside closure.",
+      "functions": {
+        "goroutine": "goodGoroutineUsesCtxInCall",
+        "errgroup": "goodErrgroupGoCallsWithCtx",
+        "waitgroup": "goodWaitGroupGoCallsWithCtx"
+      }
+    },
+    "bad": null
+  },
+  "level": "basic"
+}

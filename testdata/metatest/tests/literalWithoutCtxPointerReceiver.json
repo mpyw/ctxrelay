@@ -1,0 +1,16 @@
+{
+  "title": "Literal without ctx - pointer receiver",
+  "targets": [
+    "waitgroup"
+  ],
+  "variants": {
+    "bad": {
+      "description": "Pointer receiver variant",
+      "functions": {
+        "waitgroup": "badWaitGroupGoPtr"
+      }
+    },
+    "good": null
+  },
+  "level": "basic"
+}

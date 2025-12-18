@@ -1,0 +1,16 @@
+{
+  "title": "Ctx only in recovery closure (LIMITATION)",
+  "targets": [
+    "goroutine"
+  ],
+  "variants": {
+    "bad": {
+      "description": "Known analyzer limitation: this pattern cannot be detected statically.",
+      "functions": {
+        "goroutine": "badGoroutineUsesCtxOnlyInRecoveryClosure"
+      }
+    },
+    "good": null
+  },
+  "level": "advanced"
+}

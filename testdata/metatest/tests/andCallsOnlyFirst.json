@@ -1,0 +1,16 @@
+{
+  "title": "AND - Calls only first (method).",
+  "targets": [
+    "goroutinederiveand"
+  ],
+  "variants": {
+    "bad": {
+      "description": "AND - calls only first (method).",
+      "functions": {
+        "goroutinederiveand": "badAndCallsOnlyFirst"
+      }
+    },
+    "good": null
+  },
+  "level": "basic"
+}

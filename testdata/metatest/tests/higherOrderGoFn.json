@@ -1,0 +1,16 @@
+{
+  "title": "Higher-order go fn()()",
+  "targets": [
+    "goroutinederiveand"
+  ],
+  "variants": {
+    "bad": {
+      "description": "Higher-order go fn()() - returned func only has first deriver.",
+      "functions": {
+        "goroutinederiveand": "badHigherOrderReturnedFuncPartialDeriver"
+      }
+    },
+    "good": null
+  },
+  "level": "evil"
+}

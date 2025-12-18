@@ -1,0 +1,16 @@
+{
+  "title": "Mixed - multiple goroutines, one fails.",
+  "targets": [
+    "goroutinederivemixed"
+  ],
+  "variants": {
+    "bad": {
+      "description": "One of multiple goroutines fails to meet deriver requirements.",
+      "functions": {
+        "goroutinederivemixed": "badMixedMultipleGoroutinesOneFails"
+      }
+    },
+    "good": null
+  },
+  "level": "advanced"
+}

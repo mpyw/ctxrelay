@@ -51,9 +51,14 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: Validate structure.json schema
+      - name: Validate options.json schema
         working-directory: testdata/metatest
-        run: go run github.com/santhosh-tekuri/jsonschema/cmd/jv@29cbed9 structure.schema.json structure.json
+        run: go run github.com/santhosh-tekuri/jsonschema/cmd/jv@29cbed9 options.schema.json options.json
+
+      - name: Validate test schemas (parallel)
+        working-directory: testdata/metatest
+        run: |
+          ls tests/*.json | xargs -P 8 -I {} go run github.com/santhosh-tekuri/jsonschema/cmd/jv@29cbed9 test.schema.json {}
 
   metatest:
     name: Metatest

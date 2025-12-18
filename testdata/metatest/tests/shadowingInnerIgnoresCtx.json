@@ -1,0 +1,18 @@
+{
+  "title": "Shadowing - inner ignores ctx",
+  "targets": [
+    "errgroup",
+    "waitgroup"
+  ],
+  "variants": {
+    "bad": {
+      "description": "Inner function ignores the shadowed context.",
+      "functions": {
+        "errgroup": "evilShadowingInnerIgnoresCtx",
+        "waitgroup": "evilShadowingInnerIgnoresCtx"
+      }
+    },
+    "good": null
+  },
+  "level": "evil"
+}

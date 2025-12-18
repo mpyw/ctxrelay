@@ -1,0 +1,17 @@
+{
+  "title": "Function through interface{} - ctx captured but not traced",
+  "targets": [
+    "errgroup",
+    "waitgroup"
+  ],
+  "variants": {
+    "limitation": {
+      "description": "Context captured but lost through interface type assertion.",
+      "functions": {
+        "errgroup": "limitationFuncThroughInterfaceWithCtx",
+        "waitgroup": "limitationFuncThroughInterfaceWithCtx"
+      }
+    }
+  },
+  "level": "evil"
+}

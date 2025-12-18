@@ -1,0 +1,16 @@
+{
+  "title": "Basic - no deriver call.",
+  "targets": [
+    "goroutinederive"
+  ],
+  "variants": {
+    "bad": {
+      "description": "Goroutine does not call the required context deriver function.",
+      "functions": {
+        "goroutinederive": "badNoDeriverCall"
+      }
+    },
+    "good": null
+  },
+  "level": "goroutinederive"
+}

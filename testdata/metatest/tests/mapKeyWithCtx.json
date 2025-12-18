@@ -1,0 +1,18 @@
+{
+  "title": "Map key with ctx",
+  "targets": [
+    "errgroup",
+    "waitgroup"
+  ],
+  "variants": {
+    "good": {
+      "description": "Function in map value captures context.",
+      "functions": {
+        "errgroup": "goodMapKeyWithCtx",
+        "waitgroup": "goodMapKeyWithCtx"
+      }
+    },
+    "bad": null
+  },
+  "level": "evil"
+}

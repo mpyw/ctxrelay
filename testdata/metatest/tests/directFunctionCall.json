@@ -1,0 +1,16 @@
+{
+  "title": "Direct function call",
+  "targets": [
+    "goroutine"
+  ],
+  "variants": {
+    "good": {
+      "description": "Direct function call - not a func literal",
+      "functions": {
+        "goroutine": "goodDirectFunctionCall"
+      }
+    },
+    "bad": null
+  },
+  "level": "basic"
+}

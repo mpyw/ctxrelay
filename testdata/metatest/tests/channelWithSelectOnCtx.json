@@ -1,0 +1,16 @@
+{
+  "title": "Channel with select on ctx",
+  "targets": [
+    "goroutine"
+  ],
+  "variants": {
+    "good": {
+      "description": "Channel with select on ctx.Done()",
+      "functions": {
+        "goroutine": "goodGoroutineWithChannelAndCtx"
+      }
+    },
+    "bad": null
+  },
+  "level": "advanced"
+}

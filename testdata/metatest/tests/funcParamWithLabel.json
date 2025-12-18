@@ -1,0 +1,16 @@
+{
+  "title": "Function with func param, no spawn call, has label",
+  "targets": [
+    "spawnerlabel"
+  ],
+  "level": "basic",
+  "variants": {
+    "good": {
+      "description": "Function with func param and label is valid",
+      "functions": {
+        "spawnerlabel": "goodFuncParamWithLabel"
+      }
+    },
+    "bad": null
+  }
+}

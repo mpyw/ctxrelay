@@ -1,0 +1,16 @@
+{
+  "title": "Ignore directive - with reason",
+  "targets": [
+    "goroutine"
+  ],
+  "variants": {
+    "good": {
+      "description": "The //goroutinectx:ignore directive suppresses the warning.",
+      "functions": {
+        "goroutine": "goodIgnoredWithReason"
+      }
+    },
+    "bad": null
+  },
+  "level": "basic"
+}

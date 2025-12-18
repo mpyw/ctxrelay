@@ -1,0 +1,6 @@
+{
+  "excludeDirs": [
+    "github.com",
+    "golang.org"
+  ]
+}

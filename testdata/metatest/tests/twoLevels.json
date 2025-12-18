@@ -1,0 +1,16 @@
+{
+  "title": "Two levels",
+  "targets": [
+    "goroutine"
+  ],
+  "variants": {
+    "bad": {
+      "description": "Two levels - innermost doesn't use",
+      "functions": {
+        "goroutine": "badTwoLevelArguments"
+      }
+    },
+    "good": null
+  },
+  "level": "evil"
+}

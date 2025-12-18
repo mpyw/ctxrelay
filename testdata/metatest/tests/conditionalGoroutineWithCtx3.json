@@ -1,0 +1,16 @@
+{
+  "title": "Conditional goroutine with ctx",
+  "targets": [
+    "waitgroup"
+  ],
+  "variants": {
+    "good": {
+      "description": "All conditional branches properly use context in goroutines.",
+      "functions": {
+        "waitgroup": "goodConditionalGo"
+      }
+    },
+    "bad": null
+  },
+  "level": "advanced"
+}

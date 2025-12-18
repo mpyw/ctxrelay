@@ -1,0 +1,16 @@
+{
+  "title": "Task - with nil channel (ctx still needs deriver)",
+  "targets": [
+    "gotask"
+  ],
+  "variants": {
+    "bad": {
+      "description": "Task.DoAsync with nil channel (ctx still needs deriver)",
+      "functions": {
+        "gotask": "badTaskDoAsyncNilChannel"
+      }
+    },
+    "good": null
+  },
+  "level": "basic"
+}

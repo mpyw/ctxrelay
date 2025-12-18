@@ -1,0 +1,16 @@
+{
+  "title": "gotask.DoAllFns missing label - takes func arguments directly",
+  "targets": [
+    "spawnerlabel"
+  ],
+  "level": "evil",
+  "variants": {
+    "good": null,
+    "bad": {
+      "description": "gotask.DoAllFns takes func arguments directly",
+      "functions": {
+        "spawnerlabel": "evilGotaskDoAllFns"
+      }
+    }
+  }
+}

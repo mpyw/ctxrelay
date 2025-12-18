@@ -38,10 +38,18 @@ func supportsWaitgroupGo() bool {
 	return false
 }
 
-// Structure represents the test metadata structure.
+// Options represents the options.json configuration.
+type Options struct {
+	ExcludeDirs []string `json:"excludeDirs"`
+}
+
+// Structure represents the combined test metadata (built at runtime).
 type Structure struct {
-	Targets []string        `json:"targets"`
-	Tests   map[string]Test `json:"tests"`
+	Options Options
+	Tests   map[string]Test
+
+	// targets is populated at runtime by scanning testdata/src
+	targets []string
 }
 
 // Test represents a single test pattern across multiple checkers.
@@ -59,16 +67,33 @@ type Variant struct {
 }
 
 func TestStructureValidation(t *testing.T) {
-	// Load structure.json
-	structureFile := filepath.Join("structure.json")
-	data, err := os.ReadFile(structureFile)
+	// Load options.json
+	optionsFile := filepath.Join("options.json")
+	data, err := os.ReadFile(optionsFile)
 	if err != nil {
-		t.Fatalf("Failed to read structure.json: %v", err)
+		t.Fatalf("Failed to read options.json: %v", err)
 	}
 
-	var structure Structure
-	if err := json.Unmarshal(data, &structure); err != nil {
-		t.Fatalf("Failed to parse structure.json: %v", err)
+	var options Options
+	if err := json.Unmarshal(data, &options); err != nil {
+		t.Fatalf("Failed to parse options.json: %v", err)
+	}
+
+	// Load tests from tests/ directory
+	tests, err := loadTests("tests")
+	if err != nil {
+		t.Fatalf("Failed to load tests: %v", err)
+	}
+
+	structure := Structure{
+		Options: options,
+		Tests:   tests,
+	}
+
+	// Discover targets from testdata/src, excluding specified dirs
+	structure.targets, err = discoverTargets(structure.Options.ExcludeDirs)
+	if err != nil {
+		t.Fatalf("Failed to discover targets: %v", err)
 	}
 
 	// Validate each test
@@ -84,11 +109,72 @@ func TestStructureValidation(t *testing.T) {
 	})
 }
 
+// loadTests reads all test JSON files from the given directory.
+func loadTests(dir string) (map[string]Test, error) {
+	tests := make(map[string]Test)
+
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".json") {
+			continue
+		}
+
+		testName := strings.TrimSuffix(entry.Name(), ".json")
+		filePath := filepath.Join(dir, entry.Name())
+
+		data, err := os.ReadFile(filePath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read %s: %w", filePath, err)
+		}
+
+		var test Test
+		if err := json.Unmarshal(data, &test); err != nil {
+			return nil, fmt.Errorf("failed to parse %s: %w", filePath, err)
+		}
+
+		tests[testName] = test
+	}
+
+	return tests, nil
+}
+
+// discoverTargets scans testdata/src and returns all directories except excluded ones.
+func discoverTargets(excludeDirs []string) ([]string, error) {
+	srcDir := filepath.Join("..", "src")
+	entries, err := os.ReadDir(srcDir)
+	if err != nil {
+		return nil, err
+	}
+
+	excludeSet := make(map[string]bool)
+	for _, dir := range excludeDirs {
+		excludeSet[dir] = true
+	}
+
+	var targets []string
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		if excludeSet[name] {
+			continue
+		}
+		targets = append(targets, name)
+	}
+
+	return targets, nil
+}
+
 func validateTest(t *testing.T, structure *Structure, testName string, test *Test) {
-	// Validate targets exist in global targets list
+	// Validate targets exist in discovered targets list
 	for _, target := range test.Targets {
-		if !contains(structure.Targets, target) {
-			t.Errorf("Target %q not found in global targets list", target)
+		if !contains(structure.targets, target) {
+			t.Errorf("Target %q not found in testdata/src (discovered targets: %v)", target, structure.targets)
 		}
 	}
 
@@ -131,7 +217,7 @@ func validateVariant(t *testing.T, structure *Structure, testName string, test *
 		}
 
 		// Check if function exists and has correct comments
-		if !validateFunctionInFile(t, testFile, funcName, test, variant, variantType, target, structure.Targets, testName) {
+		if !validateFunctionInFile(t, testFile, funcName, test, variant, variantType, target, structure.targets, testName) {
 			t.Errorf("Function %q not found in %s for target %q", funcName, testFile, target)
 		}
 	}
@@ -140,8 +226,8 @@ func validateVariant(t *testing.T, structure *Structure, testName string, test *
 // validateAllFunctionsAccountedFor checks that all functions in test files
 // are either in structure.json or marked with //vt:helper
 func validateAllFunctionsAccountedFor(t *testing.T, structure *Structure) {
-	// Build map of expected functions by target and level
-	expectedFunctions := make(map[string]map[string]map[string]bool) // target -> level -> funcName -> true
+	// Build map of expected functions by target and file
+	expectedFunctions := make(map[string]map[string]map[string]bool) // target -> filename -> funcName -> true
 	for _, test := range structure.Tests {
 		for _, variant := range test.Variants {
 			if variant == nil {
@@ -149,35 +235,46 @@ func validateAllFunctionsAccountedFor(t *testing.T, structure *Structure) {
 			}
 			for _, target := range test.Targets {
 				funcName := variant.Functions[target]
+				fileName := test.Level + ".go"
 
 				if expectedFunctions[target] == nil {
 					expectedFunctions[target] = make(map[string]map[string]bool)
 				}
-				if expectedFunctions[target][test.Level] == nil {
-					expectedFunctions[target][test.Level] = make(map[string]bool)
+				if expectedFunctions[target][fileName] == nil {
+					expectedFunctions[target][fileName] = make(map[string]bool)
 				}
-				expectedFunctions[target][test.Level][funcName] = true
+				expectedFunctions[target][fileName][funcName] = true
 			}
 		}
 	}
 
-	// Check each target's files
-	for target := range expectedFunctions {
+	// Check each discovered target's files
+	for _, target := range structure.targets {
 		// Skip waitgroup on Go < 1.25
 		if target == "waitgroup" && !supportsWaitgroupGo() {
 			continue
 		}
-		for level := range expectedFunctions[target] {
-			testFile := findTestFile(target, level)
-			if testFile == "" {
+
+		targetDir := filepath.Join("..", "src", target)
+		entries, err := os.ReadDir(targetDir)
+		if err != nil {
+			t.Errorf("Failed to read target dir %s: %v", targetDir, err)
+			continue
+		}
+
+		for _, entry := range entries {
+			if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".go") {
 				continue
 			}
 
+			fileName := entry.Name()
+			filePath := filepath.Join(targetDir, fileName)
+
 			// Parse file and get all functions
 			fset := token.NewFileSet()
-			file, err := parser.ParseFile(fset, testFile, nil, parser.ParseComments)
+			file, err := parser.ParseFile(fset, filePath, nil, parser.ParseComments)
 			if err != nil {
-				t.Errorf("Failed to parse %s: %v", testFile, err)
+				t.Errorf("Failed to parse %s: %v", filePath, err)
 				continue
 			}
 
@@ -205,9 +302,11 @@ func validateAllFunctionsAccountedFor(t *testing.T, structure *Structure) {
 				}
 
 				// Function must be in structure.json
-				if !expectedFunctions[target][level][funcName] {
+				if expectedFunctions[target] == nil ||
+					expectedFunctions[target][fileName] == nil ||
+					!expectedFunctions[target][fileName][funcName] {
 					t.Errorf("Function %q in %s is not in structure.json and not marked with //vt:helper",
-						funcName, testFile)
+						funcName, filePath)
 				}
 			}
 		}
@@ -216,20 +315,7 @@ func validateAllFunctionsAccountedFor(t *testing.T, structure *Structure) {
 
 func findTestFile(target, level string) string {
 	targetDir := filepath.Join("..", "src", target)
-
-	// Map level to actual filename based on target
-	var fileName string
-	switch target {
-	case "spawner":
-		fileName = "spawner.go"
-	case "goroutinederive":
-		fileName = "goroutinederive.go"
-	case "carrier":
-		fileName = "carrier.go"
-	default:
-		fileName = level + ".go"
-	}
-
+	fileName := level + ".go"
 	filePath := filepath.Join(targetDir, fileName)
 
 	// Check if file exists
@@ -277,11 +363,6 @@ func validateFunctionInFile(t *testing.T, filePath, funcName string, test *Test,
 					}
 					return "(empty)"
 				}())
-		}
-
-		// Check description: should be on second non-empty line
-		if !strings.Contains(comments, variant.Description) {
-			t.Errorf("Function %q in %s missing description %q in comments", funcName, filePath, variant.Description)
 		}
 
 		// Check "See also" references

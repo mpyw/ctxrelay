@@ -1,0 +1,16 @@
+{
+  "title": "Mixed - WaitGroup with nothing.",
+  "targets": [
+    "goroutinederivemixed"
+  ],
+  "variants": {
+    "bad": {
+      "description": "WaitGroup pattern without any deriver calls.",
+      "functions": {
+        "goroutinederivemixed": "badMixedWaitGroupWithNothing"
+      }
+    },
+    "good": null
+  },
+  "level": "advanced"
+}

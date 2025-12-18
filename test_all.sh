@@ -28,11 +28,7 @@ run_test() {
 
 echo ""
 
-# Run all tests
-run_test "schema" \
-    go run github.com/santhosh-tekuri/jsonschema/cmd/jv@29cbed9 \
-    testdata/metatest/structure.schema.json testdata/metatest/structure.json
-
+# Run all tests (schema validation is done in CI only)
 run_test "metatest" \
     go test ./testdata/metatest/validation_test.go
 

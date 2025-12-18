@@ -1,0 +1,16 @@
+{
+  "title": "Ignore directive on Task",
+  "targets": [
+    "gotask"
+  ],
+  "variants": {
+    "good": {
+      "description": "Ignore directive on Task.DoAsync",
+      "functions": {
+        "gotask": "goodIgnoreTaskDoAsync"
+      }
+    },
+    "bad": null
+  },
+  "level": "basic"
+}

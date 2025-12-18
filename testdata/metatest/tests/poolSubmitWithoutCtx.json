@@ -1,0 +1,12 @@
+{
+  "title": "Pool.Submit without ctx",
+  "targets": ["externalspawner"],
+  "level": "basic",
+  "variants": {
+    "good": null,
+    "bad": {
+      "description": "External spawner method call without ctx",
+      "functions": {"externalspawner": "badPoolSubmit"}
+    }
+  }
+}

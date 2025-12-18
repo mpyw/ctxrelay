@@ -1,0 +1,16 @@
+{
+  "title": "Nested goroutine - outer uses ctx1, inner uses ctx2",
+  "targets": [
+    "goroutine"
+  ],
+  "variants": {
+    "good": {
+      "description": "Nested goroutines using different context parameters.",
+      "functions": {
+        "goroutine": "goodNestedDifferentContexts"
+      }
+    },
+    "bad": null
+  },
+  "level": "evil"
+}

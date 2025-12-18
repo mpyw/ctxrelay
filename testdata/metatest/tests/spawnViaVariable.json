@@ -1,0 +1,16 @@
+{
+  "title": "Has label and spawns via variable func",
+  "targets": [
+    "spawnerlabel"
+  ],
+  "level": "evil",
+  "variants": {
+    "good": {
+      "description": "Spawn via variable func reference",
+      "functions": {
+        "spawnerlabel": "goodSpawnViaVariable"
+      }
+    },
+    "bad": null
+  }
+}

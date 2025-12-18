@@ -1,0 +1,16 @@
+{
+  "title": "NewTask stored in variable",
+  "targets": [
+    "gotask"
+  ],
+  "variants": {
+    "bad": {
+      "description": "NewTask wrapper without context derivation inside.",
+      "functions": {
+        "gotask": "badNewTaskVariableNoDeriver"
+      }
+    },
+    "good": null
+  },
+  "level": "evil"
+}

@@ -1,0 +1,16 @@
+{
+  "title": "Spawn in select statement",
+  "targets": [
+    "spawnerlabel"
+  ],
+  "level": "evil",
+  "variants": {
+    "good": null,
+    "bad": {
+      "description": "Spawn call in select case",
+      "functions": {
+        "spawnerlabel": "spawnInSelect"
+      }
+    }
+  }
+}

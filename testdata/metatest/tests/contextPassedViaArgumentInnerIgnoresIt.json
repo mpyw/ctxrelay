@@ -1,0 +1,16 @@
+{
+  "title": "Context passed via argument - inner ignores it",
+  "targets": [
+    "goroutine"
+  ],
+  "variants": {
+    "bad": {
+      "description": "Inner function receives context but goroutine ignores it.",
+      "functions": {
+        "goroutine": "badArgumentShadowing"
+      }
+    },
+    "good": null
+  },
+  "level": "evil"
+}

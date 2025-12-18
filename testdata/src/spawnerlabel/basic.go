@@ -62,6 +62,7 @@ func missingLabelIndirectSpawner() { // want `function "missingLabelIndirectSpaw
 	_ = g.Wait()
 }
 
+//vt:helper
 //goroutinectx:spawner
 func runWithGroup(g *errgroup.Group, fn func() error) {
 	g.Go(fn)
@@ -145,6 +146,10 @@ func goodNestedSpawnInClosure() {
 // [GOOD]: Method on type - should be treated same as function
 type SpawnerType struct{}
 
+// [GOOD]: Method with spawner label
+//
+// Method with spawner label and spawn call
+//
 //goroutinectx:spawner
 func (s *SpawnerType) SpawnWork() {
 	g := new(errgroup.Group)
@@ -154,7 +159,9 @@ func (s *SpawnerType) SpawnWork() {
 	_ = g.Wait()
 }
 
-// [BAD]: Method missing label
+// [BAD]: Method with spawner label
+//
+// Method missing spawner label
 func (s *SpawnerType) MissingLabelMethod() { // want `function "MissingLabelMethod" should have //goroutinectx:spawner directive \(calls errgroup\.Group\.Go with func argument\)`
 	g := new(errgroup.Group)
 	g.Go(func() error {
