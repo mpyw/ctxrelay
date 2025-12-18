@@ -1,3 +1,5 @@
+// Package goroutinederive contains test fixtures for the goroutine-derive checker.
+// This file covers basic patterns with -goroutine-deriver flag.
 package goroutinederive
 
 import (
@@ -10,7 +12,8 @@ import (
 
 // ===== SHOULD NOT REPORT =====
 
-// DD01: Basic - calls deriver.
+// Basic - calls deriver
+// Goroutine calls deriver function
 func d01CallsDeriver(ctx context.Context) {
 	go func() {
 		ctx := apm.NewGoroutineContext(ctx)
@@ -18,7 +21,8 @@ func d01CallsDeriver(ctx context.Context) {
 	}()
 }
 
-// DD02: Basic - nested goroutines both call deriver.
+// Nested goroutines both call deriver
+// Both nested goroutines call deriver function
 func d02NestedBothCallDeriver(ctx context.Context) {
 	go func() {
 		ctx := apm.NewGoroutineContext(ctx)
@@ -30,14 +34,16 @@ func d02NestedBothCallDeriver(ctx context.Context) {
 	}()
 }
 
-// DD03: Basic - has own context param.
+// Has own context param
+// Goroutine has its own context parameter
 func d03OwnContextParam(ctx context.Context) {
 	go func(ctx context.Context) {
 		_ = ctx
 	}(ctx)
 }
 
-// DD04: Basic - named function call (not checked).
+// Named function call
+// go statement with named function call (not checked)
 func d04NamedFuncCall(ctx context.Context) {
 	go namedFunc(ctx)
 }
@@ -48,14 +54,16 @@ func namedFunc(ctx context.Context) {
 
 // ===== SHOULD REPORT =====
 
-// DD05: Basic - no deriver call.
+// No deriver call
+// Goroutine does not call deriver function
 func d05NoDeriverCall(ctx context.Context) {
 	go func() { // want "goroutine should call github.com/my-example-app/telemetry/apm.NewGoroutineContext to derive context"
 		_ = ctx
 	}()
 }
 
-// DD06: Basic - uses different function (not deriver).
+// Uses different function
+// Goroutine uses context.WithValue instead of deriver
 func d06UsesDifferentFunc(ctx context.Context) {
 	go func() { // want "goroutine should call github.com/my-example-app/telemetry/apm.NewGoroutineContext to derive context"
 		ctx := context.WithValue(ctx, "key", "value")
@@ -63,7 +71,8 @@ func d06UsesDifferentFunc(ctx context.Context) {
 	}()
 }
 
-// DD07: Basic - nested, inner missing deriver.
+// Nested, inner missing deriver
+// Outer goroutine calls deriver but inner does not
 func d07NestedInnerMissingDeriver(ctx context.Context) {
 	go func() {
 		ctx := apm.NewGoroutineContext(ctx)

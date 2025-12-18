@@ -10,7 +10,8 @@ import (
 
 // ===== DoAllFnsSettled - SHOULD REPORT =====
 
-// GT01: DoAllFnsSettled - func literal without deriver
+// DoAllFnsSettled - func literal without deriver
+// DoAllFnsSettled with func literal that doesn't call goroutine deriver
 func badDoAllFnsSettledNoDeriver(ctx context.Context) {
 	_ = gotask.DoAllFnsSettled( // want `gotask\.DoAllFnsSettled\(\) 2nd argument should call goroutine deriver`
 		ctx,
@@ -20,7 +21,8 @@ func badDoAllFnsSettledNoDeriver(ctx context.Context) {
 	)
 }
 
-// GT02: DoAllFnsSettled - multiple args, some without deriver
+// DoAllFnsSettled - multiple args, some without deriver
+// DoAllFnsSettled with multiple args where some don't call goroutine deriver
 func badDoAllFnsSettledPartialDeriver(ctx context.Context) {
 	_ = gotask.DoAllFnsSettled( // want `gotask\.DoAllFnsSettled\(\) 3rd argument should call goroutine deriver` `gotask\.DoAllFnsSettled\(\) 5th argument should call goroutine deriver`
 		ctx,
@@ -41,7 +43,8 @@ func badDoAllFnsSettledPartialDeriver(ctx context.Context) {
 	)
 }
 
-// GT03: DoAllFnsSettled - deriver called on parent ctx (still bad - deriver must be inside task body)
+// DoAllFnsSettled - deriver called on parent ctx
+// Deriver called on parent ctx is still bad - deriver must be inside task body
 func badDoAllFnsSettledDerivedParentCtx(ctx context.Context) {
 	_ = gotask.DoAllFnsSettled( // want `gotask\.DoAllFnsSettled\(\) 2nd argument should call goroutine deriver`
 		apm.NewGoroutineContext(ctx),
@@ -53,7 +56,8 @@ func badDoAllFnsSettledDerivedParentCtx(ctx context.Context) {
 
 // ===== DoAllSettled with NewTask - SHOULD REPORT =====
 
-// GT10: DoAllSettled - NewTask without deriver
+// DoAllSettled - NewTask without deriver
+// DoAllSettled with NewTask that doesn't call goroutine deriver
 func badDoAllSettledNewTaskNoDeriver(ctx context.Context) {
 	_ = gotask.DoAllSettled( // want `gotask\.DoAllSettled\(\) 2nd argument should call goroutine deriver`
 		ctx,
@@ -63,7 +67,8 @@ func badDoAllSettledNewTaskNoDeriver(ctx context.Context) {
 	)
 }
 
-// GT11: DoAllSettled - NewTask with deriver on parent ctx (still bad - deriver must be inside task body)
+// DoAllSettled - NewTask with deriver on parent ctx
+// NewTask with deriver on parent ctx is still bad - deriver must be inside task body
 func badDoAllSettledNewTaskDerivedParentCtx(ctx context.Context) {
 	_ = gotask.DoAllSettled( // want `gotask\.DoAllSettled\(\) 2nd argument should call goroutine deriver`
 		apm.NewGoroutineContext(ctx),
@@ -75,7 +80,8 @@ func badDoAllSettledNewTaskDerivedParentCtx(ctx context.Context) {
 
 // ===== DoAsync - SHOULD REPORT =====
 
-// GT20: Task.DoAsync without deriver on ctx
+// Task.DoAsync without deriver
+// Task.DoAsync called without deriver on ctx
 func badTaskDoAsyncNoDeriver(ctx context.Context) {
 	task := gotask.NewTask(func(ctx context.Context) error {
 		return nil
@@ -85,7 +91,8 @@ func badTaskDoAsyncNoDeriver(ctx context.Context) {
 	task.DoAsync(ctx, errChan) // want `\(\*gotask\.Task\)\.DoAsync\(\) 1st argument should call goroutine deriver`
 }
 
-// GT21: Task.DoAsync with nil channel (ctx still needs deriver)
+// Task.DoAsync with nil channel
+// Task.DoAsync with nil channel still needs deriver on ctx
 func badTaskDoAsyncNilChannel(ctx context.Context) {
 	task := gotask.NewTask(func(ctx context.Context) error {
 		return nil
@@ -94,7 +101,8 @@ func badTaskDoAsyncNilChannel(ctx context.Context) {
 	task.DoAsync(ctx, nil) // want `\(\*gotask\.Task\)\.DoAsync\(\) 1st argument should call goroutine deriver`
 }
 
-// GT22: CancelableTask.DoAsync without deriver on ctx
+// CancelableTask.DoAsync without deriver
+// CancelableTask.DoAsync called without deriver on ctx
 func badCancelableTaskDoAsyncNoDeriver(ctx context.Context) {
 	task := gotask.NewTask(func(ctx context.Context) error {
 		return nil
@@ -106,7 +114,8 @@ func badCancelableTaskDoAsyncNoDeriver(ctx context.Context) {
 
 // ===== DoAllFnsSettled - SHOULD NOT REPORT =====
 
-// GT30: DoAllFnsSettled - func literal with deriver
+// DoAllFnsSettled - func literal with deriver
+// DoAllFnsSettled with func literal that calls goroutine deriver
 func goodDoAllFnsSettledWithDeriver(ctx context.Context) {
 	_ = gotask.DoAllFnsSettled(
 		ctx,
@@ -118,7 +127,8 @@ func goodDoAllFnsSettledWithDeriver(ctx context.Context) {
 	)
 }
 
-// GT31: DoAllFnsSettled - deriver called but result assigned
+// DoAllFnsSettled - deriver called but result assigned
+// DoAllFnsSettled with deriver result assigned to variable
 func goodDoAllFnsSettledDerivedAssigned(ctx context.Context) {
 	_ = gotask.DoAllFnsSettled(
 		ctx,
@@ -129,7 +139,8 @@ func goodDoAllFnsSettledDerivedAssigned(ctx context.Context) {
 	)
 }
 
-// GT32: DoAllFnsSettled - all args have deriver
+// DoAllFnsSettled - all args have deriver
+// DoAllFnsSettled with all args calling goroutine deriver
 func goodDoAllFnsSettledAllWithDeriver(ctx context.Context) {
 	_ = gotask.DoAllFnsSettled(
 		ctx,
@@ -146,7 +157,8 @@ func goodDoAllFnsSettledAllWithDeriver(ctx context.Context) {
 
 // ===== DoAllSettled with NewTask - SHOULD NOT REPORT =====
 
-// GT40: DoAllSettled - NewTask with deriver
+// DoAllSettled - NewTask with deriver
+// DoAllSettled with NewTask that calls goroutine deriver
 func goodDoAllSettledNewTaskWithDeriver(ctx context.Context) {
 	_ = gotask.DoAllSettled(
 		ctx,
@@ -160,7 +172,8 @@ func goodDoAllSettledNewTaskWithDeriver(ctx context.Context) {
 
 // ===== DoAsync - SHOULD NOT REPORT =====
 
-// GT50: Task.DoAsync with deriver on ctx
+// Task.DoAsync with deriver
+// Task.DoAsync called with deriver on ctx
 func goodTaskDoAsyncWithDeriver(ctx context.Context) {
 	task := gotask.NewTask(func(ctx context.Context) error {
 		return nil
@@ -170,7 +183,8 @@ func goodTaskDoAsyncWithDeriver(ctx context.Context) {
 	task.DoAsync(apm.NewGoroutineContext(ctx), errChan)
 }
 
-// GT51: CancelableTask.DoAsync with deriver on ctx
+// CancelableTask.DoAsync with deriver
+// CancelableTask.DoAsync called with deriver on ctx
 func goodCancelableTaskDoAsyncWithDeriver(ctx context.Context) {
 	task := gotask.NewTask(func(ctx context.Context) error {
 		return nil
@@ -182,7 +196,8 @@ func goodCancelableTaskDoAsyncWithDeriver(ctx context.Context) {
 
 // ===== Other Do* functions - SHOULD REPORT =====
 
-// GT60: DoAll without deriver
+// DoAll without deriver
+// DoAll with task that doesn't call goroutine deriver
 func badDoAllNoDeriver(ctx context.Context) {
 	_ = gotask.DoAll( // want `gotask\.DoAll\(\) 2nd argument should call goroutine deriver`
 		ctx,
@@ -192,7 +207,8 @@ func badDoAllNoDeriver(ctx context.Context) {
 	)
 }
 
-// GT61: DoAllFns without deriver
+// DoAllFns without deriver
+// DoAllFns with func that doesn't call goroutine deriver
 func badDoAllFnsNoDeriver(ctx context.Context) {
 	_ = gotask.DoAllFns( // want `gotask\.DoAllFns\(\) 2nd argument should call goroutine deriver`
 		ctx,
@@ -202,7 +218,8 @@ func badDoAllFnsNoDeriver(ctx context.Context) {
 	)
 }
 
-// GT62: DoRace without deriver
+// DoRace without deriver
+// DoRace with task that doesn't call goroutine deriver
 func badDoRaceNoDeriver(ctx context.Context) {
 	_ = gotask.DoRace( // want `gotask\.DoRace\(\) 2nd argument should call goroutine deriver`
 		ctx,
@@ -212,7 +229,8 @@ func badDoRaceNoDeriver(ctx context.Context) {
 	)
 }
 
-// GT63: DoRaceFns without deriver
+// DoRaceFns without deriver
+// DoRaceFns with func that doesn't call goroutine deriver
 func badDoRaceFnsNoDeriver(ctx context.Context) {
 	_ = gotask.DoRaceFns( // want `gotask\.DoRaceFns\(\) 2nd argument should call goroutine deriver`
 		ctx,
@@ -224,7 +242,8 @@ func badDoRaceFnsNoDeriver(ctx context.Context) {
 
 // ===== Other Do* functions - SHOULD NOT REPORT =====
 
-// GT70: DoAll with deriver
+// DoAll with deriver
+// DoAll with task that calls goroutine deriver
 func goodDoAllWithDeriver(ctx context.Context) {
 	_ = gotask.DoAll(
 		ctx,
@@ -235,7 +254,8 @@ func goodDoAllWithDeriver(ctx context.Context) {
 	)
 }
 
-// GT71: DoAllFns with deriver
+// DoAllFns with deriver
+// DoAllFns with func that calls goroutine deriver
 func goodDoAllFnsWithDeriver(ctx context.Context) {
 	_ = gotask.DoAllFns(
 		ctx,
@@ -246,7 +266,8 @@ func goodDoAllFnsWithDeriver(ctx context.Context) {
 	)
 }
 
-// GT72: DoRace with deriver
+// DoRace with deriver
+// DoRace with task that calls goroutine deriver
 func goodDoRaceWithDeriver(ctx context.Context) {
 	_ = gotask.DoRace(
 		ctx,
@@ -257,7 +278,8 @@ func goodDoRaceWithDeriver(ctx context.Context) {
 	)
 }
 
-// GT73: DoRaceFns with deriver
+// DoRaceFns with deriver
+// DoRaceFns with func that calls goroutine deriver
 func goodDoRaceFnsWithDeriver(ctx context.Context) {
 	_ = gotask.DoRaceFns(
 		ctx,
@@ -270,7 +292,8 @@ func goodDoRaceFnsWithDeriver(ctx context.Context) {
 
 // ===== Ignore directive =====
 
-// GT80: Ignore directive on DoAllFnsSettled
+// Ignore directive on DoAllFnsSettled
+// Ignore directive suppresses warning on DoAllFnsSettled
 func goodIgnoreDoAllFnsSettled(ctx context.Context) {
 	//goroutinectx:ignore
 	_ = gotask.DoAllFnsSettled(
@@ -281,7 +304,8 @@ func goodIgnoreDoAllFnsSettled(ctx context.Context) {
 	)
 }
 
-// GT81: Ignore directive on Task.DoAsync
+// Ignore directive on Task.DoAsync
+// Ignore directive suppresses warning on Task.DoAsync
 func goodIgnoreTaskDoAsync(ctx context.Context) {
 	task := gotask.NewTask(func(ctx context.Context) error { return nil })
 
@@ -291,7 +315,9 @@ func goodIgnoreTaskDoAsync(ctx context.Context) {
 
 // ===== No ctx param - SHOULD NOT REPORT =====
 
-// GT90: No ctx param - not checked
+// No ctx param
+// Function has no context parameter - not checked
+// see also: goroutinecreator
 func goodNoCtxParam() {
 	_ = gotask.DoAllFnsSettled(
 		context.Background(),

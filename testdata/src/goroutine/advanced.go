@@ -12,7 +12,8 @@ import (
 
 // ===== DEFER PATTERNS =====
 
-// GO20: Defer without ctx
+// Defer without ctx
+// Goroutine with defer statement but no context usage
 func badGoroutineWithDefer(ctx context.Context) {
 	go func() { // want `goroutine does not propagate context "ctx"`
 		defer fmt.Println("deferred")
@@ -20,7 +21,8 @@ func badGoroutineWithDefer(ctx context.Context) {
 	}()
 }
 
-// GO21: LIMITATION - ctx in deferred nested closure not detected
+// Ctx in deferred nested closure
+// LIMITATION: Context used only in deferred nested closure is not detected
 func badGoroutineUsesCtxOnlyInDeferredClosure(ctx context.Context) {
 	go func() { // want `goroutine does not propagate context "ctx"`
 		defer func() {
@@ -29,7 +31,8 @@ func badGoroutineUsesCtxOnlyInDeferredClosure(ctx context.Context) {
 	}()
 }
 
-// GO20b: Defer with recovery, no ctx
+// Defer with recovery, no ctx
+// Goroutine with defer/recover but no context usage
 func badGoroutineWithRecovery(ctx context.Context) {
 	go func() { // want `goroutine does not propagate context "ctx"`
 		defer func() {
@@ -41,7 +44,8 @@ func badGoroutineWithRecovery(ctx context.Context) {
 	}()
 }
 
-// GO21b: Ctx only in recovery closure (LIMITATION)
+// Ctx only in recovery closure
+// LIMITATION: Context used only in recovery closure is not detected
 func badGoroutineUsesCtxOnlyInRecoveryClosure(ctx context.Context) {
 	go func() { // want `goroutine does not propagate context "ctx"`
 		defer func() {
@@ -55,7 +59,9 @@ func badGoroutineUsesCtxOnlyInRecoveryClosure(ctx context.Context) {
 
 // ===== GOROUTINE IN LOOP =====
 
-// GO22: Go in for loop without ctx
+// Go in for loop without ctx
+// Goroutine spawned in for loop without context
+// see also: errgroup, waitgroup
 func badGoroutinesInLoop(ctx context.Context) {
 	for i := 0; i < 3; i++ {
 		go func() { // want `goroutine does not propagate context "ctx"`
@@ -64,7 +70,9 @@ func badGoroutinesInLoop(ctx context.Context) {
 	}
 }
 
-// GO22b: Goroutine in for loop with ctx
+// Goroutine in for loop with ctx
+// Goroutine spawned in for loop with context properly captured
+// see also: errgroup, waitgroup
 func goodGoroutinesInLoopWithCtx(ctx context.Context) {
 	for i := 0; i < 3; i++ {
 		go func() {
@@ -73,7 +81,9 @@ func goodGoroutinesInLoopWithCtx(ctx context.Context) {
 	}
 }
 
-// GO23: Go in range loop without ctx
+// Go in range loop without ctx
+// Goroutine spawned in range loop without context
+// see also: errgroup, waitgroup
 func badGoroutinesInRangeLoop(ctx context.Context) {
 	items := []int{1, 2, 3}
 	for _, item := range items {
@@ -85,7 +95,9 @@ func badGoroutinesInRangeLoop(ctx context.Context) {
 
 // ===== CONDITIONAL GOROUTINE =====
 
-// GO24: Conditional Go without ctx
+// Conditional Go without ctx
+// Goroutine spawned conditionally without context
+// see also: errgroup, waitgroup
 func badConditionalGoroutine(ctx context.Context, flag bool) {
 	if flag {
 		go func() { // want `goroutine does not propagate context "ctx"`
@@ -98,7 +110,9 @@ func badConditionalGoroutine(ctx context.Context, flag bool) {
 	}
 }
 
-// GO24b: Conditional goroutine with ctx
+// Conditional goroutine with ctx
+// Goroutine spawned conditionally with context properly captured
+// see also: errgroup, waitgroup
 func goodConditionalGoroutine(ctx context.Context, flag bool) {
 	if flag {
 		go func() {
@@ -113,7 +127,8 @@ func goodConditionalGoroutine(ctx context.Context, flag bool) {
 
 // ===== CHANNEL OPERATIONS =====
 
-// GO25: Channel send without ctx
+// Channel send without ctx
+// Goroutine sending to channel without context
 func badGoroutineWithChannelSend(ctx context.Context) {
 	ch := make(chan int)
 	go func() { // want `goroutine does not propagate context "ctx"`
@@ -122,7 +137,8 @@ func badGoroutineWithChannelSend(ctx context.Context) {
 	<-ch
 }
 
-// GO25b: Channel with select on ctx.Done()
+// Channel with select on ctx.Done
+// Goroutine with channel and proper context handling in select
 func goodGoroutineWithChannelAndCtx(ctx context.Context) {
 	ch := make(chan int)
 	go func() {
@@ -135,7 +151,8 @@ func goodGoroutineWithChannelAndCtx(ctx context.Context) {
 	<-ch
 }
 
-// GO26: Channel result without ctx
+// Channel result without ctx
+// Goroutine returning result via channel without context
 func badGoroutineReturnsViaChannel(ctx context.Context) {
 	result := make(chan int)
 	go func() { // want `goroutine does not propagate context "ctx"`
@@ -144,7 +161,8 @@ func badGoroutineReturnsViaChannel(ctx context.Context) {
 	<-result
 }
 
-// GO26b: Channel result with ctx
+// Channel result with ctx
+// Goroutine returning result via channel with proper context handling
 func goodGoroutineReturnsWithCtx(ctx context.Context) {
 	result := make(chan int)
 	go func() {
@@ -160,7 +178,8 @@ func compute() int { return 42 }
 
 // ===== SELECT PATTERNS =====
 
-// GO27: Select without ctx.Done() case
+// Select without ctx.Done case
+// Goroutine with multi-case select but no ctx.Done case
 func badGoroutineWithMultiCaseSelect(ctx context.Context) {
 	ch1 := make(chan int)
 	ch2 := make(chan int)
@@ -174,7 +193,8 @@ func badGoroutineWithMultiCaseSelect(ctx context.Context) {
 	}()
 }
 
-// GO27b: Select with ctx.Done() case
+// Select with ctx.Done case
+// Goroutine with select properly handling context cancellation
 func goodGoroutineWithCtxInSelect(ctx context.Context) {
 	ch1 := make(chan int)
 	go func() {
@@ -189,7 +209,8 @@ func goodGoroutineWithCtxInSelect(ctx context.Context) {
 
 // ===== WAITGROUP PATTERN =====
 
-// GO28: WaitGroup (traditional Add/Done) without ctx
+// WaitGroup traditional without ctx
+// Traditional WaitGroup (Add/Done) pattern without context
 func badGoroutineWithWaitGroup(ctx context.Context) {
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -200,7 +221,8 @@ func badGoroutineWithWaitGroup(ctx context.Context) {
 	wg.Wait()
 }
 
-// GO28b: WaitGroup (traditional Add/Done) with ctx
+// WaitGroup traditional with ctx
+// Traditional WaitGroup (Add/Done) pattern with proper context handling
 func goodGoroutineWithWaitGroupAndCtx(ctx context.Context) {
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -231,7 +253,8 @@ func (w *worker) runWithCtx(ctx context.Context) {
 	fmt.Println("running:", w.name)
 }
 
-// GO29: Method call without ctx
+// Method call without ctx
+// Goroutine calling method without passing context
 func badGoroutineCallsMethodWithoutCtx(ctx context.Context) {
 	w := &worker{name: "test"}
 	go func() { // want `goroutine does not propagate context "ctx"`
@@ -239,7 +262,8 @@ func badGoroutineCallsMethodWithoutCtx(ctx context.Context) {
 	}()
 }
 
-// GO29b: Method call with ctx
+// Method call with ctx
+// Goroutine calling method with context passed
 func goodGoroutineCallsMethodWithCtx(ctx context.Context) {
 	w := &worker{name: "test"}
 	go func() {
@@ -249,7 +273,8 @@ func goodGoroutineCallsMethodWithCtx(ctx context.Context) {
 
 // ===== MULTIPLE VARIABLE CAPTURE =====
 
-// GO30: Captures other vars but not ctx
+// Captures other vars but not ctx
+// Goroutine captures other variables but not context
 func badGoroutineCapturesOtherButNotCtx(ctx context.Context) {
 	x := 42
 	y := "hello"
@@ -258,7 +283,8 @@ func badGoroutineCapturesOtherButNotCtx(ctx context.Context) {
 	}()
 }
 
-// GO30b: Captures ctx among other vars
+// Captures ctx among other vars
+// Goroutine captures context along with other variables
 func goodGoroutineCapturesCtxAmongOthers(ctx context.Context) {
 	x := 42
 	y := "hello"
@@ -270,7 +296,8 @@ func goodGoroutineCapturesCtxAmongOthers(ctx context.Context) {
 
 // ===== CONTROL FLOW =====
 
-// GO31: Loop inside goroutine without ctx
+// Loop inside goroutine without ctx
+// Goroutine with internal loop but no context
 func badGoroutineWithLoop(ctx context.Context) {
 	go func() { // want `goroutine does not propagate context "ctx"`
 		for i := 0; i < 10; i++ {
@@ -279,7 +306,8 @@ func badGoroutineWithLoop(ctx context.Context) {
 	}()
 }
 
-// GO31b: Loop inside goroutine with ctx
+// Loop inside goroutine with ctx
+// Goroutine with internal loop properly checking context
 func goodGoroutineUsesCtxInLoop(ctx context.Context) {
 	go func() {
 		for {
@@ -293,7 +321,8 @@ func goodGoroutineUsesCtxInLoop(ctx context.Context) {
 	}()
 }
 
-// GO32: Switch inside goroutine without ctx
+// Switch inside goroutine without ctx
+// Goroutine with switch statement but no context
 func badGoroutineWithSwitch(ctx context.Context) {
 	go func() { // want `goroutine does not propagate context "ctx"`
 		switch x := 1; x {
@@ -305,7 +334,8 @@ func badGoroutineWithSwitch(ctx context.Context) {
 	}()
 }
 
-// GO32b: Switch inside goroutine with ctx
+// Switch inside goroutine with ctx
+// Goroutine with switch checking context
 func goodGoroutineUsesCtxInSwitch(ctx context.Context) {
 	go func() {
 		switch {
@@ -314,5 +344,21 @@ func goodGoroutineUsesCtxInSwitch(ctx context.Context) {
 		default:
 			// continue
 		}
+	}()
+}
+
+// ===== DEEPLY NESTED PATTERNS =====
+
+// Deep nested without ctx
+// Three levels of nested goroutines where only the first uses context
+// see also: errgroup, waitgroup
+func badNestedDeep(ctx context.Context) {
+	go func() {
+		_ = ctx
+		go func() { // want `goroutine does not propagate context "ctx"`
+			go func() { // want `goroutine does not propagate context "ctx"`
+				fmt.Println("deep")
+			}()
+		}()
 	}()
 }

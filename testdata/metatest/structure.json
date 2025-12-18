@@ -1,0 +1,1737 @@
+{
+    "targets": [
+        "goroutine",
+        "goroutinecreator",
+        "goroutinederive",
+        "goroutinederiveand",
+        "goroutinederivemixed",
+        "carrier",
+        "errgroup",
+        "gotask",
+        "waitgroup"
+    ],
+    "tests": {
+        "badBasicErrgroup": {
+            "title": "Basic - func doesn't use ctx",
+            "description": "Goroutine creator receives function without context usage",
+            "level": "basic",
+            "targets": [
+                "goroutinecreator"
+            ]
+        },
+        "badBasicWaitGroup": {
+            "title": "Basic - func doesn't use ctx (waitgroup)",
+            "description": "Goroutine creator receives function without context usage (waitgroup variant)",
+            "level": "basic",
+            "targets": [
+                "goroutinecreator"
+            ]
+        },
+        "badCancelableChainDoAsync": {
+            "title": "Cancelable chain DoAsync without deriver",
+            "description": "Cancelable chain DoAsync without deriver",
+            "level": "evil",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "badCancelableTaskDoAsyncNoDeriver": {
+            "title": "CancelableTask.DoAsync without deriver",
+            "description": "CancelableTask.DoAsync called without deriver on ctx",
+            "level": "basic",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "badCarrierAsSecondParam": {
+            "title": "Carrier as second param - doesn't use it",
+            "description": "Carrier is second parameter but not used",
+            "level": "basic",
+            "targets": [
+                "carrier"
+            ]
+        },
+        "badChainedTaskDoAsync": {
+            "title": "Chained task creation - DoAsync on result of method chain",
+            "description": "DoAsync on method chain result without deriver",
+            "level": "evil",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "badConditionalGo": {
+            "title": "Conditional Go without ctx",
+            "description": "errgroup.Go() called conditionally without context",
+            "level": "advanced",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "badConditionalGoroutine": {
+            "title": "Conditional Go without ctx",
+            "description": "Goroutine spawned conditionally without context",
+            "level": "advanced",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badContextParamUnusualName": {
+            "title": "Context param with unusual name",
+            "description": "Unusual ctx param name",
+            "level": "evil",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "badCtxAsSecondParam": {
+            "title": "Context as non-first param without use",
+            "description": "Context is second parameter but not used in closure",
+            "level": "basic",
+            "targets": [
+                "goroutine",
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "badDeeplyNestedGoroutines": {
+            "title": "4-level nesting - last level missing ctx",
+            "description": "Four levels of nested goroutines where only the last level misses context",
+            "level": "evil",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badDeferInClosure": {
+            "title": "Closure with defer but no ctx",
+            "description": "errgroup.Go() closure with defer but no context",
+            "level": "advanced",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "badDeferredGoroutineWithoutCtx": {
+            "title": "Goroutine in deferred function WITHOUT ctx",
+            "description": "Goroutine spawned from deferred function without context",
+            "level": "evil",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badDerivedInNestedClosure": {
+            "title": "Deriver only in nested closure",
+            "description": "LIMITATION: Deriver in nested closure is not detected at top level",
+            "level": "evil",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "badDifferentCtxName": {
+            "title": "Context with different param name",
+            "description": "Different ctx param name",
+            "level": "evil",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "badDoAllFnsNoDeriver": {
+            "title": "DoAllFns without deriver",
+            "description": "DoAllFns with func that doesn't call goroutine deriver",
+            "level": "basic",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "badDoAllFnsSettledDerivedParentCtx": {
+            "title": "DoAllFnsSettled - deriver called on parent ctx",
+            "description": "Deriver called on parent ctx is still bad - deriver must be inside task body",
+            "level": "basic",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "badDoAllFnsSettledNoDeriver": {
+            "title": "DoAllFnsSettled - func literal without deriver",
+            "description": "DoAllFnsSettled with func literal that doesn't call goroutine deriver",
+            "level": "basic",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "badDoAllFnsSettledPartialDeriver": {
+            "title": "DoAllFnsSettled - multiple args, some without deriver",
+            "description": "DoAllFnsSettled with multiple args where some don't call goroutine deriver",
+            "level": "basic",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "badDoAllNoDeriver": {
+            "title": "DoAll without deriver",
+            "description": "DoAll with task that doesn't call goroutine deriver",
+            "level": "basic",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "badDoAllSettledNewTaskDerivedParentCtx": {
+            "title": "DoAllSettled - NewTask with deriver on parent ctx",
+            "description": "NewTask with deriver on parent ctx is still bad - deriver must be inside task body",
+            "level": "basic",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "badDoAllSettledNewTaskNoDeriver": {
+            "title": "DoAllSettled - NewTask without deriver",
+            "description": "DoAllSettled with NewTask that doesn't call goroutine deriver",
+            "level": "basic",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "badDoRaceFnsNoDeriver": {
+            "title": "DoRaceFns without deriver",
+            "description": "DoRaceFns with func that doesn't call goroutine deriver",
+            "level": "basic",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "badDoRaceNoDeriver": {
+            "title": "DoRace without deriver",
+            "description": "DoRace with task that doesn't call goroutine deriver",
+            "level": "basic",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "badEchoHandler": {
+            "title": "Echo handler without context usage",
+            "description": "echo.Context should be treated as context carrier",
+            "level": "basic",
+            "targets": [
+                "carrier"
+            ]
+        },
+        "badErrgroupGo": {
+            "title": "Literal without ctx - basic bad case",
+            "description": "errgroup.Group.Go() closure does not use context",
+            "level": "basic",
+            "targets": [
+                "errgroup"
+            ]
+        },
+        "badErrgroupGoMultiple": {
+            "title": "Multiple Go calls without ctx",
+            "description": "Multiple errgroup.Group.Go() calls without context",
+            "level": "basic",
+            "targets": [
+                "errgroup"
+            ]
+        },
+        "badErrgroupTryGo": {
+            "title": "TryGo without ctx",
+            "description": "errgroup.Group.TryGo() closure does not use context",
+            "level": "basic",
+            "targets": [
+                "errgroup"
+            ]
+        },
+        "badFirstFuncOnly": {
+            "title": "Multiple func args - first bad",
+            "description": "Goroutine creator receives multiple functions, first without context",
+            "level": "basic",
+            "targets": [
+                "goroutinecreator"
+            ]
+        },
+        "badFuncPassedThroughCreator": {
+            "title": "Function without ctx passed through creator",
+            "description": "Function without context passed through goroutine creator helper",
+            "level": "evil",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "badFuncThroughInterfaceWithoutCtx": {
+            "title": "Function through interface{} - control case without ctx",
+            "description": "Function through interface{} that does not use context",
+            "level": "evil",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "badGoHigherOrder": {
+            "title": "go fn()() higher-order without ctx",
+            "description": "Higher-order function call in go statement without context",
+            "level": "evil",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badGoHigherOrderTriple": {
+            "title": "go fn()()() triple higher-order without ctx",
+            "description": "Triple higher-order function call without context",
+            "level": "evil",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badGoInfiniteChain": {
+            "title": "Arbitrary depth go fn()()()...() without ctx",
+            "description": "Deep chain of function calls in go statement without context",
+            "level": "evil",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badGoroutineCallsInterfaceMethod": {
+            "title": "Interface method without ctx",
+            "description": "Goroutine calls interface method without context",
+            "level": "evil",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badGoroutineCallsMethodWithoutCtx": {
+            "title": "Method call without ctx",
+            "description": "Goroutine calling method without passing context",
+            "level": "advanced",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badGoroutineCapturesOtherButNotCtx": {
+            "title": "Captures other vars but not ctx",
+            "description": "Goroutine captures other variables but not context",
+            "level": "advanced",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badGoroutineIgnoresCtx": {
+            "title": "Literal without ctx - variant",
+            "description": "Goroutine ignores available context",
+            "level": "basic",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badGoroutineInEchoHandler": {
+            "title": "Goroutine in echo handler without carrier usage",
+            "description": "Goroutine does not capture echo.Context carrier",
+            "level": "basic",
+            "targets": [
+                "carrier"
+            ]
+        },
+        "badGoroutineInExpression": {
+            "title": "Goroutine in expression",
+            "description": "Goroutine inside function expression (not immediately invoked)",
+            "level": "evil",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badGoroutineInInitWithoutCtx": {
+            "title": "Goroutine in init expression WITHOUT ctx",
+            "description": "Goroutine in init expression without context",
+            "level": "evil",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badGoroutineNoCapture": {
+            "title": "Literal without ctx - basic bad case",
+            "description": "Goroutine func literal does not capture context",
+            "level": "basic",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badGoroutineReturnsViaChannel": {
+            "title": "Channel result without ctx",
+            "description": "Goroutine returning result via channel without context",
+            "level": "advanced",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badGoroutineUsesCtxOnlyInDeferredClosure": {
+            "title": "Ctx in deferred nested closure",
+            "description": "LIMITATION: Context used only in deferred nested closure is not detected",
+            "level": "advanced",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badGoroutineUsesCtxOnlyInRecoveryClosure": {
+            "title": "Ctx only in recovery closure",
+            "description": "LIMITATION: Context used only in recovery closure is not detected",
+            "level": "advanced",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badGoroutineWithChannelSend": {
+            "title": "Channel send without ctx",
+            "description": "Goroutine sending to channel without context",
+            "level": "advanced",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badGoroutineWithDefer": {
+            "title": "Defer without ctx",
+            "description": "Goroutine with defer statement but no context usage",
+            "level": "advanced",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badGoroutineWithLoop": {
+            "title": "Loop inside goroutine without ctx",
+            "description": "Goroutine with internal loop but no context",
+            "level": "advanced",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badGoroutineWithMultiCaseSelect": {
+            "title": "Select without ctx.Done case",
+            "description": "Goroutine with multi-case select but no ctx.Done case",
+            "level": "advanced",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badGoroutineWithRecovery": {
+            "title": "Defer with recovery, no ctx",
+            "description": "Goroutine with defer/recover but no context usage",
+            "level": "advanced",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badGoroutineWithSwitch": {
+            "title": "Switch inside goroutine without ctx",
+            "description": "Goroutine with switch statement but no context",
+            "level": "advanced",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badGoroutineWithTypeAssertion": {
+            "title": "Type assertion without ctx",
+            "description": "Goroutine with type assertion but no context",
+            "level": "evil",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badGoroutineWithWaitGroup": {
+            "title": "WaitGroup traditional without ctx",
+            "description": "Traditional WaitGroup (Add/Done) pattern without context",
+            "level": "advanced",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badGoroutinesInLoop": {
+            "title": "Go in for loop without ctx",
+            "description": "Goroutine spawned in for loop without context",
+            "level": "advanced",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badGoroutinesInRangeLoop": {
+            "title": "Go in range loop without ctx",
+            "description": "Goroutine spawned in range loop without context",
+            "level": "advanced",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badHigherOrderFunc": {
+            "title": "Higher-order func without ctx",
+            "description": "Higher-order function that returns closure without context",
+            "level": "evil",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "badHigherOrderTaskFactoryNoDeriver": {
+            "title": "Higher-order function returning task WITHOUT deriver",
+            "description": "Higher-order task factory without deriver",
+            "level": "evil",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "badIIFEInsideGoroutine": {
+            "title": "IIFE inside goroutine without ctx",
+            "description": "Goroutine with IIFE inside but no context usage",
+            "level": "evil",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badIIFEUsesCtxInNestedFunc": {
+            "title": "Ctx only in IIFE nested closure",
+            "description": "LIMITATION: Context used only in nested IIFE is not detected",
+            "level": "evil",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badInlineFuncLiteral": {
+            "title": "Inline func literal doesn't use ctx",
+            "description": "Goroutine creator receives inline func literal without context",
+            "level": "basic",
+            "targets": [
+                "goroutinecreator"
+            ]
+        },
+        "badInterfaceMethodWithoutCtxArg": {
+            "title": "Interface method without ctx arg",
+            "description": "Interface method that does not receive context",
+            "level": "evil",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "badLoopGo": {
+            "title": "Go in for loop without ctx",
+            "description": "errgroup.Go() called in for loop without context",
+            "level": "advanced",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "badMapValueWithoutCtx": {
+            "title": "Function from map without ctx",
+            "description": "Function from map that does not use context",
+            "level": "evil",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "badMixedCtxAndCarrierUsesNeither": {
+            "title": "Mixed ctx and carrier - uses neither",
+            "description": "Function has both context.Context and carrier, uses neither",
+            "level": "basic",
+            "targets": [
+                "carrier"
+            ]
+        },
+        "badMixedDerivers": {
+            "title": "Multiple tasks, only some have deriver",
+            "description": "Mixed deriver and non-deriver tasks",
+            "level": "evil",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "badMultipleCtxSeparateGroups": {
+            "title": "Multiple ctx in separate param groups - none used",
+            "description": "Context parameters in separate groups, none used",
+            "level": "evil",
+            "targets": [
+                "goroutine",
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "badMultipleDoAsync": {
+            "title": "Multiple DoAsync calls in same function",
+            "description": "Multiple DoAsync calls - each reported independently",
+            "level": "evil",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "badMultipleFuncs": {
+            "title": "Multiple func args - both bad",
+            "description": "Goroutine creator receives multiple functions, both without context",
+            "level": "basic",
+            "targets": [
+                "goroutinecreator"
+            ]
+        },
+        "badMultipleGoroutinesParallel": {
+            "title": "Multiple parallel goroutines - mixed ctx usage",
+            "description": "Multiple parallel goroutines with mixed context usage",
+            "level": "evil",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badNestedClosure": {
+            "title": "Go call inside IIFE without ctx",
+            "description": "errgroup.Go() called from immediately invoked function without context",
+            "level": "advanced",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "badNestedClosureWithoutCtx": {
+            "title": "Goroutine in nested closure WITHOUT ctx",
+            "description": "Goroutine in nested closure without context",
+            "level": "evil",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badNestedDeep": {
+            "title": "Deep nested without ctx",
+            "description": "Three levels of nested goroutines where only the first uses context",
+            "level": "advanced",
+            "targets": [
+                "goroutine",
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "badNestedInner": {
+            "title": "Nested goroutine - outer uses ctx, inner doesn't",
+            "description": "Outer goroutine uses context but inner goroutine does not",
+            "level": "evil",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badNestedInnerFunc": {
+            "title": "Go call inside inner named func without ctx",
+            "description": "errgroup.Go() called from inner named function without context",
+            "level": "advanced",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "badNestedOnlyOuterUsesCtx": {
+            "title": "Nested goroutine - outer uses ctx2, inner uses neither",
+            "description": "Nested goroutine where inner uses neither context",
+            "level": "evil",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badNestedTaskCreation": {
+            "title": "Task that creates another task (nested gotask call)",
+            "description": "Nested task creation - outer lacks deriver",
+            "level": "evil",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "badNewTaskVariableNoDeriver": {
+            "title": "NewTask stored in variable",
+            "description": "NewTask in variable without deriver",
+            "level": "evil",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "badRangeLoopGo": {
+            "title": "Go in range loop without ctx",
+            "description": "errgroup.Go() called in range loop without context",
+            "level": "advanced",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "badSecondFuncOnly": {
+            "title": "Multiple func args - second bad",
+            "description": "Goroutine creator receives multiple functions, second without context",
+            "level": "basic",
+            "targets": [
+                "goroutinecreator"
+            ]
+        },
+        "badShadowingInNestedBlock": {
+            "title": "Shadow in nested block",
+            "description": "Context shadowed in nested block with non-context type",
+            "level": "basic",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badShadowingNonContext": {
+            "title": "Shadow with non-ctx type",
+            "description": "Context variable is shadowed with non-context type (string)",
+            "level": "basic",
+            "targets": [
+                "goroutine",
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "badShadowingWithDifferentType": {
+            "title": "Shadow with non-ctx type (channel)",
+            "description": "Context shadowed with channel type",
+            "level": "basic",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badShadowingWithFunction": {
+            "title": "Shadow with non-ctx type (function)",
+            "description": "Context shadowed with function type",
+            "level": "basic",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "badSliceValueWithoutCtx": {
+            "title": "Function from slice without ctx",
+            "description": "Function from slice that does not use context",
+            "level": "evil",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "badStructFieldWithoutCtx": {
+            "title": "Struct field func without ctx",
+            "description": "Function from struct field that does not use context",
+            "level": "evil",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "badTaskDoAsyncNilChannel": {
+            "title": "Task.DoAsync with nil channel",
+            "description": "Task.DoAsync with nil channel still needs deriver on ctx",
+            "level": "basic",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "badTaskDoAsyncNoDeriver": {
+            "title": "Task.DoAsync without deriver",
+            "description": "Task.DoAsync called without deriver on ctx",
+            "level": "basic",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "badTaskPointerDoAsync": {
+            "title": "Task pointer DoAsync",
+            "description": "DoAsync on task pointer without deriver",
+            "level": "evil",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "badVariableFunc": {
+            "title": "Variable func without ctx",
+            "description": "Function stored in variable does not use context",
+            "level": "evil",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "badVariableTaskNoDeriver": {
+            "title": "Task stored in variable (func literal without deriver)",
+            "description": "Variable task without deriver",
+            "level": "evil",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "badVariadicExpansion": {
+            "title": "Variadic expansion without deriver",
+            "description": "Variadic expansion of tasks without deriver",
+            "level": "evil",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "badWaitGroupGo": {
+            "title": "Literal without ctx - basic bad case",
+            "description": "sync.WaitGroup.Go() closure does not use context",
+            "level": "basic",
+            "targets": [
+                "waitgroup"
+            ]
+        },
+        "badWaitGroupGoMultiple": {
+            "title": "Multiple Go calls without ctx",
+            "description": "Multiple sync.WaitGroup.Go() calls without context",
+            "level": "basic",
+            "targets": [
+                "waitgroup"
+            ]
+        },
+        "badWaitGroupGoPtr": {
+            "title": "Pointer receiver variant",
+            "description": "sync.WaitGroup.Go() with pointer receiver, closure does not use context",
+            "level": "basic",
+            "targets": [
+                "waitgroup"
+            ]
+        },
+        "evilInterleavedLayers": {
+            "title": "Interleaved layers - goroutine ignores shadowing ctx",
+            "description": "Interleaved layers where goroutine ignores the shadowing context",
+            "level": "evil",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "evilInterleavedLayersGood": {
+            "title": "Interleaved layers - good",
+            "description": "Interleaved layers where goroutine properly uses shadowing context",
+            "level": "evil",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "evilMiddleLayerIntroducesCtx": {
+            "title": "Middle layer introduces ctx - mixed usage",
+            "description": "Middle layer introduces context, some closures use it and some don't",
+            "level": "evil",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "evilMiddleLayerIntroducesCtxGood": {
+            "title": "Middle layer introduces ctx - good",
+            "description": "Middle layer introduces context and nested closure properly uses it",
+            "level": "evil",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "evilShadowingInnerHasCtx": {
+            "title": "Shadowing - inner ctx shadows outer",
+            "description": "Inner function with its own context parameter uses it",
+            "level": "evil",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "evilShadowingInnerIgnoresCtx": {
+            "title": "Shadowing - inner ignores ctx",
+            "description": "Inner function with its own context parameter ignores it",
+            "level": "evil",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "evilShadowingTwoLevels": {
+            "title": "Two levels of shadowing",
+            "description": "Two levels of argument passing with context shadowing",
+            "level": "evil",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "evilShadowingTwoLevelsBad": {
+            "title": "Two levels of shadowing - innermost ignores ctx",
+            "description": "Two levels of shadowing where innermost closure ignores context",
+            "level": "evil",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "goodBasicErrgroup": {
+            "title": "Basic - func uses ctx",
+            "description": "Goroutine creator receives function that uses context",
+            "level": "basic",
+            "targets": [
+                "goroutinecreator"
+            ]
+        },
+        "goodBasicWaitGroup": {
+            "title": "Basic - func uses ctx (waitgroup)",
+            "description": "Goroutine creator receives function that uses context (waitgroup variant)",
+            "level": "basic",
+            "targets": [
+                "goroutinecreator"
+            ]
+        },
+        "goodCancelableChainDoAsyncWithDeriver": {
+            "title": "Cancelable chain DoAsync with derived ctx",
+            "description": "Cancelable chain DoAsync with derived ctx",
+            "level": "evil",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "goodCancelableTaskDoAsyncWithDeriver": {
+            "title": "CancelableTask.DoAsync with deriver",
+            "description": "CancelableTask.DoAsync called with deriver on ctx",
+            "level": "basic",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "goodCarrierAsSecondParam": {
+            "title": "Carrier as second param - uses it",
+            "description": "Carrier is second parameter and is properly used",
+            "level": "basic",
+            "targets": [
+                "carrier"
+            ]
+        },
+        "goodChainedTaskDoAsyncWithDeriver": {
+            "title": "Chained task creation with derived ctx",
+            "description": "DoAsync on method chain with derived ctx",
+            "level": "evil",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "goodConditionalGo": {
+            "title": "Conditional Go with ctx",
+            "description": "errgroup.Go() called conditionally with context properly captured",
+            "level": "advanced",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "goodConditionalGoroutine": {
+            "title": "Conditional goroutine with ctx",
+            "description": "Goroutine spawned conditionally with context properly captured",
+            "level": "advanced",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "goodCtxAsSecondParam": {
+            "title": "Context as non-first param",
+            "description": "Context is second parameter and is properly used",
+            "level": "basic",
+            "targets": [
+                "goroutine",
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "goodDeferWithCtxDirect": {
+            "title": "Closure with ctx and defer",
+            "description": "errgroup.Go() closure with context and defer",
+            "level": "advanced",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "goodDeferredGoroutineWithCtx": {
+            "title": "Goroutine in deferred function WITH ctx",
+            "description": "Goroutine spawned from deferred function with context",
+            "level": "evil",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "goodDerivedBeforeEarlyReturn": {
+            "title": "Deriver called before early return",
+            "description": "Deriver before early return",
+            "level": "evil",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "goodDerivedInIfBranch": {
+            "title": "Deriver in if branch",
+            "description": "Deriver in if branch (any presence should satisfy)",
+            "level": "evil",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "goodDerivedOnOneBranch": {
+            "title": "Deriver only on one branch",
+            "description": "Deriver on one branch (any call counts)",
+            "level": "evil",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "goodDerivedStoredAndUsed": {
+            "title": "Deriver result stored and used",
+            "description": "Deriver result stored then used",
+            "level": "evil",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "goodDerivedUsedInExpression": {
+            "title": "Deriver result used directly in expression",
+            "description": "Deriver result used in expression",
+            "level": "evil",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "goodDifferentCtxNames": {
+            "title": "Good with different ctx param names",
+            "description": "Different ctx names with deriver",
+            "level": "evil",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "goodDirectFunctionCall": {
+            "title": "Direct function call",
+            "description": "go statement with direct function call (not func literal)",
+            "level": "basic",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "goodDoAllFnsSettledAllWithDeriver": {
+            "title": "DoAllFnsSettled - all args have deriver",
+            "description": "DoAllFnsSettled with all args calling goroutine deriver",
+            "level": "basic",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "goodDoAllFnsSettledDerivedAssigned": {
+            "title": "DoAllFnsSettled - deriver called but result assigned",
+            "description": "DoAllFnsSettled with deriver result assigned to variable",
+            "level": "basic",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "goodDoAllFnsSettledWithDeriver": {
+            "title": "DoAllFnsSettled - func literal with deriver",
+            "description": "DoAllFnsSettled with func literal that calls goroutine deriver",
+            "level": "basic",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "goodDoAllFnsWithDeriver": {
+            "title": "DoAllFns with deriver",
+            "description": "DoAllFns with func that calls goroutine deriver",
+            "level": "basic",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "goodDoAllSettledNewTaskWithDeriver": {
+            "title": "DoAllSettled - NewTask with deriver",
+            "description": "DoAllSettled with NewTask that calls goroutine deriver",
+            "level": "basic",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "goodDoAllWithDeriver": {
+            "title": "DoAll with deriver",
+            "description": "DoAll with task that calls goroutine deriver",
+            "level": "basic",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "goodDoRaceFnsWithDeriver": {
+            "title": "DoRaceFns with deriver",
+            "description": "DoRaceFns with func that calls goroutine deriver",
+            "level": "basic",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "goodDoRaceWithDeriver": {
+            "title": "DoRace with deriver",
+            "description": "DoRace with task that calls goroutine deriver",
+            "level": "basic",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "goodEchoHandler": {
+            "title": "Echo handler with context usage",
+            "description": "echo.Context used properly",
+            "level": "basic",
+            "targets": [
+                "carrier"
+            ]
+        },
+        "goodEmptyDoAll": {
+            "title": "Empty call (less than 2 args)",
+            "description": "Empty DoAll call - not checked",
+            "level": "evil",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "goodErrgroupGoCallsWithCtx": {
+            "title": "Literal with ctx - via function call",
+            "description": "errgroup.Group.Go() closure uses context via function call",
+            "level": "basic",
+            "targets": [
+                "errgroup"
+            ]
+        },
+        "goodErrgroupGoWithCtx": {
+            "title": "Literal with ctx - basic good case",
+            "description": "errgroup.Group.Go() closure properly uses context",
+            "level": "basic",
+            "targets": [
+                "errgroup"
+            ]
+        },
+        "goodErrgroupWithContext": {
+            "title": "errgroup.WithContext pattern",
+            "description": "Using errgroup.WithContext to create group and context",
+            "level": "basic",
+            "targets": [
+                "errgroup"
+            ]
+        },
+        "goodFuncHasOwnCtx": {
+            "title": "Func has own ctx param",
+            "description": "Function has its own context parameter",
+            "level": "basic",
+            "targets": [
+                "goroutinecreator"
+            ]
+        },
+        "goodFuncPassedThroughCreator": {
+            "title": "Function with ctx passed through creator",
+            "description": "Function with context passed through goroutine creator helper",
+            "level": "evil",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "goodGoHigherOrder": {
+            "title": "go fn(ctx)() higher-order with ctx",
+            "description": "Higher-order function call in go statement with context",
+            "level": "evil",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "goodGoHigherOrderTriple": {
+            "title": "go fn(ctx)()() triple higher-order with ctx",
+            "description": "Triple higher-order function call with context",
+            "level": "evil",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "goodGoInfiniteChain": {
+            "title": "Arbitrary depth go fn(ctx)()()...() with ctx",
+            "description": "Deep chain of function calls in go statement with context",
+            "level": "evil",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "goodGoroutineCallsInterfaceMethodWithCtx": {
+            "title": "Interface method with ctx",
+            "description": "Goroutine calls interface method with context",
+            "level": "evil",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "goodGoroutineCallsMethodWithCtx": {
+            "title": "Method call with ctx",
+            "description": "Goroutine calling method with context passed",
+            "level": "advanced",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "goodGoroutineCapturesCtx": {
+            "title": "Literal with ctx - basic good case",
+            "description": "Goroutine captures and uses context",
+            "level": "basic",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "goodGoroutineCapturesCtxAmongOthers": {
+            "title": "Captures ctx among other vars",
+            "description": "Goroutine captures context along with other variables",
+            "level": "advanced",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "goodGoroutineInEchoHandler": {
+            "title": "Goroutine in echo handler with carrier usage",
+            "description": "Goroutine properly captures echo.Context carrier",
+            "level": "basic",
+            "targets": [
+                "carrier"
+            ]
+        },
+        "goodGoroutineInInitWithCtx": {
+            "title": "Goroutine in init expression WITH ctx",
+            "description": "Goroutine in init expression with context properly captured",
+            "level": "evil",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "goodGoroutinePassesCtxAsArg": {
+            "title": "Ctx passed as argument to goroutine",
+            "description": "Context passed as argument to goroutine function",
+            "level": "basic",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "goodGoroutineReturnsWithCtx": {
+            "title": "Channel result with ctx",
+            "description": "Goroutine returning result via channel with proper context handling",
+            "level": "advanced",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "goodGoroutineSelectOnCtx": {
+            "title": "Literal with ctx in select",
+            "description": "Goroutine uses context in select statement",
+            "level": "basic",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "goodGoroutineUsesCtxInCall": {
+            "title": "Literal with ctx - via function call",
+            "description": "Goroutine uses context via function call",
+            "level": "basic",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "goodGoroutineUsesCtxInLoop": {
+            "title": "Loop inside goroutine with ctx",
+            "description": "Goroutine with internal loop properly checking context",
+            "level": "advanced",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "goodGoroutineUsesCtxInSwitch": {
+            "title": "Switch inside goroutine with ctx",
+            "description": "Goroutine with switch checking context",
+            "level": "advanced",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "goodGoroutineWithChannelAndCtx": {
+            "title": "Channel with select on ctx.Done",
+            "description": "Goroutine with channel and proper context handling in select",
+            "level": "advanced",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "goodGoroutineWithCtxInSelect": {
+            "title": "Select with ctx.Done case",
+            "description": "Goroutine with select properly handling context cancellation",
+            "level": "advanced",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "goodGoroutineWithDerivedCtx": {
+            "title": "Literal with derived ctx",
+            "description": "Goroutine uses derived context (WithCancel, etc.)",
+            "level": "basic",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "goodGoroutineWithWaitGroupAndCtx": {
+            "title": "WaitGroup traditional with ctx",
+            "description": "Traditional WaitGroup (Add/Done) pattern with proper context handling",
+            "level": "advanced",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "goodGoroutinesInLoopWithCtx": {
+            "title": "Goroutine in for loop with ctx",
+            "description": "Goroutine spawned in for loop with context properly captured",
+            "level": "advanced",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "goodHigherOrderFuncWithCtx": {
+            "title": "Higher-order func with ctx",
+            "description": "Higher-order function that returns closure with context",
+            "level": "evil",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "goodHigherOrderMultipleCtx": {
+            "title": "Higher-order with multiple ctx - factory receives ctx1",
+            "description": "Higher-order function with multiple contexts, uses first",
+            "level": "evil",
+            "targets": [
+                "goroutine",
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "goodHigherOrderMultipleCtxSecond": {
+            "title": "Higher-order with multiple ctx - factory receives ctx2",
+            "description": "Higher-order function with multiple contexts, uses second",
+            "level": "evil",
+            "targets": [
+                "goroutine",
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "goodHigherOrderTaskFactoryWithDeriver": {
+            "title": "Higher-order function returning task WITH deriver",
+            "description": "Higher-order task factory with deriver",
+            "level": "evil",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "goodIIFEWithCtxInGoroutineBody": {
+            "title": "IIFE with ctx in goroutine body",
+            "description": "Goroutine uses context directly before IIFE",
+            "level": "evil",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "goodIgnoreDoAllFnsSettled": {
+            "title": "Ignore directive on DoAllFnsSettled",
+            "description": "Ignore directive suppresses warning on DoAllFnsSettled",
+            "level": "basic",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "goodIgnoreTaskDoAsync": {
+            "title": "Ignore directive on Task.DoAsync",
+            "description": "Ignore directive suppresses warning on Task.DoAsync",
+            "level": "basic",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "goodIgnoredPreviousLine": {
+            "title": "Ignore directive - previous line",
+            "description": "Ignore directive on the previous line suppresses warning",
+            "level": "basic",
+            "targets": [
+                "goroutine",
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "goodIgnoredSameLine": {
+            "title": "Ignore directive - same line",
+            "description": "Ignore directive on the same line suppresses warning",
+            "level": "basic",
+            "targets": [
+                "goroutine",
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "goodIgnoredWithReason": {
+            "title": "Ignore directive - with reason",
+            "description": "Ignore directive with explanatory reason",
+            "level": "basic",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "goodInlineFuncLiteral": {
+            "title": "Inline func literal uses ctx",
+            "description": "Goroutine creator receives inline func literal with context",
+            "level": "basic",
+            "targets": [
+                "goroutinecreator"
+            ]
+        },
+        "goodInterfaceMethodWithCtxArg": {
+            "title": "Interface method with ctx arg",
+            "description": "Interface method receives context as argument",
+            "level": "evil",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "goodLoopGo": {
+            "title": "Go in for loop with ctx",
+            "description": "errgroup.Go() called in for loop with context properly captured",
+            "level": "advanced",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "goodMapKeyWithCtx": {
+            "title": "Map key with ctx",
+            "description": "Function from map that uses context",
+            "level": "evil",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "goodMixedCtxAndCarrierUsesCarrier": {
+            "title": "Mixed ctx and carrier - uses carrier",
+            "description": "Function has both context.Context and carrier, uses carrier",
+            "level": "basic",
+            "targets": [
+                "carrier"
+            ]
+        },
+        "goodMultipleCtxSeparateGroups": {
+            "title": "Multiple ctx in separate param groups",
+            "description": "Context parameters in separate groups, uses second",
+            "level": "evil",
+            "targets": [
+                "goroutine",
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "goodMultipleFuncs": {
+            "title": "Multiple func args - both good",
+            "description": "Goroutine creator receives multiple functions, both with context",
+            "level": "basic",
+            "targets": [
+                "goroutinecreator"
+            ]
+        },
+        "goodNestedAllUseCtx": {
+            "title": "Nested goroutines - all use ctx",
+            "description": "All levels of nested goroutines properly use context",
+            "level": "evil",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "goodNestedClosureWithCtx": {
+            "title": "Goroutine in nested closure WITH ctx",
+            "description": "Goroutine in nested closure with context properly captured via FreeVar chain",
+            "level": "evil",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "goodNestedDifferentContexts": {
+            "title": "Nested goroutine - outer uses ctx1, inner uses ctx2",
+            "description": "Nested goroutines each using different context parameter",
+            "level": "evil",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "goodNestedInnerHasOwnCtx": {
+            "title": "Inner func has own ctx param",
+            "description": "Inner function has its own context parameter",
+            "level": "advanced",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "goodNestedWithCtx": {
+            "title": "Go call inside inner func with ctx",
+            "description": "errgroup.Go() called from inner function with context properly captured",
+            "level": "advanced",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "goodNewTaskVariableWithDeriver": {
+            "title": "NewTask in variable with deriver is traced correctly",
+            "description": "NewTask in variable with deriver is traced",
+            "level": "evil",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "goodNoContextParam": {
+            "title": "No ctx param",
+            "description": "Function has no context parameter - not checked",
+            "level": "basic",
+            "targets": [
+                "goroutine",
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "goodNoCtxParam": {
+            "title": "No ctx param",
+            "description": "Function has no context parameter - not checked",
+            "level": "basic",
+            "targets": [
+                "goroutinecreator",
+                "gotask"
+            ]
+        },
+        "goodNonCreatorFunction": {
+            "title": "Non-creator function",
+            "description": "Call to non-creator function is not checked",
+            "level": "basic",
+            "targets": [
+                "goroutinecreator"
+            ]
+        },
+        "goodOnlyCtxArg": {
+            "title": "Only ctx arg",
+            "description": "Only ctx arg - not checked",
+            "level": "evil",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "goodShadowingInnerCtxParam": {
+            "title": "Inner func has own ctx param",
+            "description": "Inner function has its own context parameter",
+            "level": "basic",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "goodSliceIndexWithCtx": {
+            "title": "Slice index with ctx",
+            "description": "Function from slice that uses context",
+            "level": "evil",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "goodStructFieldWithCtx": {
+            "title": "Struct field func with ctx",
+            "description": "Function from struct field that uses context",
+            "level": "evil",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "goodTaskDoAsyncWithDeriver": {
+            "title": "Task.DoAsync with deriver",
+            "description": "Task.DoAsync called with deriver on ctx",
+            "level": "basic",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "goodTaskPointerDoAsyncWithDeriver": {
+            "title": "Task pointer DoAsync with deriver",
+            "description": "DoAsync on task pointer with deriver",
+            "level": "evil",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "goodTraditionalPattern": {
+            "title": "Traditional pattern (Add/Done)",
+            "description": "Traditional sync.WaitGroup pattern with Add/Done - not checked by waitgroup checker",
+            "level": "basic",
+            "targets": [
+                "waitgroup"
+            ]
+        },
+        "goodUsesBothContexts": {
+            "title": "Both contexts used",
+            "description": "Function with two context parameters, both used",
+            "level": "evil",
+            "targets": [
+                "goroutine",
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "goodUsesCtxBeforeShadowing": {
+            "title": "Uses ctx before shadow",
+            "description": "Uses context before shadowing it - valid usage",
+            "level": "basic",
+            "targets": [
+                "goroutine",
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "goodUsesLastOfThreeContexts": {
+            "title": "Three contexts - uses last one",
+            "description": "Function with three context parameters, uses last one",
+            "level": "evil",
+            "targets": [
+                "goroutine",
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "goodUsesMiddleOfThreeContexts": {
+            "title": "Three contexts - uses middle one",
+            "description": "Function with three context parameters, uses middle one",
+            "level": "evil",
+            "targets": [
+                "goroutine",
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "goodUsesOneOfTwoContexts": {
+            "title": "Multiple ctx params - uses first",
+            "description": "Function has multiple context parameters and uses first",
+            "level": "basic",
+            "targets": [
+                "goroutine",
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "goodUsesSecondOfTwoContexts": {
+            "title": "Multiple ctx params - uses second",
+            "description": "Function has multiple context parameters and uses second - should NOT report",
+            "level": "basic",
+            "targets": [
+                "goroutine",
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "goodVariableFuncWithCtx": {
+            "title": "Variable func with ctx",
+            "description": "Function stored in variable uses context",
+            "level": "evil",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "goodVariableTaskWithDeriver": {
+            "title": "Variable func assignment with deriver is traced correctly",
+            "description": "Variable task with deriver is traced",
+            "level": "evil",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "goodWaitGroupGoCallsWithCtx": {
+            "title": "Literal with ctx - via function call",
+            "description": "sync.WaitGroup.Go() closure uses context via function call",
+            "level": "basic",
+            "targets": [
+                "waitgroup"
+            ]
+        },
+        "goodWaitGroupGoWithCtx": {
+            "title": "Literal with ctx - basic good case",
+            "description": "sync.WaitGroup.Go() closure properly uses context",
+            "level": "basic",
+            "targets": [
+                "waitgroup"
+            ]
+        },
+        "limitationDeferNestedClosure": {
+            "title": "Ctx in deferred nested closure",
+            "description": "LIMITATION: Context used only in deferred nested closure is not detected",
+            "level": "advanced",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "limitationDerivedInDeferClosure": {
+            "title": "LIMITATION - Deriver in defer closure not detected",
+            "description": "Defer closure is treated as nested FuncLit, not traversed",
+            "level": "evil",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "limitationFuncFromChannel": {
+            "title": "LIMITATION - Function from channel",
+            "description": "Context captured but not traced through channel receive",
+            "level": "evil",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "limitationFuncThroughInterfaceWithCtx": {
+            "title": "LIMITATION - Function through interface{} type assertion",
+            "description": "Context captured but not traced through interface{} assertion",
+            "level": "evil",
+            "targets": [
+                "errgroup",
+                "waitgroup"
+            ]
+        },
+        "limitationInterfaceTaskMaker": {
+            "title": "LIMITATION - Interface method returns can't be traced",
+            "description": "Interface task maker can't be traced",
+            "level": "evil",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "limitationVariadicExpansionVariable": {
+            "title": "LIMITATION - Variable slice expansion can't be traced",
+            "description": "Variable slice expansion with deriver can't be traced",
+            "level": "evil",
+            "targets": [
+                "gotask"
+            ]
+        },
+        "notCheckedLocalContextVariable": {
+            "title": "No ctx param (local var)",
+            "description": "Context from local variable is not checked (no param)",
+            "level": "basic",
+            "targets": [
+                "goroutine"
+            ]
+        },
+        "twoContextParams": {
+            "title": "Multiple ctx params - reports first",
+            "description": "Function has two context parameters, reports first one when neither used",
+            "level": "basic",
+            "targets": [
+                "goroutine",
+                "errgroup",
+                "waitgroup"
+            ]
+        }
+    }
+}

@@ -1,3 +1,6 @@
+// Package goroutinederiveand contains test fixtures for the goroutine-derive AND mode.
+// This file covers basic patterns with AND (plus) mode - all derivers must be called.
+// Test flag: -goroutine-deriver=github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine+github.com/newrelic/go-agent/v3/newrelic.NewContext
 package goroutinederiveand
 
 import (
@@ -6,14 +9,10 @@ import (
 	"github.com/newrelic/go-agent/v3/newrelic"
 )
 
-// =============================================================================
-// BASIC: AND (plus) - all must be called
-// Test flag: -goroutine-deriver=github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine+github.com/newrelic/go-agent/v3/newrelic.NewContext
-// =============================================================================
-
 // ===== SHOULD NOT REPORT =====
 
-// DA01: AND - calls both functions.
+// AND - calls both functions
+// Goroutine calls both required deriver functions
 func a01AndCallsBoth(ctx context.Context, txn *newrelic.Transaction) {
 	go func() {
 		txn = txn.NewGoroutine()
@@ -22,7 +21,8 @@ func a01AndCallsBoth(ctx context.Context, txn *newrelic.Transaction) {
 	}()
 }
 
-// DA02: AND - calls both in different order.
+// AND - calls both in different order
+// Goroutine calls both derivers in reversed order
 func a02AndCallsBothReversed(ctx context.Context, txn *newrelic.Transaction) {
 	go func() {
 		ctx = newrelic.NewContext(ctx, txn)
@@ -32,7 +32,8 @@ func a02AndCallsBothReversed(ctx context.Context, txn *newrelic.Transaction) {
 	}()
 }
 
-// DA03: AND - calls both with other code between.
+// AND - calls both with other code between
+// Goroutine calls both derivers with interleaved code
 func a03AndCallsBothInterleaved(ctx context.Context, txn *newrelic.Transaction) {
 	go func() {
 		txn = txn.NewGoroutine()
@@ -42,7 +43,8 @@ func a03AndCallsBothInterleaved(ctx context.Context, txn *newrelic.Transaction) 
 	}()
 }
 
-// DA04: AND - has own context param.
+// AND - has own context param
+// Goroutine has its own context parameter
 func a04AndOwnContextParam(ctx context.Context) {
 	go func(ctx context.Context) {
 		_ = ctx
@@ -51,7 +53,8 @@ func a04AndOwnContextParam(ctx context.Context) {
 
 // ===== SHOULD REPORT =====
 
-// DA05: AND - calls only first (method).
+// AND - calls only first (method)
+// Goroutine calls only first of AND group
 func a05AndCallsOnlyFirst(ctx context.Context, txn *newrelic.Transaction) {
 	go func() { // want "goroutine should call github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine\\+github.com/newrelic/go-agent/v3/newrelic.NewContext to derive context"
 		txn = txn.NewGoroutine()
@@ -60,7 +63,8 @@ func a05AndCallsOnlyFirst(ctx context.Context, txn *newrelic.Transaction) {
 	}()
 }
 
-// DA06: AND - calls only second (function).
+// AND - calls only second (function)
+// Goroutine calls only second of AND group
 func a06AndCallsOnlySecond(ctx context.Context, txn *newrelic.Transaction) {
 	go func() { // want "goroutine should call github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine\\+github.com/newrelic/go-agent/v3/newrelic.NewContext to derive context"
 		ctx = newrelic.NewContext(ctx, txn)
@@ -68,7 +72,8 @@ func a06AndCallsOnlySecond(ctx context.Context, txn *newrelic.Transaction) {
 	}()
 }
 
-// DA07: AND - calls neither function.
+// AND - calls neither function
+// Goroutine calls neither deriver
 func a07AndCallsNeither(ctx context.Context) {
 	go func() { // want "goroutine should call github.com/newrelic/go-agent/v3/newrelic.Transaction.NewGoroutine\\+github.com/newrelic/go-agent/v3/newrelic.NewContext to derive context"
 		_ = ctx

@@ -10,14 +10,16 @@ import (
 
 // ===== SHOULD REPORT =====
 
-// GO01: Literal without ctx - basic bad case
+// Literal without ctx - basic bad case
+// Goroutine func literal does not capture context
 func badGoroutineNoCapture(ctx context.Context) {
 	go func() { // want `goroutine does not propagate context "ctx"`
 		fmt.Println("no context")
 	}()
 }
 
-// GO01b: Literal without ctx - variant
+// Literal without ctx - variant
+// Goroutine ignores available context
 func badGoroutineIgnoresCtx(ctx context.Context) {
 	go func() { // want `goroutine does not propagate context "ctx"`
 		x := 1
@@ -27,28 +29,33 @@ func badGoroutineIgnoresCtx(ctx context.Context) {
 
 // ===== SHOULD NOT REPORT =====
 
-// GO02: Literal with ctx - basic good case
+// Literal with ctx - basic good case
+// Goroutine captures and uses context
 func goodGoroutineCapturesCtx(ctx context.Context) {
 	go func() {
 		_ = ctx.Done()
 	}()
 }
 
-// GO02b: Literal with ctx - via function call
+// Literal with ctx - via function call
+// Goroutine uses context via function call
 func goodGoroutineUsesCtxInCall(ctx context.Context) {
 	go func() {
 		doSomething(ctx)
 	}()
 }
 
-// GO03: No ctx param - not checked
+// No ctx param
+// Function has no context parameter - not checked
+// see also: errgroup, waitgroup
 func goodNoContextParam() {
 	go func() {
 		fmt.Println("hello")
 	}()
 }
 
-// GO02c: Literal with derived ctx
+// Literal with derived ctx
+// Goroutine uses derived context (WithCancel, etc.)
 func goodGoroutineWithDerivedCtx(ctx context.Context) {
 	go func() {
 		ctx2, cancel := context.WithCancel(ctx)
@@ -57,7 +64,8 @@ func goodGoroutineWithDerivedCtx(ctx context.Context) {
 	}()
 }
 
-// GO02d: Literal with ctx in select
+// Literal with ctx in select
+// Goroutine uses context in select statement
 func goodGoroutineSelectOnCtx(ctx context.Context) {
 	go func() {
 		select {
@@ -70,7 +78,9 @@ func goodGoroutineSelectOnCtx(ctx context.Context) {
 
 // ===== SHADOWING TESTS =====
 
-// GO04: Shadow with non-ctx type (string)
+// Shadow with non-ctx type
+// Context variable is shadowed with non-context type (string)
+// see also: errgroup, waitgroup
 func badShadowingNonContext(ctx context.Context) {
 	go func() { // want `goroutine does not propagate context "ctx"`
 		ctx := "not a context" // shadows with string
@@ -78,14 +88,16 @@ func badShadowingNonContext(ctx context.Context) {
 	}()
 }
 
-// GO10: Inner func has own ctx param
+// Inner func has own ctx param
+// Inner function has its own context parameter
 func goodShadowingInnerCtxParam(outerCtx context.Context) {
 	go func(ctx context.Context) {
 		_ = ctx.Done() // uses inner ctx - OK
 	}(outerCtx)
 }
 
-// GO04b: Shadow with non-ctx type (channel)
+// Shadow with non-ctx type (channel)
+// Context shadowed with channel type
 func badShadowingWithDifferentType(ctx context.Context) {
 	go func() { // want `goroutine does not propagate context "ctx"`
 		ctx := make(chan int) // shadows with channel
@@ -93,7 +105,8 @@ func badShadowingWithDifferentType(ctx context.Context) {
 	}()
 }
 
-// GO04c: Shadow with non-ctx type (function)
+// Shadow with non-ctx type (function)
+// Context shadowed with function type
 func badShadowingWithFunction(ctx context.Context) {
 	go func() { // want `goroutine does not propagate context "ctx"`
 		ctx := func() {} // shadows with function
@@ -101,7 +114,8 @@ func badShadowingWithFunction(ctx context.Context) {
 	}()
 }
 
-// GO04d: Shadow in nested block
+// Shadow in nested block
+// Context shadowed in nested block with non-context type
 func badShadowingInNestedBlock(ctx context.Context) {
 	go func() { // want `goroutine does not propagate context "ctx"`
 		if true {
@@ -111,7 +125,9 @@ func badShadowingInNestedBlock(ctx context.Context) {
 	}()
 }
 
-// GO05: Uses ctx before shadow - valid usage
+// Uses ctx before shadow
+// Uses context before shadowing it - valid usage
+// see also: errgroup, waitgroup
 func goodUsesCtxBeforeShadowing(ctx context.Context) {
 	go func() {
 		_ = ctx.Done() // use ctx before shadowing
@@ -122,35 +138,45 @@ func goodUsesCtxBeforeShadowing(ctx context.Context) {
 
 // ===== MULTIPLE CONTEXT PARAMETERS =====
 
-// GO08: Multiple ctx params - reports first (bad)
+// Multiple ctx params - reports first
+// Function has two context parameters, reports first one when neither used
+// see also: errgroup, waitgroup
 func twoContextParams(ctx1, ctx2 context.Context) {
 	go func() { // want `goroutine does not propagate context "ctx1"`
 		fmt.Println("ignoring both contexts")
 	}()
 }
 
-// GO09: Multiple ctx params - uses first (good)
+// Multiple ctx params - uses first
+// Function has multiple context parameters and uses first
+// see also: errgroup, waitgroup
 func goodUsesOneOfTwoContexts(ctx1, ctx2 context.Context) {
 	go func() {
 		_ = ctx1 // uses first context
 	}()
 }
 
-// GO09b: Multiple ctx params - uses second (good)
+// Multiple ctx params - uses second
+// Function has multiple context parameters and uses second - should NOT report
+// see also: errgroup, waitgroup
 func goodUsesSecondOfTwoContexts(ctx1, ctx2 context.Context) {
 	go func() {
 		_ = ctx2 // uses second context - should NOT report
 	}()
 }
 
-// GO14: Context as non-first param (good)
+// Context as non-first param
+// Context is second parameter and is properly used
+// see also: errgroup, waitgroup
 func goodCtxAsSecondParam(logger interface{}, ctx context.Context) {
 	go func() {
 		_ = ctx // ctx is second param but still detected
 	}()
 }
 
-// GO14b: Context as non-first param without use (bad)
+// Context as non-first param without use
+// Context is second parameter but not used in closure
+// see also: errgroup, waitgroup
 func badCtxAsSecondParam(logger interface{}, ctx context.Context) {
 	go func() { // want `goroutine does not propagate context "ctx"`
 		_ = logger
@@ -159,7 +185,8 @@ func badCtxAsSecondParam(logger interface{}, ctx context.Context) {
 
 // ===== CONTEXT FROM LOCAL VARIABLE =====
 
-// GO03b: No ctx param (local var) - not checked
+// No ctx param (local var)
+// Context from local variable is not checked (no param)
 func notCheckedLocalContextVariable() {
 	// No context parameter, so not checked
 	ctx := context.Background()
@@ -171,7 +198,8 @@ func notCheckedLocalContextVariable() {
 
 // ===== CONTEXT PASSED AS ARGUMENT =====
 
-// GO10b: Ctx passed as argument to goroutine
+// Ctx passed as argument to goroutine
+// Context passed as argument to goroutine function
 func goodGoroutinePassesCtxAsArg(ctx context.Context) {
 	go func(c context.Context) {
 		_ = c.Done() // uses its own param
@@ -180,7 +208,8 @@ func goodGoroutinePassesCtxAsArg(ctx context.Context) {
 
 // ===== DIRECT FUNCTION CALL =====
 
-// GO11: Direct function call - not a func literal
+// Direct function call
+// go statement with direct function call (not func literal)
 func goodDirectFunctionCall(ctx context.Context) {
 	go doSomething(ctx) // not a func literal
 }
@@ -191,14 +220,18 @@ func doSomething(ctx context.Context) {
 
 // ===== IGNORE DIRECTIVES =====
 
-// GO06: Ignore directive - same line
+// Ignore directive - same line
+// Ignore directive on the same line suppresses warning
+// see also: errgroup, waitgroup
 func goodIgnoredSameLine(ctx context.Context) {
 	go func() { //goroutinectx:ignore
 		fmt.Println("ignored")
 	}()
 }
 
-// GO07: Ignore directive - previous line
+// Ignore directive - previous line
+// Ignore directive on the previous line suppresses warning
+// see also: errgroup, waitgroup
 func goodIgnoredPreviousLine(ctx context.Context) {
 	//goroutinectx:ignore
 	go func() {
@@ -206,7 +239,8 @@ func goodIgnoredPreviousLine(ctx context.Context) {
 	}()
 }
 
-// GO07b: Ignore directive - with reason
+// Ignore directive - with reason
+// Ignore directive with explanatory reason
 func goodIgnoredWithReason(ctx context.Context) {
 	go func() { //goroutinectx:ignore - intentionally fire-and-forget
 		fmt.Println("background task")

@@ -11,7 +11,8 @@ import (
 
 // ===== 2-LEVEL GOROUTINE NESTING =====
 
-// GO40: Nested goroutine - outer uses ctx, inner doesn't
+// Nested goroutine - outer uses ctx, inner doesn't
+// Outer goroutine uses context but inner goroutine does not
 func badNestedInner(ctx context.Context) {
 	go func() {
 		_ = ctx // outer goroutine uses ctx, but inner doesn't
@@ -21,19 +22,8 @@ func badNestedInner(ctx context.Context) {
 	}()
 }
 
-// GO41: 3-level nesting - only first uses ctx
-func badNestedDeep(ctx context.Context) {
-	go func() {
-		_ = ctx
-		go func() { // want `goroutine does not propagate context "ctx"`
-			go func() { // want `goroutine does not propagate context "ctx"`
-				fmt.Println("deep")
-			}()
-		}()
-	}()
-}
-
-// GO42: Nested goroutines - all use ctx
+// Nested goroutines - all use ctx
+// All levels of nested goroutines properly use context
 func goodNestedAllUseCtx(ctx context.Context) {
 	go func() {
 		_ = ctx
@@ -46,7 +36,8 @@ func goodNestedAllUseCtx(ctx context.Context) {
 	}()
 }
 
-// GO43: 4-level nesting - last level missing ctx
+// 4-level nesting - last level missing ctx
+// Four levels of nested goroutines where only the last level misses context
 func badDeeplyNestedGoroutines(ctx context.Context) {
 	go func() {
 		_ = ctx
@@ -76,17 +67,20 @@ func makeWorkerWithCtx(ctx context.Context) func() {
 	}
 }
 
-// GO50: go fn()() - higher-order without ctx
+// go fn()() higher-order without ctx
+// Higher-order function call in go statement without context
 func badGoHigherOrder(ctx context.Context) {
 	go makeWorker()() // want `goroutine does not propagate context "ctx"`
 }
 
-// GO50b: go fn(ctx)() - higher-order with ctx
+// go fn(ctx)() higher-order with ctx
+// Higher-order function call in go statement with context
 func goodGoHigherOrder(ctx context.Context) {
 	go makeWorkerWithCtx(ctx)()
 }
 
-// GO51: go fn()()() - triple higher-order without ctx
+// go fn()()() triple higher-order without ctx
+// Triple higher-order function call without context
 func badGoHigherOrderTriple(ctx context.Context) {
 	makeMaker := func() func() func() {
 		return func() func() {
@@ -98,7 +92,8 @@ func badGoHigherOrderTriple(ctx context.Context) {
 	go makeMaker()()() // want `goroutine does not propagate context "ctx"`
 }
 
-// GO51b: go fn(ctx)()() - triple higher-order with ctx
+// go fn(ctx)()() triple higher-order with ctx
+// Triple higher-order function call with context
 func goodGoHigherOrderTriple(ctx context.Context) {
 	makeMaker := func(c context.Context) func() func() {
 		return func() func() {
@@ -110,7 +105,8 @@ func goodGoHigherOrderTriple(ctx context.Context) {
 	go makeMaker(ctx)()()
 }
 
-// GO52: Arbitrary depth go fn()()()...() without ctx
+// Arbitrary depth go fn()()()...() without ctx
+// Deep chain of function calls in go statement without context
 func badGoInfiniteChain(ctx context.Context) {
 	f := func() func() func() func() {
 		return func() func() func() {
@@ -124,7 +120,8 @@ func badGoInfiniteChain(ctx context.Context) {
 	go f()()()() // want `goroutine does not propagate context "ctx"`
 }
 
-// GO52b: Arbitrary depth go fn(ctx)()()...() with ctx
+// Arbitrary depth go fn(ctx)()()...() with ctx
+// Deep chain of function calls in go statement with context
 func goodGoInfiniteChain(ctx context.Context) {
 	f := func(c context.Context) func() func() func() {
 		return func() func() func() {
@@ -140,7 +137,8 @@ func goodGoInfiniteChain(ctx context.Context) {
 
 // ===== IIFE PATTERNS =====
 
-// GO60: IIFE inside goroutine without ctx
+// IIFE inside goroutine without ctx
+// Goroutine with IIFE inside but no context usage
 func badIIFEInsideGoroutine(ctx context.Context) {
 	go func() { // want `goroutine does not propagate context "ctx"`
 		func() {
@@ -149,7 +147,8 @@ func badIIFEInsideGoroutine(ctx context.Context) {
 	}()
 }
 
-// GO61: Ctx only in IIFE nested closure (LIMITATION)
+// Ctx only in IIFE nested closure
+// LIMITATION: Context used only in nested IIFE is not detected
 func badIIFEUsesCtxInNestedFunc(ctx context.Context) {
 	// ctx used only in nested IIFE, not by goroutine's direct body
 	go func() { // want `goroutine does not propagate context "ctx"`
@@ -159,7 +158,8 @@ func badIIFEUsesCtxInNestedFunc(ctx context.Context) {
 	}()
 }
 
-// GO60b: IIFE with ctx in goroutine body
+// IIFE with ctx in goroutine body
+// Goroutine uses context directly before IIFE
 func goodIIFEWithCtxInGoroutineBody(ctx context.Context) {
 	go func() {
 		_ = ctx // ctx used directly
@@ -181,7 +181,8 @@ func (r *myRunner) Run() {
 	fmt.Println("running")
 }
 
-// GO62: Interface method without ctx
+// Interface method without ctx
+// Goroutine calls interface method without context
 func badGoroutineCallsInterfaceMethod(ctx context.Context, r Runner) {
 	go func() { // want `goroutine does not propagate context "ctx"`
 		r.Run()
@@ -198,7 +199,8 @@ func (r *myCtxRunner) RunWithCtx(ctx context.Context) {
 	_ = ctx
 }
 
-// GO62b: Interface method with ctx
+// Interface method with ctx
+// Goroutine calls interface method with context
 func goodGoroutineCallsInterfaceMethodWithCtx(ctx context.Context, r CtxRunner) {
 	go func() {
 		r.RunWithCtx(ctx)
@@ -207,7 +209,8 @@ func goodGoroutineCallsInterfaceMethodWithCtx(ctx context.Context, r CtxRunner) 
 
 // ===== TYPE ASSERTION IN GOROUTINE =====
 
-// GO63: Type assertion without ctx
+// Type assertion without ctx
+// Goroutine with type assertion but no context
 func badGoroutineWithTypeAssertion(ctx context.Context) {
 	var x interface{} = "hello"
 	go func() { // want `goroutine does not propagate context "ctx"`
@@ -219,7 +222,8 @@ func badGoroutineWithTypeAssertion(ctx context.Context) {
 
 // ===== GOROUTINE IN EXPRESSION =====
 
-// GO64: Goroutine in expression (not immediately invoked)
+// Goroutine in expression
+// Goroutine inside function expression (not immediately invoked)
 func badGoroutineInExpression(ctx context.Context) {
 	_ = func() {
 		go func() { // want `goroutine does not propagate context "ctx"`
@@ -230,7 +234,8 @@ func badGoroutineInExpression(ctx context.Context) {
 
 // ===== MULTIPLE GOROUTINES PARALLEL =====
 
-// GO65: Multiple parallel goroutines - mixed ctx usage
+// Multiple parallel goroutines - mixed ctx usage
+// Multiple parallel goroutines with mixed context usage
 func badMultipleGoroutinesParallel(ctx context.Context) {
 	go func() { // want `goroutine does not propagate context "ctx"`
 		fmt.Println("first")
@@ -248,7 +253,8 @@ func badMultipleGoroutinesParallel(ctx context.Context) {
 // ===== NESTED CLOSURE GOROUTINE PATTERNS =====
 // These test goroutines inside nested closures - analyzer CAN trace ctx through FreeVar chains.
 
-// GO90: Goroutine in nested closure WITH ctx (good)
+// Goroutine in nested closure WITH ctx
+// Goroutine in nested closure with context properly captured via FreeVar chain
 func goodNestedClosureWithCtx(ctx context.Context) {
 	wrapper := func() {
 		go func() {
@@ -258,7 +264,8 @@ func goodNestedClosureWithCtx(ctx context.Context) {
 	wrapper()
 }
 
-// GO90b: Goroutine in nested closure WITHOUT ctx (bad)
+// Goroutine in nested closure WITHOUT ctx
+// Goroutine in nested closure without context
 func badNestedClosureWithoutCtx(ctx context.Context) {
 	wrapper := func() {
 		go func() { // want `goroutine does not propagate context "ctx"`
@@ -268,7 +275,8 @@ func badNestedClosureWithoutCtx(ctx context.Context) {
 	wrapper()
 }
 
-// GO91: Goroutine in deferred function WITH ctx (good)
+// Goroutine in deferred function WITH ctx
+// Goroutine spawned from deferred function with context
 func goodDeferredGoroutineWithCtx(ctx context.Context) {
 	defer func() {
 		go func() {
@@ -277,7 +285,8 @@ func goodDeferredGoroutineWithCtx(ctx context.Context) {
 	}()
 }
 
-// GO91b: Goroutine in deferred function WITHOUT ctx (bad)
+// Goroutine in deferred function WITHOUT ctx
+// Goroutine spawned from deferred function without context
 func badDeferredGoroutineWithoutCtx(ctx context.Context) {
 	defer func() {
 		go func() { // want `goroutine does not propagate context "ctx"`
@@ -286,7 +295,8 @@ func badDeferredGoroutineWithoutCtx(ctx context.Context) {
 	}()
 }
 
-// GO92: Goroutine in init expression WITH ctx (good)
+// Goroutine in init expression WITH ctx
+// Goroutine in init expression with context properly captured
 func goodGoroutineInInitWithCtx(ctx context.Context) {
 	_ = func() func() {
 		go func() {
@@ -296,7 +306,8 @@ func goodGoroutineInInitWithCtx(ctx context.Context) {
 	}()
 }
 
-// GO92b: Goroutine in init expression WITHOUT ctx (bad)
+// Goroutine in init expression WITHOUT ctx
+// Goroutine in init expression without context
 func badGoroutineInInitWithoutCtx(ctx context.Context) {
 	_ = func() func() {
 		go func() { // want `goroutine does not propagate context "ctx"`
@@ -308,35 +319,45 @@ func badGoroutineInInitWithoutCtx(ctx context.Context) {
 
 // ===== MULTIPLE CONTEXT EVIL PATTERNS =====
 
-// GO70: Three contexts - uses middle one (good)
+// Three contexts - uses middle one
+// Function with three context parameters, uses middle one
+// see also: errgroup, waitgroup
 func goodUsesMiddleOfThreeContexts(ctx1, ctx2, ctx3 context.Context) {
 	go func() {
 		_ = ctx2 // uses middle context
 	}()
 }
 
-// GO71: Three contexts - uses last one (good)
+// Three contexts - uses last one
+// Function with three context parameters, uses last one
+// see also: errgroup, waitgroup
 func goodUsesLastOfThreeContexts(ctx1, ctx2, ctx3 context.Context) {
 	go func() {
 		_ = ctx3 // uses last context
 	}()
 }
 
-// GO72: Multiple ctx in separate param groups (good)
+// Multiple ctx in separate param groups
+// Context parameters in separate groups, uses second
+// see also: errgroup, waitgroup
 func goodMultipleCtxSeparateGroups(a int, ctx1 context.Context, b string, ctx2 context.Context) {
 	go func() {
 		_ = ctx2 // uses second ctx from different param group
 	}()
 }
 
-// GO73: Multiple ctx in separate param groups - none used (bad)
+// Multiple ctx in separate param groups - none used
+// Context parameters in separate groups, none used
+// see also: errgroup, waitgroup
 func badMultipleCtxSeparateGroups(a int, ctx1 context.Context, b string, ctx2 context.Context) {
 	go func() { // want `goroutine does not propagate context "ctx1"`
 		fmt.Println(a, b) // uses other params but not ctx
 	}()
 }
 
-// GO74: Both contexts used (good)
+// Both contexts used
+// Function with two context parameters, both used
+// see also: errgroup, waitgroup
 func goodUsesBothContexts(ctx1, ctx2 context.Context) {
 	go func() {
 		_ = ctx1
@@ -344,7 +365,8 @@ func goodUsesBothContexts(ctx1, ctx2 context.Context) {
 	}()
 }
 
-// GO75: Nested goroutine - outer uses ctx1, inner uses ctx2 (good)
+// Nested goroutine - outer uses ctx1, inner uses ctx2
+// Nested goroutines each using different context parameter
 func goodNestedDifferentContexts(ctx1, ctx2 context.Context) {
 	go func() {
 		_ = ctx1 // outer uses ctx1
@@ -354,7 +376,8 @@ func goodNestedDifferentContexts(ctx1, ctx2 context.Context) {
 	}()
 }
 
-// GO76: Nested goroutine - outer uses ctx2, inner uses neither (bad inner)
+// Nested goroutine - outer uses ctx2, inner uses neither
+// Nested goroutine where inner uses neither context
 func badNestedOnlyOuterUsesCtx(ctx1, ctx2 context.Context) {
 	go func() {
 		_ = ctx2 // outer uses ctx2
@@ -364,12 +387,16 @@ func badNestedOnlyOuterUsesCtx(ctx1, ctx2 context.Context) {
 	}()
 }
 
-// GO77: Higher-order with multiple ctx - factory receives ctx1 (good)
+// Higher-order with multiple ctx - factory receives ctx1
+// Higher-order function with multiple contexts, uses first
+// see also: errgroup, waitgroup
 func goodHigherOrderMultipleCtx(ctx1, ctx2 context.Context) {
 	go makeWorkerWithCtx(ctx1)() // factory uses ctx1
 }
 
-// GO78: Higher-order with multiple ctx - factory receives ctx2 (good)
+// Higher-order with multiple ctx - factory receives ctx2
+// Higher-order function with multiple contexts, uses second
+// see also: errgroup, waitgroup
 func goodHigherOrderMultipleCtxSecond(ctx1, ctx2 context.Context) {
 	go makeWorkerWithCtx(ctx2)() // factory uses ctx2
 }
@@ -377,7 +404,8 @@ func goodHigherOrderMultipleCtxSecond(ctx1, ctx2 context.Context) {
 // ===== IIFE AND ARGUMENT-PASSING PATTERNS =====
 // These test goroutines inside IIFEs and context passed via arguments
 
-// GO80: Goroutine inside IIFE without ctx
+// Goroutine inside IIFE without ctx
+// Goroutine inside IIFE without context
 func go80GoroutineInIIFEBad(ctx context.Context) {
 	func() {
 		go func() { // want `goroutine does not propagate context "ctx"`
@@ -386,7 +414,8 @@ func go80GoroutineInIIFEBad(ctx context.Context) {
 	}()
 }
 
-// GO80b: Goroutine inside IIFE with ctx
+// Goroutine inside IIFE with ctx
+// Goroutine inside IIFE with context properly captured
 func go80GoroutineInIIFEGood(ctx context.Context) {
 	func() {
 		go func() {
@@ -395,7 +424,8 @@ func go80GoroutineInIIFEGood(ctx context.Context) {
 	}()
 }
 
-// GO81: Context passed via argument - inner shadows outer
+// Context passed via argument - inner shadows outer
+// Context passed to inner function that uses it (shadowing pattern)
 func go81ArgumentShadowing(outerCtx context.Context) {
 	func(ctx context.Context) {
 		go func() {
@@ -404,7 +434,8 @@ func go81ArgumentShadowing(outerCtx context.Context) {
 	}(outerCtx)
 }
 
-// GO81b: Context passed via argument - inner ignores it
+// Context passed via argument - inner ignores it
+// Context passed to inner function but ignored
 func go81ArgumentShadowingBad(outerCtx context.Context) {
 	func(ctx context.Context) {
 		go func() { // want `goroutine does not propagate context "ctx"`
@@ -413,7 +444,8 @@ func go81ArgumentShadowingBad(outerCtx context.Context) {
 	}(outerCtx)
 }
 
-// GO82: Two levels of argument passing
+// Two levels of argument passing
+// Context passed through two levels of function calls
 func go82TwoLevelArguments(ctx1 context.Context) {
 	func(ctx2 context.Context) {
 		func(ctx3 context.Context) {
@@ -424,7 +456,8 @@ func go82TwoLevelArguments(ctx1 context.Context) {
 	}(ctx1)
 }
 
-// GO82b: Two levels - innermost doesn't use
+// Two levels - innermost doesn't use
+// Context passed through two levels but innermost doesn't use it
 func go82TwoLevelArgumentsBad(ctx1 context.Context) {
 	func(ctx2 context.Context) {
 		func(ctx3 context.Context) {
@@ -435,7 +468,8 @@ func go82TwoLevelArgumentsBad(ctx1 context.Context) {
 	}(ctx1)
 }
 
-// GO83: Middle layer introduces ctx (outer has none)
+// Middle layer introduces ctx
+// Middle layer introduces context when outer has none
 func go83MiddleLayerIntroducesCtx() {
 	func(ctx context.Context) {
 		go func() {
@@ -444,7 +478,8 @@ func go83MiddleLayerIntroducesCtx() {
 	}(context.Background())
 }
 
-// GO83b: Middle layer introduces ctx - goroutine ignores
+// Middle layer introduces ctx - goroutine ignores
+// Middle layer introduces context but goroutine ignores it
 func go83MiddleLayerIntroducesCtxBad() {
 	func(ctx context.Context) {
 		go func() { // want `goroutine does not propagate context "ctx"`
@@ -453,7 +488,8 @@ func go83MiddleLayerIntroducesCtxBad() {
 	}(context.Background())
 }
 
-// GO84: Interleaved layers - ctx -> no ctx -> ctx (shadowing) -> goroutine
+// Interleaved layers - ctx -> no ctx -> ctx (shadowing) -> goroutine
+// Interleaved layers with context shadowing
 func go84InterleavedLayers(outerCtx context.Context) {
 	func() {
 		func(middleCtx context.Context) {
@@ -464,7 +500,8 @@ func go84InterleavedLayers(outerCtx context.Context) {
 	}()
 }
 
-// GO84b: Interleaved layers - goroutine ignores shadowing ctx
+// Interleaved layers - goroutine ignores shadowing ctx
+// Interleaved layers where goroutine ignores the shadowing context
 func go84InterleavedLayersBad(outerCtx context.Context) {
 	func() {
 		func(middleCtx context.Context) {

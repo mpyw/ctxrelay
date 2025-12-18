@@ -11,7 +11,9 @@ import (
 
 // ===== NESTED FUNCTIONS =====
 
-// GW35: Go call inside inner named func without ctx
+// Go call inside inner named func without ctx
+// sync.WaitGroup.Go() called from inner named function without context
+// see also: errgroup
 func badNestedInnerFunc(ctx context.Context) {
 	var wg sync.WaitGroup
 	innerFunc := func() {
@@ -22,7 +24,9 @@ func badNestedInnerFunc(ctx context.Context) {
 	wg.Wait()
 }
 
-// GW35b: Go call inside IIFE without ctx
+// Go call inside IIFE without ctx
+// sync.WaitGroup.Go() called from immediately invoked function without context
+// see also: errgroup
 func badNestedClosure(ctx context.Context) {
 	var wg sync.WaitGroup
 	func() {
@@ -32,7 +36,9 @@ func badNestedClosure(ctx context.Context) {
 	wg.Wait()
 }
 
-// GW35c: Go call inside deeply nested IIFE without ctx
+// Deep nested without ctx
+// sync.WaitGroup.Go() called from deeply nested closure without context
+// see also: goroutine, errgroup
 func badNestedDeep(ctx context.Context) {
 	var wg sync.WaitGroup
 	func() {
@@ -44,7 +50,9 @@ func badNestedDeep(ctx context.Context) {
 	wg.Wait()
 }
 
-// GW35d: Go call inside inner func with ctx
+// Go call inside inner func with ctx
+// sync.WaitGroup.Go() called from inner function with context properly captured
+// see also: errgroup
 func goodNestedWithCtx(ctx context.Context) {
 	var wg sync.WaitGroup
 	innerFunc := func() {
@@ -56,7 +64,9 @@ func goodNestedWithCtx(ctx context.Context) {
 	wg.Wait()
 }
 
-// GW10: Inner func has own ctx param
+// Inner func has own ctx param
+// Inner function has its own context parameter
+// see also: errgroup
 func goodNestedInnerHasOwnCtx(outerCtx context.Context) {
 	innerFunc := func(ctx context.Context) {
 		var wg sync.WaitGroup
@@ -70,7 +80,9 @@ func goodNestedInnerHasOwnCtx(outerCtx context.Context) {
 
 // ===== CONDITIONAL PATTERNS =====
 
-// GW24: Conditional Go without ctx
+// Conditional Go without ctx
+// sync.WaitGroup.Go() called conditionally without context
+// see also: errgroup
 func badConditionalGo(ctx context.Context, flag bool) {
 	var wg sync.WaitGroup
 	if flag {
@@ -83,7 +95,9 @@ func badConditionalGo(ctx context.Context, flag bool) {
 	wg.Wait()
 }
 
-// GW24b: Conditional Go with ctx
+// Conditional Go with ctx
+// sync.WaitGroup.Go() called conditionally with context properly captured
+// see also: errgroup
 func goodConditionalGo(ctx context.Context, flag bool) {
 	var wg sync.WaitGroup
 	if flag {
@@ -100,7 +114,9 @@ func goodConditionalGo(ctx context.Context, flag bool) {
 
 // ===== LOOP PATTERNS =====
 
-// GW22: Go in for loop without ctx
+// Go in for loop without ctx
+// sync.WaitGroup.Go() called in for loop without context
+// see also: errgroup
 func badLoopGo(ctx context.Context) {
 	var wg sync.WaitGroup
 	for i := 0; i < 3; i++ {
@@ -110,7 +126,9 @@ func badLoopGo(ctx context.Context) {
 	wg.Wait()
 }
 
-// GW22b: Go in for loop with ctx
+// Go in for loop with ctx
+// sync.WaitGroup.Go() called in for loop with context properly captured
+// see also: errgroup
 func goodLoopGo(ctx context.Context) {
 	var wg sync.WaitGroup
 	for i := 0; i < 3; i++ {
@@ -121,7 +139,9 @@ func goodLoopGo(ctx context.Context) {
 	wg.Wait()
 }
 
-// GW23: Go in range loop without ctx
+// Go in range loop without ctx
+// sync.WaitGroup.Go() called in range loop without context
+// see also: errgroup
 func badRangeLoopGo(ctx context.Context) {
 	var wg sync.WaitGroup
 	items := []int{1, 2, 3}
@@ -135,7 +155,9 @@ func badRangeLoopGo(ctx context.Context) {
 
 // ===== DEFER PATTERNS =====
 
-// GW35e: Closure with defer but no ctx
+// Closure with defer but no ctx
+// sync.WaitGroup.Go() closure with defer but no context
+// see also: errgroup
 func badDeferInClosure(ctx context.Context) {
 	var wg sync.WaitGroup
 	wg.Go(func() { // want `sync.WaitGroup.Go\(\) closure should use context "ctx"`
@@ -144,7 +166,9 @@ func badDeferInClosure(ctx context.Context) {
 	wg.Wait()
 }
 
-// GW02c: Closure with ctx and defer
+// Closure with ctx and defer
+// sync.WaitGroup.Go() closure with context and defer
+// see also: errgroup
 func goodDeferWithCtxDirect(ctx context.Context) {
 	var wg sync.WaitGroup
 	wg.Go(func() {
@@ -154,7 +178,9 @@ func goodDeferWithCtxDirect(ctx context.Context) {
 	wg.Wait()
 }
 
-// GW21: LIMITATION - ctx in deferred nested closure not detected
+// Ctx in deferred nested closure
+// LIMITATION: Context used only in deferred nested closure is not detected
+// see also: errgroup
 func limitationDeferNestedClosure(ctx context.Context) {
 	var wg sync.WaitGroup
 	wg.Go(func() { // want `sync.WaitGroup.Go\(\) closure should use context "ctx"`

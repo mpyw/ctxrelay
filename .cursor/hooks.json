@@ -1,0 +1,9 @@
+// ~/.cursor/hooks.json
+{
+    "version": 1,
+    "hooks": {
+      "stop": [
+        { "command": "./hooks/exo-reflect.sh" }
+      ]
+    }
+  }
