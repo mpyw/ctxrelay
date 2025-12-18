@@ -28,7 +28,7 @@ func makeWorkerWithCtx(ctx context.Context) func() {
 	}
 }
 
-// [BAD]: Variable func without ctx
+// [BAD]: Variable func
 //
 // Function stored in variable does not capture context.
 //
@@ -43,7 +43,7 @@ func badVariableFunc(ctx context.Context) {
 	wg.Wait()
 }
 
-// [GOOD]: Variable func with ctx
+// [GOOD]: Variable func
 //
 // Function stored in variable captures and uses context.
 //
@@ -58,7 +58,7 @@ func goodVariableFuncWithCtx(ctx context.Context) {
 	wg.Wait()
 }
 
-// [BAD]: Higher-order func without ctx
+// [BAD]: Higher-order func
 //
 // Function returned by factory does not use context.
 //
@@ -70,7 +70,7 @@ func badHigherOrderFunc(ctx context.Context) {
 	wg.Wait()
 }
 
-// [GOOD]: Higher-order func with ctx
+// [GOOD]: Higher-order func
 //
 // Factory function is called with context, enabling propagation.
 //

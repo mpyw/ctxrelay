@@ -173,7 +173,7 @@ func goodGoroutineWithChannelAndCtx(ctx context.Context) {
 	<-ch
 }
 
-// [BAD]: Channel result without ctx
+// [BAD]: Channel result pattern
 //
 // Goroutine using channels does not propagate context.
 func badGoroutineReturnsViaChannel(ctx context.Context) {
@@ -184,7 +184,7 @@ func badGoroutineReturnsViaChannel(ctx context.Context) {
 	<-result
 }
 
-// [GOOD]: Channel result with ctx
+// [GOOD]: Channel result pattern
 //
 // Goroutine using channels properly captures context.
 func goodGoroutineReturnsWithCtx(ctx context.Context) {
@@ -203,7 +203,7 @@ func compute() int { return 42 }
 
 // ===== SELECT PATTERNS =====
 
-// [BAD]: Select without ctx
+// [BAD]: Select statement
 //
 // Select without ctx.Done() case
 func badGoroutineWithMultiCaseSelect(ctx context.Context) {
@@ -219,7 +219,7 @@ func badGoroutineWithMultiCaseSelect(ctx context.Context) {
 	}()
 }
 
-// [GOOD]: Select with ctx
+// [GOOD]: Select statement
 //
 // Select with ctx.Done() case
 func goodGoroutineWithCtxInSelect(ctx context.Context) {
@@ -236,7 +236,7 @@ func goodGoroutineWithCtxInSelect(ctx context.Context) {
 
 // ===== WAITGROUP PATTERN =====
 
-// [BAD]: WaitGroup (traditional Add/Done) without ctx
+// [BAD]: Waitgroup pattern
 //
 // Traditional WaitGroup Add/Done pattern without context usage.
 func badGoroutineWithWaitGroup(ctx context.Context) {
@@ -249,7 +249,7 @@ func badGoroutineWithWaitGroup(ctx context.Context) {
 	wg.Wait()
 }
 
-// [GOOD]: WaitGroup (traditional Add/Done) with ctx
+// [GOOD]: Waitgroup pattern
 //
 // Traditional Add/Done pattern is not checked by the waitgroup checker.
 func goodGoroutineWithWaitGroupAndCtx(ctx context.Context) {
@@ -284,7 +284,7 @@ func (w *worker) runWithCtx(ctx context.Context) {
 	fmt.Println("running:", w.name)
 }
 
-// [BAD]: Method call without ctx
+// [BAD]: Method call
 //
 // Method called in goroutine does not receive context.
 func badGoroutineCallsMethodWithoutCtx(ctx context.Context) {
@@ -294,7 +294,7 @@ func badGoroutineCallsMethodWithoutCtx(ctx context.Context) {
 	}()
 }
 
-// [GOOD]: Method call with ctx
+// [GOOD]: Method call
 //
 // Method called in goroutine properly receives context.
 func goodGoroutineCallsMethodWithCtx(ctx context.Context) {
@@ -331,7 +331,7 @@ func goodGoroutineCapturesCtxAmongOthers(ctx context.Context) {
 
 // ===== CONTROL FLOW =====
 
-// [BAD]: Loop inside goroutine without ctx
+// [BAD]: Loop inside goroutine
 //
 // Loop inside goroutine body does not check context.
 func badGoroutineWithLoop(ctx context.Context) {
@@ -342,7 +342,7 @@ func badGoroutineWithLoop(ctx context.Context) {
 	}()
 }
 
-// [GOOD]: Loop inside goroutine with ctx
+// [GOOD]: Loop inside goroutine
 //
 // Loop inside goroutine body uses context for cancellation.
 func goodGoroutineUsesCtxInLoop(ctx context.Context) {
@@ -358,7 +358,7 @@ func goodGoroutineUsesCtxInLoop(ctx context.Context) {
 	}()
 }
 
-// [BAD]: Switch inside goroutine without ctx
+// [BAD]: Switch inside goroutine
 //
 // Goroutine with switch statement does not use context.
 func badGoroutineWithSwitch(ctx context.Context) {
@@ -372,7 +372,7 @@ func badGoroutineWithSwitch(ctx context.Context) {
 	}()
 }
 
-// [GOOD]: Switch inside goroutine with ctx
+// [GOOD]: Switch inside goroutine
 //
 // Goroutine with switch statement properly uses context.
 func goodGoroutineUsesCtxInSwitch(ctx context.Context) {

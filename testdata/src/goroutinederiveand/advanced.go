@@ -14,7 +14,7 @@ import (
 
 // ===== SHOULD NOT REPORT =====
 
-// [GOOD]: AND - Defer with both derivers.
+// [GOOD]: AND - Defer pattern
 //
 // AND - defer with both derivers.
 func goodAndDeferWithBothDerivers(ctx context.Context, txn *newrelic.Transaction) {
@@ -28,7 +28,7 @@ func goodAndDeferWithBothDerivers(ctx context.Context, txn *newrelic.Transaction
 	}()
 }
 
-// [GOOD]: AND - For loop with both derivers.
+// [GOOD]: AND - For loop pattern
 //
 // AND - for loop with both derivers.
 func goodAndForLoopWithBothDerivers(ctx context.Context, txn *newrelic.Transaction) {
@@ -41,7 +41,7 @@ func goodAndForLoopWithBothDerivers(ctx context.Context, txn *newrelic.Transacti
 	}
 }
 
-// [GOOD]: AND - WaitGroup pattern with both derivers.
+// [GOOD]: AND - WaitGroup pattern
 //
 // Both required deriver functions are called, satisfying AND condition.
 func goodAndWaitGroupWithBothDerivers(ctx context.Context, txn *newrelic.Transaction) {
@@ -104,7 +104,7 @@ func goodAndHigherOrderVariableWithBothDerivers(ctx context.Context, txn *newrel
 
 // ===== SHOULD REPORT =====
 
-// [BAD]: AND - Defer with only one deriver.
+// [BAD]: AND - Defer pattern
 //
 // AND - defer with only one deriver.
 func badAndDeferWithOneDeriver(ctx context.Context, txn *newrelic.Transaction) {
@@ -117,7 +117,7 @@ func badAndDeferWithOneDeriver(ctx context.Context, txn *newrelic.Transaction) {
 	}()
 }
 
-// [BAD]: AND - For loop with only one deriver.
+// [BAD]: AND - For loop pattern
 //
 // AND - for loop with only one deriver.
 func badAndForLoopWithOneDeriver(ctx context.Context, txn *newrelic.Transaction) {
@@ -129,7 +129,7 @@ func badAndForLoopWithOneDeriver(ctx context.Context, txn *newrelic.Transaction)
 	}
 }
 
-// [BAD]: AND - WaitGroup pattern with only one deriver.
+// [BAD]: AND - WaitGroup pattern
 //
 // Only one of the required deriver functions is called.
 func badAndWaitGroupWithOneDeriver(ctx context.Context, txn *newrelic.Transaction) {

@@ -458,70 +458,6 @@
       },
       "level": "advanced"
     },
-    "andDeferWithBothDerivers": {
-      "title": "AND - Defer with both derivers.",
-      "targets": [
-        "goroutinederiveand"
-      ],
-      "variants": {
-        "good": {
-          "description": "AND - defer with both derivers.",
-          "functions": {
-            "goroutinederiveand": "goodAndDeferWithBothDerivers"
-          }
-        },
-        "bad": null
-      },
-      "level": "advanced"
-    },
-    "andDeferWithOnlyOneDeriver": {
-      "title": "AND - Defer with only one deriver.",
-      "targets": [
-        "goroutinederiveand"
-      ],
-      "variants": {
-        "bad": {
-          "description": "AND - defer with only one deriver.",
-          "functions": {
-            "goroutinederiveand": "badAndDeferWithOneDeriver"
-          }
-        },
-        "good": null
-      },
-      "level": "advanced"
-    },
-    "andForLoopWithBothDerivers": {
-      "title": "AND - For loop with both derivers.",
-      "targets": [
-        "goroutinederiveand"
-      ],
-      "variants": {
-        "good": {
-          "description": "AND - for loop with both derivers.",
-          "functions": {
-            "goroutinederiveand": "goodAndForLoopWithBothDerivers"
-          }
-        },
-        "bad": null
-      },
-      "level": "advanced"
-    },
-    "andForLoopWithOnlyOneDeriver": {
-      "title": "AND - For loop with only one deriver.",
-      "targets": [
-        "goroutinederiveand"
-      ],
-      "variants": {
-        "bad": {
-          "description": "AND - for loop with only one deriver.",
-          "functions": {
-            "goroutinederiveand": "badAndForLoopWithOneDeriver"
-          }
-        },
-        "good": null
-      },
-      "level": "advanced"
-    },
     "andHasOwnContextParam": {
       "title": "AND - Has own context param.",
       "targets": [
@@ -646,70 +582,6 @@
           }
         },
         "bad": null
-      },
-      "level": "evil"
-    },
-    "andWaitgroupPatternWithBothDerivers": {
-      "title": "AND - WaitGroup pattern with both derivers.",
-      "targets": [
-        "goroutinederiveand"
-      ],
-      "variants": {
-        "good": {
-          "description": "Both required deriver functions are called, satisfying AND condition.",
-          "functions": {
-            "goroutinederiveand": "goodAndWaitGroupWithBothDerivers"
-          }
-        },
-        "bad": null
-      },
-      "level": "advanced"
-    },
-    "andWaitgroupPatternWithOnlyOneDeriver": {
-      "title": "AND - WaitGroup pattern with only one deriver.",
-      "targets": [
-        "goroutinederiveand"
-      ],
-      "variants": {
-        "bad": {
-          "description": "Only one of the required deriver functions is called.",
-          "functions": {
-            "goroutinederiveand": "badAndWaitGroupWithOneDeriver"
-          }
-        },
-        "good": null
-      },
-      "level": "advanced"
-    },
-    "arbitraryDepthGoFnWithCtx": {
-      "title": "Arbitrary depth go fn(ctx)()() - with ctx",
-      "targets": [
-        "goroutine"
-      ],
-      "variants": {
-        "good": {
-          "description": "Arbitrary depth go fn(ctx)()()...() with ctx",
-          "functions": {
-            "goroutine": "goodGoInfiniteChain"
-          }
-        },
-        "bad": null
-      },
-      "level": "evil"
-    },
-    "arbitraryDepthGoFnWithoutCtx": {
-      "title": "Arbitrary depth go fn()()() - without ctx",
-      "targets": [
-        "goroutine"
-      ],
-      "variants": {
-        "bad": {
-          "description": "Arbitrary depth go fn()()()...() without ctx",
-          "functions": {
-            "goroutine": "badGoInfiniteChain"
-          }
-        },
-        "good": null
       },
       "level": "evil"
     },
@@ -855,70 +727,6 @@
       },
       "level": "carrier"
     },
-    "basicErrgroupFuncDoesntUseCtx": {
-      "title": "Basic errgroup - func doesn't use ctx",
-      "targets": [
-        "goroutinecreator"
-      ],
-      "variants": {
-        "bad": {
-          "description": "Basic - func doesn't use ctx",
-          "functions": {
-            "goroutinecreator": "badBasicErrgroup"
-          }
-        },
-        "good": null
-      },
-      "level": "creator"
-    },
-    "basicErrgroupFuncUsesCtx": {
-      "title": "Basic errgroup - func uses ctx",
-      "targets": [
-        "goroutinecreator"
-      ],
-      "variants": {
-        "good": {
-          "description": "Basic - func uses ctx",
-          "functions": {
-            "goroutinecreator": "goodBasicErrgroup"
-          }
-        },
-        "bad": null
-      },
-      "level": "creator"
-    },
-    "basicWaitgroupFuncDoesntUseCtx": {
-      "title": "Basic waitgroup - func doesn't use ctx",
-      "targets": [
-        "goroutinecreator"
-      ],
-      "variants": {
-        "bad": {
-          "description": "Basic - func doesn't use ctx (waitgroup)",
-          "functions": {
-            "goroutinecreator": "badBasicWaitGroup"
-          }
-        },
-        "good": null
-      },
-      "level": "creator"
-    },
-    "basicWaitgroupFuncUsesCtx": {
-      "title": "Basic waitgroup - func uses ctx",
-      "targets": [
-        "goroutinecreator"
-      ],
-      "variants": {
-        "good": {
-          "description": "Basic - func uses ctx (waitgroup)",
-          "functions": {
-            "goroutinecreator": "goodBasicWaitGroup"
-          }
-        },
-        "bad": null
-      },
-      "level": "creator"
-    },
     "bothContextsUsed": {
       "title": "Both contexts used",
       "targets": [
@@ -1050,38 +858,6 @@
         "bad": null
       },
       "level": "evil"
-    },
-    "channelResultWithCtx": {
-      "title": "Channel result with ctx",
-      "targets": [
-        "goroutine"
-      ],
-      "variants": {
-        "good": {
-          "description": "Goroutine using channels properly captures context.",
-          "functions": {
-            "goroutine": "goodGoroutineReturnsWithCtx"
-          }
-        },
-        "bad": null
-      },
-      "level": "advanced"
-    },
-    "channelResultWithoutCtx": {
-      "title": "Channel result without ctx",
-      "targets": [
-        "goroutine"
-      ],
-      "variants": {
-        "bad": {
-          "description": "Goroutine using channels does not propagate context.",
-          "functions": {
-            "goroutine": "badGoroutineReturnsViaChannel"
-          }
-        },
-        "good": null
-      },
-      "level": "advanced"
     },
     "channelSendWithoutCtx": {
       "title": "Channel send without ctx",
@@ -1853,70 +1629,6 @@
       },
       "level": "advanced"
     },
-    "goFnDoubleHigherOrderWithCtx": {
-      "title": "go fn(ctx)() - double higher-order with ctx",
-      "targets": [
-        "goroutine"
-      ],
-      "variants": {
-        "good": {
-          "description": "go fn(ctx)() - higher-order with ctx",
-          "functions": {
-            "goroutine": "goodGoHigherOrder"
-          }
-        },
-        "bad": null
-      },
-      "level": "evil"
-    },
-    "goFnDoubleHigherOrderWithoutCtx": {
-      "title": "go fn()() - double higher-order without ctx",
-      "targets": [
-        "goroutine"
-      ],
-      "variants": {
-        "bad": {
-          "description": "go fn()() - higher-order without ctx",
-          "functions": {
-            "goroutine": "badGoHigherOrder"
-          }
-        },
-        "good": null
-      },
-      "level": "evil"
-    },
-    "goFnTripleHigherOrderWithCtx": {
-      "title": "go fn(ctx)()() - triple higher-order with ctx",
-      "targets": [
-        "goroutine"
-      ],
-      "variants": {
-        "good": {
-          "description": "Three levels of function invocation with context propagation.",
-          "functions": {
-            "goroutine": "goodGoHigherOrderTriple"
-          }
-        },
-        "bad": null
-      },
-      "level": "evil"
-    },
-    "goFnTripleHigherOrderWithoutCtx": {
-      "title": "go fn()()() - triple higher-order without ctx",
-      "targets": [
-        "goroutine"
-      ],
-      "variants": {
-        "bad": {
-          "description": "Three levels of function invocation without context propagation.",
-          "functions": {
-            "goroutine": "badGoHigherOrderTriple"
-          }
-        },
-        "good": null
-      },
-      "level": "evil"
-    },
     "goInForLoopWithoutCtx": {
       "title": "Go in for loop without ctx",
       "targets": [
@@ -1956,38 +1668,6 @@
         "good": null
       },
       "level": "advanced"
-    },
-    "goroutineInDeferredFunctionWithCtx": {
-      "title": "Goroutine in deferred function WITH ctx",
-      "targets": [
-        "goroutine"
-      ],
-      "variants": {
-        "good": {
-          "description": "Closure with defer statement properly uses context.",
-          "functions": {
-            "goroutine": "goodDeferredGoroutineWithCtx"
-          }
-        },
-        "bad": null
-      },
-      "level": "evil"
-    },
-    "goroutineInDeferredFunctionWithoutCtx": {
-      "title": "Goroutine in deferred function WITHOUT ctx",
-      "targets": [
-        "goroutine"
-      ],
-      "variants": {
-        "bad": {
-          "description": "Closure with defer statement does not use context.",
-          "functions": {
-            "goroutine": "badDeferredGoroutineWithoutCtx"
-          }
-        },
-        "good": null
-      },
-      "level": "evil"
     },
     "goroutineInEchoHandlerWithContext": {
       "title": "Goroutine in echo handler with context",
@@ -2084,138 +1764,6 @@
         "bad": null
       },
       "level": "advanced"
-    },
-    "goroutineInInitExpressionWithCtx": {
-      "title": "Goroutine in init expression WITH ctx",
-      "targets": [
-        "goroutine"
-      ],
-      "variants": {
-        "good": {
-          "description": "Goroutine spawned in variable initialization uses context.",
-          "functions": {
-            "goroutine": "goodGoroutineInInitWithCtx"
-          }
-        },
-        "bad": null
-      },
-      "level": "evil"
-    },
-    "goroutineInInitExpressionWithoutCtx": {
-      "title": "Goroutine in init expression WITHOUT ctx",
-      "targets": [
-        "goroutine"
-      ],
-      "variants": {
-        "bad": {
-          "description": "Goroutine spawned in variable initialization ignores context.",
-          "functions": {
-            "goroutine": "badGoroutineInInitWithoutCtx"
-          }
-        },
-        "good": null
-      },
-      "level": "evil"
-    },
-    "goroutineInNestedClosureWithCtx": {
-      "title": "Goroutine in nested closure WITH ctx",
-      "targets": [
-        "goroutine"
-      ],
-      "variants": {
-        "good": {
-          "description": "Goroutine in nested closure properly captures context.",
-          "functions": {
-            "goroutine": "goodNestedClosureWithCtx"
-          }
-        },
-        "bad": null
-      },
-      "level": "evil"
-    },
-    "goroutineInNestedClosureWithoutCtx": {
-      "title": "Goroutine in nested closure WITHOUT ctx",
-      "targets": [
-        "goroutine"
-      ],
-      "variants": {
-        "bad": {
-          "description": "Goroutine in nested closure does not use context.",
-          "functions": {
-            "goroutine": "badNestedClosureWithoutCtx"
-          }
-        },
-        "good": null
-      },
-      "level": "evil"
-    },
-    "goroutineInsideIifeWithCtx": {
-      "title": "Goroutine inside IIFE with ctx",
-      "targets": [
-        "goroutine"
-      ],
-      "variants": {
-        "good": {
-          "description": "Goroutine inside IIFE captures context from outer scope.",
-          "functions": {
-            "goroutine": "goodGoroutineInIIFE"
-          }
-        },
-        "bad": null
-      },
-      "level": "evil"
-    },
-    "goroutineInsideIifeWithoutCtx": {
-      "title": "Goroutine inside IIFE without ctx",
-      "targets": [
-        "goroutine"
-      ],
-      "variants": {
-        "bad": {
-          "description": "Goroutine inside IIFE ignores outer context.",
-          "functions": {
-            "goroutine": "badGoroutineInIIFE"
-          }
-        },
-        "good": null
-      },
-      "level": "evil"
-    },
-    "higherOrderFuncWithCtx": {
-      "title": "Higher-order func with ctx",
-      "targets": [
-        "errgroup",
-        "waitgroup"
-      ],
-      "variants": {
-        "good": {
-          "description": "Factory function is called with context, enabling propagation.",
-          "functions": {
-            "errgroup": "goodHigherOrderFuncWithCtx",
-            "waitgroup": "goodHigherOrderFuncWithCtx"
-          }
-        },
-        "bad": null
-      },
-      "level": "evil"
-    },
-    "higherOrderFuncWithoutCtx": {
-      "title": "Higher-order func without ctx",
-      "targets": [
-        "errgroup",
-        "waitgroup"
-      ],
-      "variants": {
-        "bad": {
-          "description": "Function returned by factory does not use context.",
-          "functions": {
-            "errgroup": "badHigherOrderFunc",
-            "waitgroup": "badHigherOrderFunc"
-          }
-        },
-        "good": null
-      },
-      "level": "evil"
     },
     "higherOrderGoFn": {
       "title": "Higher-order go fn()()",
@@ -2409,38 +1957,6 @@
       },
       "level": "evil"
     },
-    "inlineFuncLiteralDoesntUseCtx": {
-      "title": "Inline func literal doesn't use ctx",
-      "targets": [
-        "goroutinecreator"
-      ],
-      "variants": {
-        "bad": {
-          "description": "Inline function literal does not use context.",
-          "functions": {
-            "goroutinecreator": "badInlineFuncLiteral"
-          }
-        },
-        "good": null
-      },
-      "level": "creator"
-    },
-    "inlineFuncLiteralUsesCtx": {
-      "title": "Inline func literal uses ctx",
-      "targets": [
-        "goroutinecreator"
-      ],
-      "variants": {
-        "good": {
-          "description": "Inline function literal properly uses context.",
-          "functions": {
-            "goroutinecreator": "goodInlineFuncLiteral"
-          }
-        },
-        "bad": null
-      },
-      "level": "creator"
-    },
     "innerFuncHasOwnCtxParam": {
       "title": "Inner func has own ctx param",
       "targets": [
@@ -2461,22 +1977,6 @@
       },
       "level": "advanced"
     },
-    "interfaceMethodWithCtx": {
-      "title": "Interface method with ctx",
-      "targets": [
-        "goroutine"
-      ],
-      "variants": {
-        "good": {
-          "description": "Context is passed as argument to interface method.",
-          "functions": {
-            "goroutine": "goodGoroutineCallsInterfaceMethodWithCtx"
-          }
-        },
-        "bad": null
-      },
-      "level": "evil"
-    },
     "interfaceMethodWithCtxArgument": {
       "title": "Interface method with ctx argument",
       "targets": [
@@ -2492,22 +1992,6 @@
           }
         },
         "bad": null
-      },
-      "level": "evil"
-    },
-    "interfaceMethodWithoutCtx": {
-      "title": "Interface method without ctx",
-      "targets": [
-        "goroutine"
-      ],
-      "variants": {
-        "bad": {
-          "description": "Interface method call without context argument.",
-          "functions": {
-            "goroutine": "badGoroutineCallsInterfaceMethod"
-          }
-        },
-        "good": null
       },
       "level": "evil"
     },
@@ -2848,38 +2332,6 @@
       },
       "level": "basic"
     },
-    "loopInsideGoroutineWithCtx": {
-      "title": "Loop inside goroutine with ctx",
-      "targets": [
-        "goroutine"
-      ],
-      "variants": {
-        "good": {
-          "description": "Loop inside goroutine body uses context for cancellation.",
-          "functions": {
-            "goroutine": "goodGoroutineUsesCtxInLoop"
-          }
-        },
-        "bad": null
-      },
-      "level": "advanced"
-    },
-    "loopInsideGoroutineWithoutCtx": {
-      "title": "Loop inside goroutine without ctx",
-      "targets": [
-        "goroutine"
-      ],
-      "variants": {
-        "bad": {
-          "description": "Loop inside goroutine body does not check context.",
-          "functions": {
-            "goroutine": "badGoroutineWithLoop"
-          }
-        },
-        "good": null
-      },
-      "level": "advanced"
-    },
     "mapKeyWithCtx": {
       "title": "Map key with ctx",
       "targets": [
@@ -2897,38 +2349,6 @@
         "bad": null
       },
       "level": "evil"
-    },
-    "methodCallWithCtx": {
-      "title": "Method call with ctx",
-      "targets": [
-        "goroutine"
-      ],
-      "variants": {
-        "good": {
-          "description": "Method called in goroutine properly receives context.",
-          "functions": {
-            "goroutine": "goodGoroutineCallsMethodWithCtx"
-          }
-        },
-        "bad": null
-      },
-      "level": "advanced"
-    },
-    "methodCallWithoutCtx": {
-      "title": "Method call without ctx",
-      "targets": [
-        "goroutine"
-      ],
-      "variants": {
-        "bad": {
-          "description": "Method called in goroutine does not receive context.",
-          "functions": {
-            "goroutine": "badGoroutineCallsMethodWithoutCtx"
-          }
-        },
-        "good": null
-      },
-      "level": "advanced"
     },
     "middleLayerIntroducesCtx": {
       "title": "Middle layer introduces ctx - goroutine uses it",
@@ -3792,38 +3212,6 @@
       },
       "level": "basic"
     },
-    "selectWithCtx": {
-      "title": "Select with ctx",
-      "targets": [
-        "goroutine"
-      ],
-      "variants": {
-        "good": {
-          "description": "Select with ctx.Done() case",
-          "functions": {
-            "goroutine": "goodGoroutineWithCtxInSelect"
-          }
-        },
-        "bad": null
-      },
-      "level": "advanced"
-    },
-    "selectWithoutCtx": {
-      "title": "Select without ctx",
-      "targets": [
-        "goroutine"
-      ],
-      "variants": {
-        "bad": {
-          "description": "Select without ctx.Done() case",
-          "functions": {
-            "goroutine": "badGoroutineWithMultiCaseSelect"
-          }
-        },
-        "good": null
-      },
-      "level": "advanced"
-    },
     "shadowInNestedBlock": {
       "title": "Shadow in nested block",
       "targets": [
@@ -3963,38 +3351,6 @@
         "bad": null
       },
       "level": "evil"
-    },
-    "switchInsideGoroutineWithCtx": {
-      "title": "Switch inside goroutine with ctx",
-      "targets": [
-        "goroutine"
-      ],
-      "variants": {
-        "good": {
-          "description": "Goroutine with switch statement properly uses context.",
-          "functions": {
-            "goroutine": "goodGoroutineUsesCtxInSwitch"
-          }
-        },
-        "bad": null
-      },
-      "level": "advanced"
-    },
-    "switchInsideGoroutineWithoutCtx": {
-      "title": "Switch inside goroutine without ctx",
-      "targets": [
-        "goroutine"
-      ],
-      "variants": {
-        "bad": {
-          "description": "Goroutine with switch statement does not use context.",
-          "functions": {
-            "goroutine": "badGoroutineWithSwitch"
-          }
-        },
-        "good": null
-      },
-      "level": "advanced"
     },
     "taskWithDeriverOnCtx": {
       "title": "Task - with deriver on ctx",
@@ -4236,42 +3592,6 @@
       },
       "level": "evil"
     },
-    "variableFuncWithCtx": {
-      "title": "Variable func with ctx",
-      "targets": [
-        "errgroup",
-        "waitgroup"
-      ],
-      "variants": {
-        "good": {
-          "description": "Function stored in variable captures and uses context.",
-          "functions": {
-            "errgroup": "goodVariableFuncWithCtx",
-            "waitgroup": "goodVariableFuncWithCtx"
-          }
-        },
-        "bad": null
-      },
-      "level": "evil"
-    },
-    "variableFuncWithoutCtx": {
-      "title": "Variable func without ctx",
-      "targets": [
-        "errgroup",
-        "waitgroup"
-      ],
-      "variants": {
-        "bad": {
-          "description": "Function stored in variable does not capture context.",
-          "functions": {
-            "errgroup": "badVariableFunc",
-            "waitgroup": "badVariableFunc"
-          }
-        },
-        "good": null
-      },
-      "level": "evil"
-    },
     "variableReassignmentLastAssignmentSatisfiesOrAlternativeShouldPass": {
       "title": "Variable reassignment - last assignment satisfies OR alternative should pass.",
       "targets": [
@@ -4338,11 +3658,459 @@
       },
       "level": "evil"
     },
-    "waitgroupWithCtx": {
-      "title": "WaitGroup (traditional Add/Done) with ctx",
+    "andDefer": {
+      "title": "AND - Defer pattern",
+      "targets": [
+        "goroutinederiveand"
+      ],
+      "level": "advanced",
+      "variants": {
+        "good": {
+          "description": "AND - defer with both derivers.",
+          "functions": {
+            "goroutinederiveand": "goodAndDeferWithBothDerivers"
+          }
+        },
+        "bad": {
+          "description": "AND - defer with only one deriver.",
+          "functions": {
+            "goroutinederiveand": "badAndDeferWithOneDeriver"
+          }
+        }
+      }
+    },
+    "andForLoop": {
+      "title": "AND - For loop pattern",
+      "targets": [
+        "goroutinederiveand"
+      ],
+      "level": "advanced",
+      "variants": {
+        "good": {
+          "description": "AND - for loop with both derivers.",
+          "functions": {
+            "goroutinederiveand": "goodAndForLoopWithBothDerivers"
+          }
+        },
+        "bad": {
+          "description": "AND - for loop with only one deriver.",
+          "functions": {
+            "goroutinederiveand": "badAndForLoopWithOneDeriver"
+          }
+        }
+      }
+    },
+    "andWaitgroupPattern": {
+      "title": "AND - WaitGroup pattern",
+      "targets": [
+        "goroutinederiveand"
+      ],
+      "level": "advanced",
+      "variants": {
+        "good": {
+          "description": "Both required deriver functions are called, satisfying AND condition.",
+          "functions": {
+            "goroutinederiveand": "goodAndWaitGroupWithBothDerivers"
+          }
+        },
+        "bad": {
+          "description": "Only one of the required deriver functions is called.",
+          "functions": {
+            "goroutinederiveand": "badAndWaitGroupWithOneDeriver"
+          }
+        }
+      }
+    },
+    "arbitraryDepthGoFn": {
+      "title": "Arbitrary depth go fn()()...()",
       "targets": [
         "goroutine"
       ],
+      "level": "evil",
+      "variants": {
+        "good": {
+          "description": "Arbitrary depth go fn(ctx)()()...() with ctx",
+          "functions": {
+            "goroutine": "goodGoInfiniteChain"
+          }
+        },
+        "bad": {
+          "description": "Arbitrary depth go fn()()()...() without ctx",
+          "functions": {
+            "goroutine": "badGoInfiniteChain"
+          }
+        }
+      }
+    },
+    "basicErrgroupFunc": {
+      "title": "Basic errgroup func context usage",
+      "targets": [
+        "goroutinecreator"
+      ],
+      "level": "creator",
+      "variants": {
+        "good": {
+          "description": "Basic - func uses ctx",
+          "functions": {
+            "goroutinecreator": "goodBasicErrgroup"
+          }
+        },
+        "bad": {
+          "description": "Basic - func doesn't use ctx",
+          "functions": {
+            "goroutinecreator": "badBasicErrgroup"
+          }
+        }
+      }
+    },
+    "basicWaitgroupFunc": {
+      "title": "Basic waitgroup func context usage",
+      "targets": [
+        "goroutinecreator"
+      ],
+      "level": "creator",
+      "variants": {
+        "good": {
+          "description": "Basic - func uses ctx (waitgroup)",
+          "functions": {
+            "goroutinecreator": "goodBasicWaitGroup"
+          }
+        },
+        "bad": {
+          "description": "Basic - func doesn't use ctx (waitgroup)",
+          "functions": {
+            "goroutinecreator": "badBasicWaitGroup"
+          }
+        }
+      }
+    },
+    "channelResult": {
+      "title": "Channel result pattern",
+      "targets": [
+        "goroutine"
+      ],
+      "level": "advanced",
+      "variants": {
+        "good": {
+          "description": "Goroutine using channels properly captures context.",
+          "functions": {
+            "goroutine": "goodGoroutineReturnsWithCtx"
+          }
+        },
+        "bad": {
+          "description": "Goroutine using channels does not propagate context.",
+          "functions": {
+            "goroutine": "badGoroutineReturnsViaChannel"
+          }
+        }
+      }
+    },
+    "goFnDoubleHigherOrder": {
+      "title": "go fn()() - double higher-order",
+      "targets": [
+        "goroutine"
+      ],
+      "level": "evil",
+      "variants": {
+        "good": {
+          "description": "go fn(ctx)() - higher-order with ctx",
+          "functions": {
+            "goroutine": "goodGoHigherOrder"
+          }
+        },
+        "bad": {
+          "description": "go fn()() - higher-order without ctx",
+          "functions": {
+            "goroutine": "badGoHigherOrder"
+          }
+        }
+      }
+    },
+    "goFnTripleHigherOrder": {
+      "title": "go fn()()() - triple higher-order",
+      "targets": [
+        "goroutine"
+      ],
+      "level": "evil",
+      "variants": {
+        "good": {
+          "description": "Three levels of function invocation with context propagation.",
+          "functions": {
+            "goroutine": "goodGoHigherOrderTriple"
+          }
+        },
+        "bad": {
+          "description": "Three levels of function invocation without context propagation.",
+          "functions": {
+            "goroutine": "badGoHigherOrderTriple"
+          }
+        }
+      }
+    },
+    "goroutineInDeferredFunction": {
+      "title": "Goroutine in deferred function",
+      "targets": [
+        "goroutine"
+      ],
+      "level": "evil",
+      "variants": {
+        "good": {
+          "description": "Closure with defer statement properly uses context.",
+          "functions": {
+            "goroutine": "goodDeferredGoroutineWithCtx"
+          }
+        },
+        "bad": {
+          "description": "Closure with defer statement does not use context.",
+          "functions": {
+            "goroutine": "badDeferredGoroutineWithoutCtx"
+          }
+        }
+      }
+    },
+    "goroutineInInitExpression": {
+      "title": "Goroutine in init expression",
+      "targets": [
+        "goroutine"
+      ],
+      "level": "evil",
+      "variants": {
+        "good": {
+          "description": "Goroutine spawned in variable initialization uses context.",
+          "functions": {
+            "goroutine": "goodGoroutineInInitWithCtx"
+          }
+        },
+        "bad": {
+          "description": "Goroutine spawned in variable initialization ignores context.",
+          "functions": {
+            "goroutine": "badGoroutineInInitWithoutCtx"
+          }
+        }
+      }
+    },
+    "goroutineInNestedClosure": {
+      "title": "Goroutine in nested closure",
+      "targets": [
+        "goroutine"
+      ],
+      "level": "evil",
+      "variants": {
+        "good": {
+          "description": "Goroutine in nested closure properly captures context.",
+          "functions": {
+            "goroutine": "goodNestedClosureWithCtx"
+          }
+        },
+        "bad": {
+          "description": "Goroutine in nested closure does not use context.",
+          "functions": {
+            "goroutine": "badNestedClosureWithoutCtx"
+          }
+        }
+      }
+    },
+    "goroutineInsideIife": {
+      "title": "Goroutine inside IIFE",
+      "targets": [
+        "goroutine"
+      ],
+      "level": "evil",
+      "variants": {
+        "good": {
+          "description": "Goroutine inside IIFE captures context from outer scope.",
+          "functions": {
+            "goroutine": "goodGoroutineInIIFE"
+          }
+        },
+        "bad": {
+          "description": "Goroutine inside IIFE ignores outer context.",
+          "functions": {
+            "goroutine": "badGoroutineInIIFE"
+          }
+        }
+      }
+    },
+    "higherOrderFunc": {
+      "title": "Higher-order func",
+      "targets": [
+        "errgroup",
+        "waitgroup"
+      ],
+      "level": "evil",
+      "variants": {
+        "good": {
+          "description": "Factory function is called with context, enabling propagation.",
+          "functions": {
+            "errgroup": "goodHigherOrderFuncWithCtx",
+            "waitgroup": "goodHigherOrderFuncWithCtx"
+          }
+        },
+        "bad": {
+          "description": "Function returned by factory does not use context.",
+          "functions": {
+            "errgroup": "badHigherOrderFunc",
+            "waitgroup": "badHigherOrderFunc"
+          }
+        }
+      }
+    },
+    "inlineFuncLiteral": {
+      "title": "Inline func literal context usage",
+      "targets": [
+        "goroutinecreator"
+      ],
+      "level": "creator",
+      "variants": {
+        "good": {
+          "description": "Inline function literal properly uses context.",
+          "functions": {
+            "goroutinecreator": "goodInlineFuncLiteral"
+          }
+        },
+        "bad": {
+          "description": "Inline function literal does not use context.",
+          "functions": {
+            "goroutinecreator": "badInlineFuncLiteral"
+          }
+        }
+      }
+    },
+    "interfaceMethod": {
+      "title": "Interface method",
+      "targets": [
+        "goroutine"
+      ],
+      "level": "evil",
+      "variants": {
+        "good": {
+          "description": "Context is passed as argument to interface method.",
+          "functions": {
+            "goroutine": "goodGoroutineCallsInterfaceMethodWithCtx"
+          }
+        },
+        "bad": {
+          "description": "Interface method call without context argument.",
+          "functions": {
+            "goroutine": "badGoroutineCallsInterfaceMethod"
+          }
+        }
+      }
+    },
+    "loopInsideGoroutine": {
+      "title": "Loop inside goroutine",
+      "targets": [
+        "goroutine"
+      ],
+      "level": "advanced",
+      "variants": {
+        "good": {
+          "description": "Loop inside goroutine body uses context for cancellation.",
+          "functions": {
+            "goroutine": "goodGoroutineUsesCtxInLoop"
+          }
+        },
+        "bad": {
+          "description": "Loop inside goroutine body does not check context.",
+          "functions": {
+            "goroutine": "badGoroutineWithLoop"
+          }
+        }
+      }
+    },
+    "methodCall": {
+      "title": "Method call",
+      "targets": [
+        "goroutine"
+      ],
+      "level": "advanced",
+      "variants": {
+        "good": {
+          "description": "Method called in goroutine properly receives context.",
+          "functions": {
+            "goroutine": "goodGoroutineCallsMethodWithCtx"
+          }
+        },
+        "bad": {
+          "description": "Method called in goroutine does not receive context.",
+          "functions": {
+            "goroutine": "badGoroutineCallsMethodWithoutCtx"
+          }
+        }
+      }
+    },
+    "select": {
+      "title": "Select statement",
+      "targets": [
+        "goroutine"
+      ],
+      "level": "advanced",
+      "variants": {
+        "good": {
+          "description": "Select with ctx.Done() case",
+          "functions": {
+            "goroutine": "goodGoroutineWithCtxInSelect"
+          }
+        },
+        "bad": {
+          "description": "Select without ctx.Done() case",
+          "functions": {
+            "goroutine": "badGoroutineWithMultiCaseSelect"
+          }
+        }
+      }
+    },
+    "switchInsideGoroutine": {
+      "title": "Switch inside goroutine",
+      "targets": [
+        "goroutine"
+      ],
+      "level": "advanced",
+      "variants": {
+        "good": {
+          "description": "Goroutine with switch statement properly uses context.",
+          "functions": {
+            "goroutine": "goodGoroutineUsesCtxInSwitch"
+          }
+        },
+        "bad": {
+          "description": "Goroutine with switch statement does not use context.",
+          "functions": {
+            "goroutine": "badGoroutineWithSwitch"
+          }
+        }
+      }
+    },
+    "variableFunc": {
+      "title": "Variable func",
+      "targets": [
+        "errgroup",
+        "waitgroup"
+      ],
+      "level": "evil",
+      "variants": {
+        "good": {
+          "description": "Function stored in variable captures and uses context.",
+          "functions": {
+            "errgroup": "goodVariableFuncWithCtx",
+            "waitgroup": "goodVariableFuncWithCtx"
+          }
+        },
+        "bad": {
+          "description": "Function stored in variable does not capture context.",
+          "functions": {
+            "errgroup": "badVariableFunc",
+            "waitgroup": "badVariableFunc"
+          }
+        }
+      }
+    },
+    "waitgroup": {
+      "title": "Waitgroup pattern",
+      "targets": [
+        "goroutine"
+      ],
+      "level": "advanced",
       "variants": {
         "good": {
           "description": "Traditional Add/Done pattern is not checked by the waitgroup checker.",
@@ -4350,25 +4118,13 @@
             "goroutine": "goodGoroutineWithWaitGroupAndCtx"
           }
         },
-        "bad": null
-      },
-      "level": "advanced"
-    },
-    "waitgroupWithoutCtx": {
-      "title": "WaitGroup (traditional Add/Done) without ctx",
-      "targets": [
-        "goroutine"
-      ],
-      "variants": {
         "bad": {
           "description": "Traditional WaitGroup Add/Done pattern without context usage.",
           "functions": {
             "goroutine": "badGoroutineWithWaitGroup"
           }
-        },
-        "good": null
-      },
-      "level": "advanced"
+        }
+      }
     }
   }
 }

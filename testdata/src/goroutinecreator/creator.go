@@ -33,7 +33,7 @@ func runMultipleFuncs(fn1, fn2 func()) {
 
 // ===== SHOULD REPORT =====
 
-// [BAD]: Basic errgroup - func doesn't use ctx
+// [BAD]: Basic errgroup func context usage
 //
 // Basic - func doesn't use ctx
 func badBasicErrgroup(ctx context.Context) {
@@ -46,7 +46,7 @@ func badBasicErrgroup(ctx context.Context) {
 	_ = g.Wait()
 }
 
-// [BAD]: Basic waitgroup - func doesn't use ctx
+// [BAD]: Basic waitgroup func context usage
 //
 // Basic - func doesn't use ctx (waitgroup)
 func badBasicWaitGroup(ctx context.Context) {
@@ -58,7 +58,7 @@ func badBasicWaitGroup(ctx context.Context) {
 	wg.Wait()
 }
 
-// [BAD]: Inline func literal doesn't use ctx
+// [BAD]: Inline func literal context usage
 //
 // Inline function literal does not use context.
 func badInlineFuncLiteral(ctx context.Context) {
@@ -102,7 +102,7 @@ func badSecondFuncOnly(ctx context.Context) {
 
 // ===== SHOULD NOT REPORT =====
 
-// [GOOD]: Basic errgroup - func uses ctx
+// [GOOD]: Basic errgroup func context usage
 //
 // Basic - func uses ctx
 func goodBasicErrgroup(ctx context.Context) {
@@ -115,7 +115,7 @@ func goodBasicErrgroup(ctx context.Context) {
 	_ = g.Wait()
 }
 
-// [GOOD]: Basic waitgroup - func uses ctx
+// [GOOD]: Basic waitgroup func context usage
 //
 // Basic - func uses ctx (waitgroup)
 func goodBasicWaitGroup(ctx context.Context) {
@@ -127,7 +127,7 @@ func goodBasicWaitGroup(ctx context.Context) {
 	wg.Wait()
 }
 
-// [GOOD]: Inline func literal uses ctx
+// [GOOD]: Inline func literal context usage
 //
 // Inline function literal properly uses context.
 func goodInlineFuncLiteral(ctx context.Context) {
