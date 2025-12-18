@@ -236,10 +236,38 @@ All checkers are enabled by default. Use these flags to disable specific checker
 
 Available flags:
 - `-goroutine` (default: true)
-- `-errgroup` (default: true)
 - `-waitgroup` (default: true)
+- `-errgroup` (default: true)
 - `-spawner` (default: true)
+- `-spawnerlabel` (default: false) - Check that spawner functions are properly labeled
 - `-gotask` (default: true, requires `-goroutine-deriver`)
+
+### `-spawnerlabel`
+
+When enabled, checks that functions calling spawn methods have the `//goroutinectx:spawner` directive:
+
+```go
+// Bad: calls errgroup.Group.Go but missing directive
+func runTasks() {  // Warning: should have //goroutinectx:spawner
+    g := new(errgroup.Group)
+    g.Go(func() error {
+        return doWork()
+    })
+    _ = g.Wait()
+}
+
+// Good: properly labeled
+//goroutinectx:spawner
+func runTasks() {
+    g := new(errgroup.Group)
+    g.Go(func() error {
+        return doWork()
+    })
+    _ = g.Wait()
+}
+```
+
+Also warns about unnecessary labels on functions that don't spawn and have no func parameters.
 
 ## Design Principles
 
