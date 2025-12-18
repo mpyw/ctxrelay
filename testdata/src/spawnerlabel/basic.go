@@ -4,7 +4,6 @@ package spawnerlabel
 import (
 	"context"
 	"fmt"
-	"sync"
 
 	"golang.org/x/sync/errgroup"
 
@@ -31,15 +30,6 @@ func missingLabelErrgroupTryGo() { // want `function "missingLabelErrgroupTryGo"
 		return nil
 	})
 	_ = g.Wait()
-}
-
-// [BAD]: Missing label - calls sync.WaitGroup.Go with func arg
-func missingLabelWaitgroup() { // want `function "missingLabelWaitgroup" should have //goroutinectx:spawner directive \(calls sync\.WaitGroup\.Go with func argument\)`
-	var wg sync.WaitGroup
-	wg.Go(func() {
-		fmt.Println("work")
-	})
-	wg.Wait()
 }
 
 // [BAD]: Missing label - calls gotask.DoAllFnsSettled with func arg

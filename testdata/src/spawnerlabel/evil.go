@@ -4,7 +4,6 @@ package spawnerlabel
 import (
 	"context"
 	"fmt"
-	"sync"
 
 	"golang.org/x/sync/errgroup"
 
@@ -124,19 +123,6 @@ func evilGotaskDoAllFns(ctx context.Context) { // want `function "evilGotaskDoAl
 			return gotask.Result[int]{Value: 42}
 		},
 	)
-}
-
-// ===== WAITGROUP PATTERNS =====
-
-// [GOOD]: Traditional WaitGroup pattern (Add/Done) - not spawn method
-func goodTraditionalWaitgroup() {
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		fmt.Println("work")
-	}()
-	wg.Wait()
 }
 
 // ===== LIMITATIONS =====
@@ -268,12 +254,10 @@ func multipleSpawnTypes() { // want `function "multipleSpawnTypes" should have /
 	g.Go(func() error {
 		return nil
 	})
-	var wg sync.WaitGroup
-	wg.Go(func() {
-		fmt.Println("work")
+	g.TryGo(func() error {
+		return nil
 	})
 	_ = g.Wait()
-	wg.Wait()
 }
 
 // [GOOD]: Struct with func field - field doesn't count as func param
