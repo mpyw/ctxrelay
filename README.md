@@ -228,6 +228,32 @@ goroutinectx -goroutine-deriver='github.com/newrelic/go-agent/v3/newrelic.Transa
 - `,` (comma) for OR - at least one group must be satisfied
 - `+` (plus) for AND - all functions in the group must be called
 
+> [!TIP]
+> When both parent and child goroutines require instrumentation inheritance (e.g., [New Relic Go Agent](https://pkg.go.dev/github.com/newrelic/go-agent/v3/newrelic)), you need to call [`Transaction.NewGoroutine`](https://pkg.go.dev/github.com/newrelic/go-agent/v3/newrelic#Transaction.NewGoroutine) and [`NewContext`](https://pkg.go.dev/github.com/newrelic/go-agent/v3/newrelic#NewContext):
+>
+> ```go
+> go func() {
+>     txn := newrelic.FromContext(ctx).NewGoroutine()
+>     ctx := newrelic.NewContext(context.Background(), txn)
+>     doSomething(ctx)
+> }()
+> ```
+>
+> It's common to define a wrapper function that takes [`context.Context`](https://pkg.go.dev/context#Context) and returns [`context.Context`](https://pkg.go.dev/context#Context):
+>
+> ```go
+> // apm.NewGoroutineContext derives context for goroutine instrumentation
+> func NewGoroutineContext(ctx context.Context) context.Context {
+>     txn := newrelic.FromContext(ctx)
+>     if txn == nil {
+>         return ctx
+>     }
+>     return newrelic.NewContext(ctx, txn.NewGoroutine())
+> }
+> ```
+>
+> See also: [New Relic Go Agent 完全理解・実践導入ガイド - Zenn (in Japanese)](https://zenn.dev/mpyw/articles/new-relic-go-agent-struggle)
+
 ### `-context-carriers`
 
 Treat additional types as context carriers (like [`context.Context`](https://pkg.go.dev/context#Context)). Useful for web frameworks that have their own context types.
