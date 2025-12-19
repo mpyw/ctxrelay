@@ -124,14 +124,30 @@ func FindScope(pass *analysis.Pass, fnType *ast.FuncType, carriers []carrier.Car
 
 ### internal/directives/ignore/
 
-Comment directive support:
+Comment directive support with checker-specific ignores and unused detection:
 
 ```go
-type Map map[int]struct{}  // Line numbers with ignore comments
+type CheckerName string  // goroutine, goroutinederive, waitgroup, errgroup, spawner, spawnerlabel, gotask
+
+type Entry struct {
+    pos      token.Pos
+    checkers []CheckerName        // Empty = ignore all
+    used     map[CheckerName]bool // Track usage per checker
+}
+
+type Map map[int]*Entry  // Line numbers with ignore comments
 
 func Build(fset *token.FileSet, file *ast.File) Map
-func (m Map) ShouldIgnore(line int) bool  // Checks same line and previous line
+func (m Map) ShouldIgnore(line int, checker CheckerName) bool  // Checks same line and previous line
+func (m Map) GetUnusedIgnores(enabled EnabledCheckers) []UnusedIgnore
 ```
+
+**Supported formats:**
+- `//goroutinectx:ignore` - ignore all checkers
+- `//goroutinectx:ignore goroutine` - ignore specific checker
+- `//goroutinectx:ignore goroutine,errgroup` - ignore multiple checkers
+- `//goroutinectx:ignore - reason` - ignore all with comment
+- `//goroutinectx:ignore goroutine - reason` - ignore specific with comment
 
 ### internal/directives/deriver/
 

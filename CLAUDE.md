@@ -26,6 +26,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Directives
 
 - `//goroutinectx:ignore` - Suppress warnings for the next line or same line
+  - Checker-specific: `//goroutinectx:ignore goroutine` or `//goroutinectx:ignore goroutine,errgroup`
+  - Valid checker names: `goroutine`, `goroutinederive`, `waitgroup`, `errgroup`, `spawner`, `spawnerlabel`, `gotask`
+  - Unused ignore detection: reports unused ignore directives
 - `//goroutinectx:spawner` - Mark a function as spawning goroutines with its func arguments
 
 ## Architecture

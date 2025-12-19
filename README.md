@@ -207,6 +207,37 @@ func handler(ctx context.Context) {
 
 The comment can be on the same line or the line above.
 
+#### Checker-Specific Ignore
+
+You can specify which checker(s) to ignore:
+
+```go
+func handler(ctx context.Context) {
+    //goroutinectx:ignore goroutine - only ignore goroutine checker
+    go func() {
+        backgroundTask()
+    }()
+
+    //goroutinectx:ignore goroutine,errgroup - ignore multiple checkers
+    g.Go(func() error {
+        return backgroundTask()
+    })
+}
+```
+
+**Available checker names:**
+- `goroutine` - `go func()` statements
+- `goroutinederive` - goroutine derive function requirement
+- `waitgroup` - `sync.WaitGroup.Go()` calls
+- `errgroup` - `errgroup.Group.Go()` calls
+- `spawner` - spawner directive checks
+- `spawnerlabel` - spawner label requirement
+- `gotask` - gotask library checks
+
+#### Unused Ignore Detection
+
+The analyzer reports unused `//goroutinectx:ignore` directives. If an ignore directive doesn't suppress any warning, it will be flagged as unused. This helps keep your codebase clean from stale ignore comments.
+
 ### `//goroutinectx:spawner`
 
 Mark a function as one that spawns goroutines with its func arguments. The analyzer will check that func arguments passed to marked functions properly use context:

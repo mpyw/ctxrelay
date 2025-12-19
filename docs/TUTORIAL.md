@@ -376,6 +376,53 @@ func handler(ctx context.Context) {
 }
 ```
 
+#### Checker-Specific Ignore
+
+You can target specific checkers instead of suppressing all warnings:
+
+```go
+func handler(ctx context.Context) {
+    //goroutinectx:ignore goroutine - only suppress goroutine checker
+    go func() {
+        backgroundTask()
+    }()
+
+    //goroutinectx:ignore goroutine,errgroup - suppress multiple checkers
+    g.Go(func() error {
+        return backgroundTask()
+    })
+}
+```
+
+**Available checker names:**
+- `goroutine` - `go func()` statements
+- `goroutinederive` - goroutine derive function requirement
+- `waitgroup` - `sync.WaitGroup.Go()` calls
+- `errgroup` - `errgroup.Group.Go()` calls
+- `spawner` - spawner directive checks
+- `spawnerlabel` - spawner label requirement
+- `gotask` - gotask library checks
+
+#### Unused Ignore Detection
+
+The analyzer reports unused `//goroutinectx:ignore` directives:
+
+```go
+func handler(ctx context.Context) {
+    //goroutinectx:ignore  // WARNING: unused ignore directive
+    go func() {
+        doSomething(ctx)  // Context IS used - ignore wasn't needed
+    }()
+
+    //goroutinectx:ignore errgroup  // WARNING: unused ignore for checker "errgroup"
+    go func() {
+        backgroundTask()  // goroutine checker would fire, not errgroup
+    }()
+}
+```
+
+This helps keep your codebase clean from stale ignore comments.
+
 ### The `//goroutinectx:spawner` Directive
 
 For wrapper functions that spawn goroutines:
