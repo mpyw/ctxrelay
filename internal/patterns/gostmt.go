@@ -137,7 +137,7 @@ func goStmtCheckIdentFactory(cctx *context.CheckContext, ident *ast.Ident) bool 
 	}
 
 	// Handle local variable pointing to a func literal
-	if v, ok := obj.(*types.Var); ok {
+	if v := cctx.VarFromIdent(ident); v != nil {
 		funcLit := cctx.FindFuncLitAssignment(v, token.NoPos)
 		if funcLit == nil {
 			return true // Can't trace
@@ -152,47 +152,19 @@ func goStmtCheckIdentFactory(cctx *context.CheckContext, ident *ast.Ident) bool 
 
 	// Handle package-level function declaration
 	if fn, ok := obj.(*types.Func); ok {
-		funcDecl := goStmtFindFuncDecl(cctx, fn)
+		funcDecl := cctx.FindFuncDecl(fn)
 		if funcDecl == nil {
 			return true // Can't trace
 		}
 		// Skip if function has context parameter
-		if goStmtFuncDeclHasContextParam(cctx, funcDecl) {
+		if cctx.FuncTypeHasContextParam(funcDecl.Type) {
 			return true
 		}
 		// Check if the factory returns a context-using func
-		return goStmtFactoryDeclReturnsCtxFunc(cctx, funcDecl)
+		return cctx.BlockReturnsContextUsingFunc(funcDecl.Body, nil)
 	}
 
 	return true // Can't analyze, assume OK
-}
-
-// goStmtFindFuncDecl finds the FuncDecl for a types.Func.
-func goStmtFindFuncDecl(cctx *context.CheckContext, fn *types.Func) *ast.FuncDecl {
-	pos := fn.Pos()
-	for _, f := range cctx.Pass.Files {
-		if f.Pos() > pos || pos >= f.End() {
-			continue
-		}
-		for _, decl := range f.Decls {
-			if funcDecl, ok := decl.(*ast.FuncDecl); ok {
-				if funcDecl.Name.Pos() == pos {
-					return funcDecl
-				}
-			}
-		}
-	}
-	return nil
-}
-
-// goStmtFuncDeclHasContextParam checks if a function declaration has a context.Context parameter.
-func goStmtFuncDeclHasContextParam(cctx *context.CheckContext, decl *ast.FuncDecl) bool {
-	return cctx.FuncTypeHasContextParam(decl.Type)
-}
-
-// goStmtFactoryDeclReturnsCtxFunc checks if a function declaration returns funcs that use context.
-func goStmtFactoryDeclReturnsCtxFunc(cctx *context.CheckContext, decl *ast.FuncDecl) bool {
-	return cctx.BlockReturnsContextUsingFunc(decl.Body, nil)
 }
 
 // GoStmtCallsDeriver checks that a go statement's closure calls a deriver function.
@@ -268,14 +240,9 @@ func (p *GoStmtCallsDeriver) checkDeriverFromSSA(cctx *context.CheckContext, lit
 
 // checkIdentDeriver checks go fn() patterns where fn is a variable.
 func (p *GoStmtCallsDeriver) checkIdentDeriver(cctx *context.CheckContext, ident *ast.Ident) bool {
-	obj := cctx.Pass.TypesInfo.ObjectOf(ident)
-	if obj == nil {
-		return true // Can't trace
-	}
-
-	v, ok := obj.(*types.Var)
-	if !ok {
-		return true // Not a variable
+	v := cctx.VarFromIdent(ident)
+	if v == nil {
+		return true // Can't trace (not a variable)
 	}
 
 	funcLit := cctx.FindFuncLitAssignment(v, token.NoPos)
@@ -306,13 +273,9 @@ func (p *GoStmtCallsDeriver) checkHigherOrderDeriver(cctx *context.CheckContext,
 
 	// Check if the inner call's function is a variable pointing to a func literal
 	if ident, ok := innerCall.Fun.(*ast.Ident); ok {
-		obj := cctx.Pass.TypesInfo.ObjectOf(ident)
-		if obj == nil {
-			return true // Can't trace
-		}
-		v, ok := obj.(*types.Var)
-		if !ok {
-			return true // Not a variable (could be a function)
+		v := cctx.VarFromIdent(ident)
+		if v == nil {
+			return true // Can't trace (not a variable)
 		}
 		funcLit := cctx.FindFuncLitAssignment(v, token.NoPos)
 		if funcLit == nil {
@@ -378,13 +341,8 @@ func (p *GoStmtCallsDeriver) returnedValueCallsDeriver(cctx *context.CheckContex
 		return false
 	}
 
-	obj := cctx.Pass.TypesInfo.ObjectOf(ident)
-	if obj == nil {
-		return false
-	}
-
-	v, ok := obj.(*types.Var)
-	if !ok {
+	v := cctx.VarFromIdent(ident)
+	if v == nil {
 		return false
 	}
 

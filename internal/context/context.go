@@ -31,6 +31,49 @@ func (c *CheckContext) Report(pos token.Pos, msg string) {
 	c.Pass.Reportf(pos, "%s", msg)
 }
 
+// VarFromIdent extracts *types.Var from an identifier.
+// Returns nil if the identifier doesn't refer to a variable.
+func (c *CheckContext) VarFromIdent(ident *ast.Ident) *types.Var {
+	obj := c.Pass.TypesInfo.ObjectOf(ident)
+	if obj == nil {
+		return nil
+	}
+	v, ok := obj.(*types.Var)
+	if !ok {
+		return nil
+	}
+	return v
+}
+
+// FindFileContaining finds the file that contains the given position.
+// Returns nil if no file contains the position.
+func (c *CheckContext) FindFileContaining(pos token.Pos) *ast.File {
+	for _, f := range c.Pass.Files {
+		if f.Pos() <= pos && pos < f.End() {
+			return f
+		}
+	}
+	return nil
+}
+
+// FindFuncDecl finds the FuncDecl for a types.Func.
+// Returns nil if the function declaration is not found in the analyzed files.
+func (c *CheckContext) FindFuncDecl(fn *types.Func) *ast.FuncDecl {
+	pos := fn.Pos()
+	f := c.FindFileContaining(pos)
+	if f == nil {
+		return nil
+	}
+	for _, decl := range f.Decls {
+		if funcDecl, ok := decl.(*ast.FuncDecl); ok {
+			if funcDecl.Name.Pos() == pos {
+				return funcDecl
+			}
+		}
+	}
+	return nil
+}
+
 // FuncTypeHasContextParam checks if a function type has a context.Context parameter.
 func (c *CheckContext) FuncTypeHasContextParam(fnType *ast.FuncType) bool {
 	if fnType == nil || fnType.Params == nil {
@@ -116,30 +159,26 @@ func (c *CheckContext) ArgUsesContext(expr ast.Expr) bool {
 // If beforePos is token.NoPos, returns the LAST assignment found.
 // If beforePos is set, returns the last assignment BEFORE that position.
 func (c *CheckContext) FindFuncLitAssignment(v *types.Var, beforePos token.Pos) *ast.FuncLit {
-	var result *ast.FuncLit
-	declPos := v.Pos()
-
-	for _, f := range c.Pass.Files {
-		if f.Pos() > declPos || declPos >= f.End() {
-			continue
-		}
-
-		ast.Inspect(f, func(n ast.Node) bool {
-			assign, ok := n.(*ast.AssignStmt)
-			if !ok {
-				return true
-			}
-			// Skip assignments at or after beforePos
-			if beforePos != token.NoPos && assign.Pos() >= beforePos {
-				return true
-			}
-			if fl := c.findFuncLitInAssignment(assign, v); fl != nil {
-				result = fl // Keep updating - we want the LAST assignment
-			}
-			return true
-		})
-		break
+	f := c.FindFileContaining(v.Pos())
+	if f == nil {
+		return nil
 	}
+
+	var result *ast.FuncLit
+	ast.Inspect(f, func(n ast.Node) bool {
+		assign, ok := n.(*ast.AssignStmt)
+		if !ok {
+			return true
+		}
+		// Skip assignments at or after beforePos
+		if beforePos != token.NoPos && assign.Pos() >= beforePos {
+			return true
+		}
+		if fl := c.findFuncLitInAssignment(assign, v); fl != nil {
+			result = fl // Keep updating - we want the LAST assignment
+		}
+		return true
+	})
 
 	return result
 }
@@ -168,30 +207,26 @@ func (c *CheckContext) findFuncLitInAssignment(assign *ast.AssignStmt, v *types.
 // If beforePos is token.NoPos, returns the LAST assignment found.
 // If beforePos is set, returns the last assignment BEFORE that position.
 func (c *CheckContext) FindCallExprAssignment(v *types.Var, beforePos token.Pos) *ast.CallExpr {
-	var result *ast.CallExpr
-	declPos := v.Pos()
-
-	for _, f := range c.Pass.Files {
-		if f.Pos() > declPos || declPos >= f.End() {
-			continue
-		}
-
-		ast.Inspect(f, func(n ast.Node) bool {
-			assign, ok := n.(*ast.AssignStmt)
-			if !ok {
-				return true
-			}
-			// Skip assignments at or after beforePos
-			if beforePos != token.NoPos && assign.Pos() >= beforePos {
-				return true
-			}
-			if call := c.findCallExprInAssignment(assign, v); call != nil {
-				result = call // Keep updating - we want the LAST assignment
-			}
-			return true
-		})
-		break
+	f := c.FindFileContaining(v.Pos())
+	if f == nil {
+		return nil
 	}
+
+	var result *ast.CallExpr
+	ast.Inspect(f, func(n ast.Node) bool {
+		assign, ok := n.(*ast.AssignStmt)
+		if !ok {
+			return true
+		}
+		// Skip assignments at or after beforePos
+		if beforePos != token.NoPos && assign.Pos() >= beforePos {
+			return true
+		}
+		if call := c.findCallExprInAssignment(assign, v); call != nil {
+			result = call // Keep updating - we want the LAST assignment
+		}
+		return true
+	})
 
 	return result
 }
@@ -281,13 +316,8 @@ func (c *CheckContext) returnedValueUsesContext(result ast.Expr) bool {
 		return false
 	}
 
-	obj := c.Pass.TypesInfo.ObjectOf(ident)
-	if obj == nil {
-		return false
-	}
-
-	v, ok := obj.(*types.Var)
-	if !ok {
+	v := c.VarFromIdent(ident)
+	if v == nil {
 		return false
 	}
 

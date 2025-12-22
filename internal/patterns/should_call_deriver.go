@@ -48,14 +48,9 @@ func (p *ShouldCallDeriver) exprCallsDeriver(cctx *context.CheckContext, expr as
 
 // identCallsDeriver checks if a variable contains a deriver by tracing its assignment.
 func (p *ShouldCallDeriver) identCallsDeriver(cctx *context.CheckContext, ident *ast.Ident) bool {
-	obj := cctx.Pass.TypesInfo.ObjectOf(ident)
-	if obj == nil {
-		return true // Can't trace
-	}
-
-	v, ok := obj.(*types.Var)
-	if !ok {
-		return true // Not a variable
+	v := cctx.VarFromIdent(ident)
+	if v == nil {
+		return true // Can't trace (not a variable)
 	}
 
 	// Check if this is a slice type - we can't trace slice contents
@@ -136,13 +131,8 @@ func (p *ShouldCallDeriver) factoryReturnCallsDeriver(cctx *context.CheckContext
 		return false
 	}
 
-	obj := cctx.Pass.TypesInfo.ObjectOf(ident)
-	if obj == nil {
-		return false
-	}
-
-	v, ok := obj.(*types.Var)
-	if !ok {
+	v := cctx.VarFromIdent(ident)
+	if v == nil {
 		return false
 	}
 

@@ -77,12 +77,8 @@ func closureCheckFromAST(cctx *context.CheckContext, callbackArg ast.Expr) bool 
 
 	// For identifiers, try to find the function literal assignment
 	if ident, ok := callbackArg.(*ast.Ident); ok {
-		obj := cctx.Pass.TypesInfo.ObjectOf(ident)
-		if obj == nil {
-			return false // Can't trace
-		}
-		v, ok := obj.(*types.Var)
-		if !ok {
+		v := cctx.VarFromIdent(ident)
+		if v == nil {
 			return false // Can't trace
 		}
 		funcLit := cctx.FindFuncLitAssignment(v, token.NoPos)
@@ -121,13 +117,8 @@ func closureCheckSelectorFunc(cctx *context.CheckContext, sel *ast.SelectorExpr)
 		return false
 	}
 
-	obj := cctx.Pass.TypesInfo.ObjectOf(ident)
-	if obj == nil {
-		return false
-	}
-
-	v, ok := obj.(*types.Var)
-	if !ok {
+	v := cctx.VarFromIdent(ident)
+	if v == nil {
 		return false
 	}
 
@@ -142,27 +133,23 @@ func closureCheckSelectorFunc(cctx *context.CheckContext, sel *ast.SelectorExpr)
 
 // closureFindStructFieldFuncLit finds a func literal assigned to a struct field.
 func closureFindStructFieldFuncLit(cctx *context.CheckContext, v *types.Var, fieldName string) *ast.FuncLit {
-	var result *ast.FuncLit
-	pos := v.Pos()
-
-	for _, f := range cctx.Pass.Files {
-		if f.Pos() > pos || pos >= f.End() {
-			continue
-		}
-
-		ast.Inspect(f, func(n ast.Node) bool {
-			if result != nil {
-				return false
-			}
-			assign, ok := n.(*ast.AssignStmt)
-			if !ok {
-				return true
-			}
-			result = closureFindFieldInAssignment(cctx, assign, v, fieldName)
-			return result == nil
-		})
-		break
+	f := cctx.FindFileContaining(v.Pos())
+	if f == nil {
+		return nil
 	}
+
+	var result *ast.FuncLit
+	ast.Inspect(f, func(n ast.Node) bool {
+		if result != nil {
+			return false
+		}
+		assign, ok := n.(*ast.AssignStmt)
+		if !ok {
+			return true
+		}
+		result = closureFindFieldInAssignment(cctx, assign, v, fieldName)
+		return result == nil
+	})
 
 	return result
 }
@@ -208,13 +195,8 @@ func closureCheckIndexFunc(cctx *context.CheckContext, idx *ast.IndexExpr) bool 
 		return false
 	}
 
-	obj := cctx.Pass.TypesInfo.ObjectOf(ident)
-	if obj == nil {
-		return false
-	}
-
-	v, ok := obj.(*types.Var)
-	if !ok {
+	v := cctx.VarFromIdent(ident)
+	if v == nil {
 		return false
 	}
 
@@ -228,27 +210,23 @@ func closureCheckIndexFunc(cctx *context.CheckContext, idx *ast.IndexExpr) bool 
 
 // closureFindIndexedFuncLit finds a func literal at a specific index in a composite literal.
 func closureFindIndexedFuncLit(cctx *context.CheckContext, v *types.Var, indexExpr ast.Expr) *ast.FuncLit {
-	var result *ast.FuncLit
-	pos := v.Pos()
-
-	for _, f := range cctx.Pass.Files {
-		if f.Pos() > pos || pos >= f.End() {
-			continue
-		}
-
-		ast.Inspect(f, func(n ast.Node) bool {
-			if result != nil {
-				return false
-			}
-			assign, ok := n.(*ast.AssignStmt)
-			if !ok {
-				return true
-			}
-			result = closureFindFuncLitAtIndex(cctx, assign, v, indexExpr)
-			return result == nil
-		})
-		break
+	f := cctx.FindFileContaining(v.Pos())
+	if f == nil {
+		return nil
 	}
+
+	var result *ast.FuncLit
+	ast.Inspect(f, func(n ast.Node) bool {
+		if result != nil {
+			return false
+		}
+		assign, ok := n.(*ast.AssignStmt)
+		if !ok {
+			return true
+		}
+		result = closureFindFuncLitAtIndex(cctx, assign, v, indexExpr)
+		return result == nil
+	})
 
 	return result
 }
@@ -331,12 +309,8 @@ func closureCheckFactoryCall(cctx *context.CheckContext, call *ast.CallExpr) boo
 	switch fun := call.Fun.(type) {
 	case *ast.Ident:
 		// e.g., makeWorker() where makeWorker := func() func() error { ... }
-		obj := cctx.Pass.TypesInfo.ObjectOf(fun)
-		if obj == nil {
-			return false
-		}
-		v, ok := obj.(*types.Var)
-		if !ok {
+		v := cctx.VarFromIdent(fun)
+		if v == nil {
 			return false
 		}
 		funcLit := cctx.FindFuncLitAssignment(v, token.NoPos)
