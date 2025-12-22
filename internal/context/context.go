@@ -184,6 +184,16 @@ func (c *CheckContext) ArgUsesContext(expr ast.Expr) bool {
 	return found
 }
 
+// FindIdentFuncLitAssignment is a convenience method that combines VarFromIdent and FindFuncLitAssignment.
+// Returns nil if the identifier doesn't refer to a variable or no func literal assignment is found.
+func (c *CheckContext) FindIdentFuncLitAssignment(ident *ast.Ident, beforePos token.Pos) *ast.FuncLit {
+	v := c.VarFromIdent(ident)
+	if v == nil {
+		return nil
+	}
+	return c.FindFuncLitAssignment(v, beforePos)
+}
+
 // FindFuncLitAssignment searches for the func literal assigned to the variable.
 // If beforePos is token.NoPos, returns the LAST assignment found.
 // If beforePos is set, returns the last assignment BEFORE that position.
@@ -345,12 +355,7 @@ func (c *CheckContext) returnedValueUsesContext(result ast.Expr) bool {
 		return false
 	}
 
-	v := c.VarFromIdent(ident)
-	if v == nil {
-		return false
-	}
-
-	innerFuncLit := c.FindFuncLitAssignment(v, token.NoPos)
+	innerFuncLit := c.FindIdentFuncLitAssignment(ident, token.NoPos)
 	if innerFuncLit == nil {
 		return false
 	}

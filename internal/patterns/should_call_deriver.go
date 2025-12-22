@@ -131,12 +131,7 @@ func (p *ShouldCallDeriver) factoryReturnCallsDeriver(cctx *context.CheckContext
 		return false
 	}
 
-	v := cctx.VarFromIdent(ident)
-	if v == nil {
-		return false
-	}
-
-	funcLit := cctx.FindFuncLitAssignment(v, call.Pos())
+	funcLit := cctx.FindIdentFuncLitAssignment(ident, call.Pos())
 	if funcLit == nil {
 		return false
 	}

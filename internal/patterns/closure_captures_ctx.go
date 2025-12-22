@@ -49,13 +49,9 @@ func closureCheckFromAST(cctx *context.CheckContext, callbackArg ast.Expr) bool 
 
 	// For identifiers, try to find the function literal assignment
 	if ident, ok := callbackArg.(*ast.Ident); ok {
-		v := cctx.VarFromIdent(ident)
-		if v == nil {
-			return false // Can't trace
-		}
-		funcLit := cctx.FindFuncLitAssignment(v, token.NoPos)
+		funcLit := cctx.FindIdentFuncLitAssignment(ident, token.NoPos)
 		if funcLit == nil {
-			return false // Can't trace (channel receive, type assertion, etc.)
+			return false // Can't trace
 		}
 		return cctx.CheckFuncLitCapturesContext(funcLit)
 	}
@@ -277,11 +273,7 @@ func closureCheckFactoryCall(cctx *context.CheckContext, call *ast.CallExpr) boo
 	switch fun := call.Fun.(type) {
 	case *ast.Ident:
 		// e.g., makeWorker() where makeWorker := func() func() error { ... }
-		v := cctx.VarFromIdent(fun)
-		if v == nil {
-			return false
-		}
-		funcLit := cctx.FindFuncLitAssignment(v, token.NoPos)
+		funcLit := cctx.FindIdentFuncLitAssignment(fun, token.NoPos)
 		if funcLit == nil {
 			return false
 		}

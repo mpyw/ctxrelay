@@ -208,12 +208,7 @@ func (p *GoStmtCallsDeriver) checkDeriverFromSSA(cctx *context.CheckContext, lit
 
 // checkIdentDeriver checks go fn() patterns where fn is a variable.
 func (p *GoStmtCallsDeriver) checkIdentDeriver(cctx *context.CheckContext, ident *ast.Ident) bool {
-	v := cctx.VarFromIdent(ident)
-	if v == nil {
-		return true // Can't trace (not a variable)
-	}
-
-	funcLit := cctx.FindFuncLitAssignment(v, token.NoPos)
+	funcLit := cctx.FindIdentFuncLitAssignment(ident, token.NoPos)
 	if funcLit == nil {
 		return true // Can't trace
 	}
@@ -241,11 +236,7 @@ func (p *GoStmtCallsDeriver) checkHigherOrderDeriver(cctx *context.CheckContext,
 
 	// Check if the inner call's function is a variable pointing to a func literal
 	if ident, ok := innerCall.Fun.(*ast.Ident); ok {
-		v := cctx.VarFromIdent(ident)
-		if v == nil {
-			return true // Can't trace (not a variable)
-		}
-		funcLit := cctx.FindFuncLitAssignment(v, token.NoPos)
+		funcLit := cctx.FindIdentFuncLitAssignment(ident, token.NoPos)
 		if funcLit == nil {
 			return true // Can't trace
 		}
@@ -309,12 +300,7 @@ func (p *GoStmtCallsDeriver) returnedValueCallsDeriver(cctx *context.CheckContex
 		return false
 	}
 
-	v := cctx.VarFromIdent(ident)
-	if v == nil {
-		return false
-	}
-
-	innerFuncLit := cctx.FindFuncLitAssignment(v, token.NoPos)
+	innerFuncLit := cctx.FindIdentFuncLitAssignment(ident, token.NoPos)
 	if innerFuncLit == nil {
 		return false
 	}
