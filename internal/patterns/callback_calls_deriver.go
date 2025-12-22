@@ -3,10 +3,10 @@ package patterns
 import (
 	"go/ast"
 	"go/types"
-	"strings"
 
 	"github.com/mpyw/goroutinectx/internal/context"
 	"github.com/mpyw/goroutinectx/internal/directives/deriver"
+	"github.com/mpyw/goroutinectx/internal/typeutil"
 )
 
 // CallbackCallsDeriver checks that a callback body calls a deriver function.
@@ -225,7 +225,7 @@ func isTaskConstructorCall(cctx *context.CheckContext, call *ast.CallExpr, tc *T
 			return false
 		}
 
-		return strings.HasPrefix(pkgName.Imported().Path(), tc.Pkg)
+		return typeutil.MatchPkg(pkgName.Imported().Path(), tc.Pkg)
 	}
 
 	// Check for method call (Type is set)

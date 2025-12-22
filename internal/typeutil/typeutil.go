@@ -3,6 +3,7 @@ package typeutil
 import (
 	"go/ast"
 	"go/types"
+	"strings"
 
 	"golang.org/x/tools/go/analysis"
 
@@ -66,4 +67,24 @@ func IsContextOrCarrierType(t types.Type, carriers []carrier.Carrier) bool {
 	}
 
 	return false
+}
+
+// MatchPkg checks if pkgPath matches targetPkg, allowing version suffixes (/v2, /v3, etc.).
+// This handles Go module versioning where:
+//   - github.com/foo/bar matches github.com/foo/bar
+//   - github.com/foo/bar/v2 matches github.com/foo/bar
+//   - github.com/foo/bar/sub does NOT match github.com/foo/bar
+//   - github.com/foo/bar/vault does NOT match github.com/foo/bar
+func MatchPkg(pkgPath, targetPkg string) bool {
+	if pkgPath == targetPkg {
+		return true
+	}
+	// Check for version suffix like /v2, /v3, etc.
+	prefix := targetPkg + "/v"
+	if !strings.HasPrefix(pkgPath, prefix) {
+		return false
+	}
+	// After /v, there must be a digit
+	rest := pkgPath[len(prefix):]
+	return len(rest) > 0 && rest[0] >= '0' && rest[0] <= '9'
 }

@@ -3,7 +3,6 @@ package registry
 import (
 	"go/ast"
 	"go/types"
-	"strings"
 
 	"golang.org/x/tools/go/analysis"
 
@@ -111,7 +110,7 @@ func (r *Registry) isMethodCall(pass *analysis.Pass, sel *ast.SelectorExpr, api 
 		return false
 	}
 
-	return strings.HasPrefix(pkg.Path(), api.Pkg)
+	return typeutil.MatchPkg(pkg.Path(), api.Pkg)
 }
 
 // isFuncCall checks if the selector is a package-level function call.
@@ -131,7 +130,7 @@ func (r *Registry) isFuncCall(pass *analysis.Pass, sel *ast.SelectorExpr, api AP
 		return false
 	}
 
-	return strings.HasPrefix(pkgName.Imported().Path(), api.Pkg)
+	return typeutil.MatchPkg(pkgName.Imported().Path(), api.Pkg)
 }
 
 // getCallbackArg extracts the callback argument from the call.
