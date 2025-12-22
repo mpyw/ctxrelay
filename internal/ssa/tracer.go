@@ -307,19 +307,35 @@ func isContextType(t types.Type) bool {
 	return obj.Pkg() != nil && obj.Pkg().Path() == "context" && obj.Name() == "Context"
 }
 
-// GetContextVars returns all context.Context variables from function parameters.
+// GetContextVars returns all context.Context variables available in a function.
+// This includes both parameters and captured variables (FreeVars) from enclosing scopes.
 func GetContextVars(fn *ssa.Function) []*types.Var {
 	var ctxVars []*types.Var
 	if fn == nil {
 		return ctxVars
 	}
 
+	// Check parameters
 	sig := fn.Signature
 	params := sig.Params()
 	for i := 0; i < params.Len(); i++ {
 		param := params.At(i)
 		if isContextType(param.Type()) {
 			ctxVars = append(ctxVars, param)
+		}
+	}
+
+	// Check captured variables (FreeVars) from enclosing scopes
+	for _, fv := range fn.FreeVars {
+		if isContextType(fv.Type()) {
+			// FreeVar doesn't have an underlying types.Var directly accessible,
+			// but we can create a synthetic Var for matching purposes.
+			// The package is derived from the parent function.
+			var pkg *types.Package
+			if fn.Pkg != nil {
+				pkg = fn.Pkg.Pkg
+			}
+			ctxVars = append(ctxVars, types.NewVar(fv.Pos(), pkg, fv.Name(), fv.Type()))
 		}
 	}
 

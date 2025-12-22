@@ -60,7 +60,14 @@ func (p *Program) EnclosingFunc(pos ast.Node) *ssa.Function {
 func (p *Program) findEnclosingFunc(fn *ssa.Function, pos ast.Node) *ssa.Function {
 	// Check anonymous functions defined within this function
 	for _, anon := range fn.AnonFuncs {
-		if anon.Pos() <= pos.Pos() && pos.End() <= anon.Syntax().End() {
+		syntax := anon.Syntax()
+		if syntax == nil {
+			continue
+		}
+		// Use the syntax's full range, not just anon.Pos()
+		// anon.Pos() is the position of 'func' keyword, but for GoStmt
+		// the position is the 'go' keyword which comes before 'func'
+		if syntax.Pos() <= pos.Pos() && pos.End() <= syntax.End() {
 			// Recursively check nested functions
 			return p.findEnclosingFunc(anon, pos)
 		}
