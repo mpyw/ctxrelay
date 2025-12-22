@@ -340,6 +340,70 @@ func (c *CheckContext) FactoryReturnsContextUsingFunc(factory *ast.FuncLit) bool
 	return c.BlockReturnsContextUsingFunc(factory.Body, factory)
 }
 
+// FactoryCallReturnsContextUsingFunc checks if a factory call returns a context-using func.
+// Handles: fn(ctx), fn() where fn captures ctx, (func(){...})(), and nested calls.
+func (c *CheckContext) FactoryCallReturnsContextUsingFunc(call *ast.CallExpr) bool {
+	// Check if ctx is passed as an argument to the call
+	if c.ArgsUseContext(call.Args) {
+		return true
+	}
+
+	// Check if the factory function itself is a closure that captures ctx
+	switch fun := call.Fun.(type) {
+	case *ast.FuncLit:
+		if c.FuncLitHasContextParam(fun) {
+			return true
+		}
+		return c.FactoryReturnsContextUsingFunc(fun)
+
+	case *ast.Ident:
+		return c.IdentFactoryReturnsContextUsingFunc(fun)
+
+	case *ast.CallExpr:
+		// Handle nested CallExpr for deeper chains like fn()()()
+		return c.FactoryCallReturnsContextUsingFunc(fun)
+	}
+
+	return true // Can't analyze, assume OK
+}
+
+// IdentFactoryReturnsContextUsingFunc checks if an identifier refers to a factory
+// that returns a context-using func. Handles both local variables and package-level functions.
+func (c *CheckContext) IdentFactoryReturnsContextUsingFunc(ident *ast.Ident) bool {
+	obj := c.Pass.TypesInfo.ObjectOf(ident)
+	if obj == nil {
+		return true // Can't trace, assume OK
+	}
+
+	// Handle local variable pointing to a func literal
+	if v := c.VarFromIdent(ident); v != nil {
+		funcLit := c.FindFuncLitAssignment(v, token.NoPos)
+		if funcLit == nil {
+			return true // Can't trace, assume OK
+		}
+		// Skip if closure has its own context parameter
+		if c.FuncLitHasContextParam(funcLit) {
+			return true
+		}
+		return c.FactoryReturnsContextUsingFunc(funcLit)
+	}
+
+	// Handle package-level function declaration
+	if fn, ok := obj.(*types.Func); ok {
+		funcDecl := c.FindFuncDecl(fn)
+		if funcDecl == nil {
+			return true // Can't trace, assume OK
+		}
+		// Skip if function has context parameter
+		if c.FuncTypeHasContextParam(funcDecl.Type) {
+			return true
+		}
+		return c.BlockReturnsContextUsingFunc(funcDecl.Body, nil)
+	}
+
+	return true // Can't analyze, assume OK
+}
+
 // returnedValueUsesContext checks if a returned value is a func that uses context.
 func (c *CheckContext) returnedValueUsesContext(result ast.Expr) bool {
 	// If it's a func literal, check directly

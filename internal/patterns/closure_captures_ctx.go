@@ -40,7 +40,7 @@ func (*ClosureCapturesCtx) Message(apiName string, ctxName string) string {
 }
 
 // closureCheckFromAST falls back to AST-based analysis when SSA tracing fails.
-// Design principle: "prove safety" - if we can't prove ctx is used, report error.
+// Design principle: "zero false positives" - if we can't trace, assume OK.
 func closureCheckFromAST(cctx *context.CheckContext, callbackArg ast.Expr) bool {
 	// For function literals, check if they reference context
 	if lit, ok := callbackArg.(*ast.FuncLit); ok {
@@ -51,14 +51,14 @@ func closureCheckFromAST(cctx *context.CheckContext, callbackArg ast.Expr) bool 
 	if ident, ok := callbackArg.(*ast.Ident); ok {
 		funcLit := cctx.FindIdentFuncLitAssignment(ident, token.NoPos)
 		if funcLit == nil {
-			return false // Can't trace
+			return true // Can't trace, assume OK
 		}
 		return cctx.FuncLitCapturesContext(funcLit)
 	}
 
 	// For call expressions, check if ctx is passed as argument
 	if call, ok := callbackArg.(*ast.CallExpr); ok {
-		return closureCheckFactoryCall(cctx, call)
+		return cctx.FactoryCallReturnsContextUsingFunc(call)
 	}
 
 	// For selector expressions (struct field access), check the field's func
@@ -71,25 +71,25 @@ func closureCheckFromAST(cctx *context.CheckContext, callbackArg ast.Expr) bool 
 		return closureCheckIndexFunc(cctx, idx)
 	}
 
-	return false // Can't analyze - report error to catch potential issues
+	return true // Can't analyze, assume OK
 }
 
 // closureCheckSelectorFunc checks if a struct field func uses context.
 func closureCheckSelectorFunc(cctx *context.CheckContext, sel *ast.SelectorExpr) bool {
 	ident, ok := sel.X.(*ast.Ident)
 	if !ok {
-		return false
+		return true // Can't trace, assume OK
 	}
 
 	v := cctx.VarFromIdent(ident)
 	if v == nil {
-		return false
+		return true // Can't trace, assume OK
 	}
 
 	fieldName := sel.Sel.Name
 	funcLit := closureFindStructFieldFuncLit(cctx, v, fieldName)
 	if funcLit == nil {
-		return false
+		return true // Can't trace, assume OK
 	}
 
 	return cctx.FuncLitUsesContext(funcLit)
@@ -156,17 +156,17 @@ func closureFindFieldInAssignment(cctx *context.CheckContext, assign *ast.Assign
 func closureCheckIndexFunc(cctx *context.CheckContext, idx *ast.IndexExpr) bool {
 	ident, ok := idx.X.(*ast.Ident)
 	if !ok {
-		return false
+		return true // Can't trace, assume OK
 	}
 
 	v := cctx.VarFromIdent(ident)
 	if v == nil {
-		return false
+		return true // Can't trace, assume OK
 	}
 
 	funcLit := closureFindIndexedFuncLit(cctx, v, idx.Index)
 	if funcLit == nil {
-		return false
+		return true // Can't trace, assume OK
 	}
 
 	return cctx.FuncLitUsesContext(funcLit)
@@ -254,34 +254,4 @@ func closureFindFuncLitByLiteral(compLit *ast.CompositeLit, lit *ast.BasicLit) *
 	}
 
 	return nil
-}
-
-// closureCheckFactoryCall checks if a factory call passes context.
-// Handles patterns like:
-//   - g.Go(makeWorkerWithCtx(ctx)) - ctx passed as argument
-//   - g.Go(makeWorker()) where makeWorker is a closure that captures ctx
-func closureCheckFactoryCall(cctx *context.CheckContext, call *ast.CallExpr) bool {
-	// Check if ctx is passed as an argument to the call
-	if cctx.ArgsUseContext(call.Args) {
-		return true
-	}
-
-	// Check if the factory function itself is a closure that captures ctx
-	// and returns a function that uses it
-	switch fun := call.Fun.(type) {
-	case *ast.Ident:
-		// e.g., makeWorker() where makeWorker := func() func() error { ... }
-		funcLit := cctx.FindIdentFuncLitAssignment(fun, token.NoPos)
-		if funcLit == nil {
-			return false
-		}
-		// Check if the factory's return statements return a func that uses ctx
-		return cctx.FactoryReturnsContextUsingFunc(funcLit)
-
-	case *ast.FuncLit:
-		// e.g., g.Go((func() func() error { return func() error { _ = ctx; return nil } })())
-		return cctx.FactoryReturnsContextUsingFunc(fun)
-	}
-
-	return false
 }

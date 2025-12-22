@@ -3,7 +3,6 @@ package patterns
 import (
 	"go/ast"
 	"go/token"
-	"go/types"
 
 	"github.com/mpyw/goroutinectx/internal/context"
 	"github.com/mpyw/goroutinectx/internal/directives/deriver"
@@ -52,82 +51,16 @@ func goStmtCheckFromAST(cctx *context.CheckContext, stmt *ast.GoStmt) bool {
 
 	// For go fn()() (higher-order), check the factory function
 	if innerCall, ok := call.Fun.(*ast.CallExpr); ok {
-		return goStmtCheckHigherOrder(cctx, innerCall)
+		return cctx.FactoryCallReturnsContextUsingFunc(innerCall)
 	}
 
-	// For go fn(), try to find the function
+	// For go fn(), try to find the function literal assignment
 	if ident, ok := call.Fun.(*ast.Ident); ok {
-		_ = ident   // Would need to look up variable definition
-		return true // Can't trace without SSA
-	}
-
-	return true // Can't analyze, assume OK
-}
-
-// goStmtCheckHigherOrder checks go fn()() patterns where fn is a factory function.
-// For these patterns, we need to check if ctx is passed to the factory,
-// or if the factory function returns a closure that uses ctx.
-// Handles arbitrary depth: go fn()(), go fn()()(), etc.
-func goStmtCheckHigherOrder(cctx *context.CheckContext, innerCall *ast.CallExpr) bool {
-	// Check if ctx is passed as an argument to the inner call
-	if cctx.ArgsUseContext(innerCall.Args) {
-		return true
-	}
-
-	// Check if the inner call's function is a func literal (factory IIFE)
-	if lit, ok := innerCall.Fun.(*ast.FuncLit); ok {
-		if cctx.FuncLitHasContextParam(lit) {
-			return true
-		}
-		return cctx.FactoryReturnsContextUsingFunc(lit)
-	}
-
-	// Check if the inner call's function is an identifier
-	if ident, ok := innerCall.Fun.(*ast.Ident); ok {
-		return goStmtCheckIdentFactory(cctx, ident)
-	}
-
-	// Handle nested CallExpr for deeper chains like go fn()()()
-	if nestedCall, ok := innerCall.Fun.(*ast.CallExpr); ok {
-		return goStmtCheckHigherOrder(cctx, nestedCall)
-	}
-
-	return true // Can't analyze, assume OK
-}
-
-// goStmtCheckIdentFactory checks if an identifier refers to a factory that returns ctx-using func.
-func goStmtCheckIdentFactory(cctx *context.CheckContext, ident *ast.Ident) bool {
-	obj := cctx.Pass.TypesInfo.ObjectOf(ident)
-	if obj == nil {
-		return true // Can't trace
-	}
-
-	// Handle local variable pointing to a func literal
-	if v := cctx.VarFromIdent(ident); v != nil {
-		funcLit := cctx.FindFuncLitAssignment(v, token.NoPos)
+		funcLit := cctx.FindIdentFuncLitAssignment(ident, token.NoPos)
 		if funcLit == nil {
-			return true // Can't trace
+			return true // Can't trace, assume OK
 		}
-		// Skip if closure has its own context parameter
-		if cctx.FuncLitHasContextParam(funcLit) {
-			return true
-		}
-		// Check if the factory returns a context-using func
-		return cctx.FactoryReturnsContextUsingFunc(funcLit)
-	}
-
-	// Handle package-level function declaration
-	if fn, ok := obj.(*types.Func); ok {
-		funcDecl := cctx.FindFuncDecl(fn)
-		if funcDecl == nil {
-			return true // Can't trace
-		}
-		// Skip if function has context parameter
-		if cctx.FuncTypeHasContextParam(funcDecl.Type) {
-			return true
-		}
-		// Check if the factory returns a context-using func
-		return cctx.BlockReturnsContextUsingFunc(funcDecl.Body, nil)
+		return cctx.FuncLitCapturesContext(funcLit)
 	}
 
 	return true // Can't analyze, assume OK
