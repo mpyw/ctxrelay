@@ -46,17 +46,17 @@ func (*GoStmtCapturesCtx) CheckGoStmt(cctx *CheckContext, stmt *ast.GoStmt) GoSt
 	}
 
 	// Try SSA-based check first (more accurate, includes nested closures)
-	if result, ok := checkGoStmtFromSSA(cctx, stmt); ok {
+	if result, ok := goStmtCheckFromSSA(cctx, stmt); ok {
 		return GoStmtResult{OK: result}
 	}
 
 	// Fall back to AST-based check when SSA fails
-	return GoStmtResult{OK: checkGoStmtFromAST(cctx, stmt)}
+	return GoStmtResult{OK: goStmtCheckFromAST(cctx, stmt)}
 }
 
-// checkGoStmtFromSSA uses SSA analysis to check if a goroutine captures context.
+// goStmtCheckFromSSA uses SSA analysis to check if a goroutine captures context.
 // Returns (result, true) if SSA analysis succeeded, or (false, false) if it failed.
-func checkGoStmtFromSSA(cctx *CheckContext, stmt *ast.GoStmt) (bool, bool) {
+func goStmtCheckFromSSA(cctx *CheckContext, stmt *ast.GoStmt) (bool, bool) {
 	if cctx.SSAProg == nil || cctx.Tracer == nil {
 		return false, false
 	}
@@ -90,8 +90,8 @@ func (*GoStmtCapturesCtx) DeferMessage(_ string) string {
 	return "" // Not applicable for context capture pattern
 }
 
-// checkGoStmtFromAST falls back to AST-based analysis for go statements.
-func checkGoStmtFromAST(cctx *CheckContext, stmt *ast.GoStmt) bool {
+// goStmtCheckFromAST falls back to AST-based analysis for go statements.
+func goStmtCheckFromAST(cctx *CheckContext, stmt *ast.GoStmt) bool {
 	call := stmt.Call
 
 	// For go func(){}(), check the function literal
@@ -105,7 +105,7 @@ func checkGoStmtFromAST(cctx *CheckContext, stmt *ast.GoStmt) bool {
 
 	// For go fn()() (higher-order), check the factory function
 	if innerCall, ok := call.Fun.(*ast.CallExpr); ok {
-		return checkHigherOrderGoStmt(cctx, innerCall)
+		return goStmtCheckHigherOrder(cctx, innerCall)
 	}
 
 	// For go fn(), try to find the function
@@ -117,11 +117,11 @@ func checkGoStmtFromAST(cctx *CheckContext, stmt *ast.GoStmt) bool {
 	return true // Can't analyze, assume OK
 }
 
-// checkHigherOrderGoStmt checks go fn()() patterns where fn is a factory function.
+// goStmtCheckHigherOrder checks go fn()() patterns where fn is a factory function.
 // For these patterns, we need to check if ctx is passed to the factory,
 // or if the factory function returns a closure that uses ctx.
 // Handles arbitrary depth: go fn()(), go fn()()(), etc.
-func checkHigherOrderGoStmt(cctx *CheckContext, innerCall *ast.CallExpr) bool {
+func goStmtCheckHigherOrder(cctx *CheckContext, innerCall *ast.CallExpr) bool {
 	// Check if ctx is passed as an argument to the inner call
 	for _, arg := range innerCall.Args {
 		if argUsesContext(cctx, arg) {
@@ -141,19 +141,19 @@ func checkHigherOrderGoStmt(cctx *CheckContext, innerCall *ast.CallExpr) bool {
 
 	// Check if the inner call's function is an identifier
 	if ident, ok := innerCall.Fun.(*ast.Ident); ok {
-		return checkIdentFactoryUsesContext(cctx, ident)
+		return goStmtCheckIdentFactory(cctx, ident)
 	}
 
 	// Handle nested CallExpr for deeper chains like go fn()()()
 	if nestedCall, ok := innerCall.Fun.(*ast.CallExpr); ok {
-		return checkHigherOrderGoStmt(cctx, nestedCall)
+		return goStmtCheckHigherOrder(cctx, nestedCall)
 	}
 
 	return true // Can't analyze, assume OK
 }
 
-// checkIdentFactoryUsesContext checks if an identifier refers to a factory that returns ctx-using func.
-func checkIdentFactoryUsesContext(cctx *CheckContext, ident *ast.Ident) bool {
+// goStmtCheckIdentFactory checks if an identifier refers to a factory that returns ctx-using func.
+func goStmtCheckIdentFactory(cctx *CheckContext, ident *ast.Ident) bool {
 	obj := cctx.Pass.TypesInfo.ObjectOf(ident)
 	if obj == nil {
 		return true // Can't trace
@@ -175,23 +175,23 @@ func checkIdentFactoryUsesContext(cctx *CheckContext, ident *ast.Ident) bool {
 
 	// Handle package-level function declaration
 	if fn, ok := obj.(*types.Func); ok {
-		funcDecl := findFuncDecl(cctx, fn)
+		funcDecl := goStmtFindFuncDecl(cctx, fn)
 		if funcDecl == nil {
 			return true // Can't trace
 		}
 		// Skip if function has context parameter
-		if funcDeclHasContextParam(cctx, funcDecl) {
+		if goStmtFuncDeclHasContextParam(cctx, funcDecl) {
 			return true
 		}
 		// Check if the factory returns a context-using func
-		return factoryDeclReturnsContextUsingFunc(cctx, funcDecl)
+		return goStmtFactoryDeclReturnsCtxFunc(cctx, funcDecl)
 	}
 
 	return true // Can't analyze, assume OK
 }
 
-// findFuncDecl finds the FuncDecl for a types.Func.
-func findFuncDecl(cctx *CheckContext, fn *types.Func) *ast.FuncDecl {
+// goStmtFindFuncDecl finds the FuncDecl for a types.Func.
+func goStmtFindFuncDecl(cctx *CheckContext, fn *types.Func) *ast.FuncDecl {
 	pos := fn.Pos()
 	for _, f := range cctx.Pass.Files {
 		if f.Pos() > pos || pos >= f.End() {
@@ -208,8 +208,8 @@ func findFuncDecl(cctx *CheckContext, fn *types.Func) *ast.FuncDecl {
 	return nil
 }
 
-// funcDeclHasContextParam checks if a function declaration has a context.Context parameter.
-func funcDeclHasContextParam(cctx *CheckContext, decl *ast.FuncDecl) bool {
+// goStmtFuncDeclHasContextParam checks if a function declaration has a context.Context parameter.
+func goStmtFuncDeclHasContextParam(cctx *CheckContext, decl *ast.FuncDecl) bool {
 	if decl.Type == nil || decl.Type.Params == nil {
 		return false
 	}
@@ -225,9 +225,9 @@ func funcDeclHasContextParam(cctx *CheckContext, decl *ast.FuncDecl) bool {
 	return false
 }
 
-// factoryDeclReturnsContextUsingFunc checks if a function declaration returns funcs that use context.
+// goStmtFactoryDeclReturnsCtxFunc checks if a function declaration returns funcs that use context.
 // For nested factories, this recursively checks if any deeply nested function uses context.
-func factoryDeclReturnsContextUsingFunc(cctx *CheckContext, decl *ast.FuncDecl) bool {
+func goStmtFactoryDeclReturnsCtxFunc(cctx *CheckContext, decl *ast.FuncDecl) bool {
 	if decl.Body == nil {
 		return true // No body to check
 	}

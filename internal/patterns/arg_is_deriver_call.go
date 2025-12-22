@@ -2,9 +2,6 @@ package patterns
 
 import (
 	"go/ast"
-	"go/types"
-
-	"golang.org/x/tools/go/analysis"
 
 	"github.com/mpyw/goroutinectx/internal/directives/deriver"
 )
@@ -111,7 +108,7 @@ func (p *ArgIsDeriverCall) identIsDeriverCall(cctx *CheckContext, ident *ast.Ide
 func (p *ArgIsDeriverCall) Message(apiName string, _ string) string {
 	// Convert "pkg.Type.Method" to "(*pkg.Type).Method"
 	// apiName is like "gotask.Task.DoAsync"
-	parts := splitAPIName(apiName)
+	parts := argDeriverSplitAPIName(apiName)
 	if len(parts) == 3 {
 		// pkg.Type.Method -> (*pkg.Type).Method
 		return "(*" + parts[0] + "." + parts[1] + ")." + parts[2] + "() 1st argument should call goroutine deriver"
@@ -119,8 +116,8 @@ func (p *ArgIsDeriverCall) Message(apiName string, _ string) string {
 	return apiName + "() 1st argument should call goroutine deriver"
 }
 
-// splitAPIName splits an API name like "pkg.Type.Method" into parts.
-func splitAPIName(name string) []string {
+// argDeriverSplitAPIName splits an API name like "pkg.Type.Method" into parts.
+func argDeriverSplitAPIName(name string) []string {
 	var parts []string
 	for i := len(name) - 1; i >= 0; i-- {
 		if name[i] == '.' {
@@ -132,28 +129,4 @@ func splitAPIName(name string) []string {
 		parts = append([]string{name}, parts...)
 	}
 	return parts
-}
-
-// extractCallFunc extracts the types.Func from a call expression.
-func extractCallFunc(pass *analysis.Pass, call *ast.CallExpr) *types.Func {
-	switch fun := call.Fun.(type) {
-	case *ast.Ident:
-		if f, ok := pass.TypesInfo.ObjectOf(fun).(*types.Func); ok {
-			return f
-		}
-
-	case *ast.SelectorExpr:
-		sel := pass.TypesInfo.Selections[fun]
-		if sel != nil {
-			if f, ok := sel.Obj().(*types.Func); ok {
-				return f
-			}
-		} else {
-			if f, ok := pass.TypesInfo.ObjectOf(fun.Sel).(*types.Func); ok {
-				return f
-			}
-		}
-	}
-
-	return nil
 }

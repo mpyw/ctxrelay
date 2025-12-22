@@ -64,13 +64,13 @@ func (p *ShouldCallDeriver) identCallsDeriver(cctx *CheckContext, ident *ast.Ide
 	}
 
 	// Try to find a FuncLit assignment
-	funcLit := findFuncLitAssignmentBefore(cctx, v, ident.Pos())
+	funcLit := deriverFindFuncLitAssignmentBefore(cctx, v, ident.Pos())
 	if funcLit != nil {
 		return p.Matcher.SatisfiesAnyGroup(cctx.Pass, funcLit.Body)
 	}
 
 	// Try to find a CallExpr assignment (e.g., task := NewTask(fn))
-	callExpr := findCallExprAssignmentBefore(cctx, v, ident.Pos())
+	callExpr := deriverFindCallExprAssignmentBefore(cctx, v, ident.Pos())
 	if callExpr != nil {
 		return p.callExprCallsDeriver(cctx, callExpr)
 	}
@@ -146,7 +146,7 @@ func (p *ShouldCallDeriver) factoryReturnCallsDeriver(cctx *CheckContext, call *
 		return false
 	}
 
-	funcLit := findFuncLitAssignmentBefore(cctx, v, call.Pos())
+	funcLit := deriverFindFuncLitAssignmentBefore(cctx, v, call.Pos())
 	if funcLit == nil {
 		return false
 	}
@@ -210,8 +210,8 @@ func (p *ShouldCallDeriver) Message(apiName string, _ string) string {
 	return apiName + "() callback should call goroutine deriver"
 }
 
-// findFuncLitAssignmentBefore finds the last FuncLit assigned to variable before pos.
-func findFuncLitAssignmentBefore(cctx *CheckContext, v *types.Var, beforePos token.Pos) *ast.FuncLit {
+// deriverFindFuncLitAssignmentBefore finds the last FuncLit assigned to variable before pos.
+func deriverFindFuncLitAssignmentBefore(cctx *CheckContext, v *types.Var, beforePos token.Pos) *ast.FuncLit {
 	var result *ast.FuncLit
 	declPos := v.Pos()
 
@@ -252,8 +252,8 @@ func findFuncLitAssignmentBefore(cctx *CheckContext, v *types.Var, beforePos tok
 	return result
 }
 
-// findCallExprAssignmentBefore finds the last CallExpr assigned to variable before pos.
-func findCallExprAssignmentBefore(cctx *CheckContext, v *types.Var, beforePos token.Pos) *ast.CallExpr {
+// deriverFindCallExprAssignmentBefore finds the last CallExpr assigned to variable before pos.
+func deriverFindCallExprAssignmentBefore(cctx *CheckContext, v *types.Var, beforePos token.Pos) *ast.CallExpr {
 	var result *ast.CallExpr
 	declPos := v.Pos()
 
