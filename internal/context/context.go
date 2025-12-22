@@ -129,30 +129,7 @@ func (c *CheckContext) FuncLitCapturesContext(lit *ast.FuncLit) bool {
 // It does NOT descend into nested func literals - they have their own scope and
 // will be checked separately.
 func (c *CheckContext) FuncLitUsesContext(lit *ast.FuncLit) bool {
-	usesCtx := false
-	ast.Inspect(lit.Body, func(n ast.Node) bool {
-		if usesCtx {
-			return false
-		}
-		// Skip nested function literals - they will be checked separately
-		if nested, ok := n.(*ast.FuncLit); ok && nested != lit {
-			return false
-		}
-		ident, ok := n.(*ast.Ident)
-		if !ok {
-			return true
-		}
-		obj := c.Pass.TypesInfo.ObjectOf(ident)
-		if obj == nil {
-			return true
-		}
-		if typeutil.IsContextOrCarrierType(obj.Type(), c.Carriers) {
-			usesCtx = true
-			return false
-		}
-		return true
-	})
-	return usesCtx
+	return c.nodeReferencesContext(lit.Body, true)
 }
 
 // ExtractCallFunc extracts the types.Func from a call expression.
@@ -162,10 +139,21 @@ func (c *CheckContext) ExtractCallFunc(call *ast.CallExpr) *types.Func {
 
 // ArgUsesContext checks if an expression references a context variable.
 func (c *CheckContext) ArgUsesContext(expr ast.Expr) bool {
+	return c.nodeReferencesContext(expr, false)
+}
+
+// nodeReferencesContext checks if a node references any context variable.
+// If skipNestedFuncLit is true, nested function literals are not traversed.
+func (c *CheckContext) nodeReferencesContext(node ast.Node, skipNestedFuncLit bool) bool {
 	found := false
-	ast.Inspect(expr, func(n ast.Node) bool {
+	ast.Inspect(node, func(n ast.Node) bool {
 		if found {
 			return false
+		}
+		if skipNestedFuncLit {
+			if _, ok := n.(*ast.FuncLit); ok {
+				return false
+			}
 		}
 		ident, ok := n.(*ast.Ident)
 		if !ok {
