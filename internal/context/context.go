@@ -74,6 +74,26 @@ func (c *CheckContext) FindFuncDecl(fn *types.Func) *ast.FuncDecl {
 	return nil
 }
 
+// CheckFuncLitCapturesContextSSA uses SSA analysis to check if a func literal captures context.
+// Returns (result, true) if SSA analysis succeeded, or (false, false) if it failed.
+func (c *CheckContext) CheckFuncLitCapturesContextSSA(lit *ast.FuncLit) (bool, bool) {
+	if c.SSAProg == nil || c.Tracer == nil {
+		return false, false
+	}
+
+	// Skip if closure has its own context parameter
+	if c.FuncLitHasContextParam(lit) {
+		return true, true
+	}
+
+	ssaFn := c.SSAProg.FindFuncLit(lit)
+	if ssaFn == nil {
+		return false, false // SSA lookup failed
+	}
+
+	return c.Tracer.ClosureCapturesContext(ssaFn, c.Carriers), true
+}
+
 // FuncTypeHasContextParam checks if a function type has a context.Context parameter.
 func (c *CheckContext) FuncTypeHasContextParam(fnType *ast.FuncType) bool {
 	if fnType == nil || fnType.Params == nil {
@@ -94,6 +114,15 @@ func (c *CheckContext) FuncTypeHasContextParam(fnType *ast.FuncType) bool {
 // FuncLitHasContextParam checks if a function literal has a context.Context parameter.
 func (c *CheckContext) FuncLitHasContextParam(lit *ast.FuncLit) bool {
 	return c.FuncTypeHasContextParam(lit.Type)
+}
+
+// CheckFuncLitCapturesContext checks if a func literal captures context (AST-based).
+// Returns true if the func has its own context param, or if it uses a context from outer scope.
+func (c *CheckContext) CheckFuncLitCapturesContext(lit *ast.FuncLit) bool {
+	if c.FuncLitHasContextParam(lit) {
+		return true
+	}
+	return c.FuncLitUsesContext(lit)
 }
 
 // FuncLitUsesContext checks if a function literal references any context variable.

@@ -25,8 +25,10 @@ func (*ClosureCapturesCtx) Check(cctx *context.CheckContext, call *ast.CallExpr,
 	}
 
 	// Try SSA-based check first (more accurate, includes nested closures)
-	if result, ok := closureCheckFromSSA(cctx, callbackArg); ok {
-		return result
+	if lit, ok := callbackArg.(*ast.FuncLit); ok {
+		if result, ok := cctx.CheckFuncLitCapturesContextSSA(lit); ok {
+			return result
+		}
 	}
 
 	// Fall back to AST-based check when SSA fails
@@ -37,42 +39,12 @@ func (*ClosureCapturesCtx) Message(apiName string, ctxName string) string {
 	return fmt.Sprintf("%s() closure should use context %q", apiName, ctxName)
 }
 
-// closureCheckFromSSA uses SSA analysis to check if a closure captures context.
-// Returns (result, true) if SSA analysis succeeded, or (false, false) if it failed.
-func closureCheckFromSSA(cctx *context.CheckContext, callbackArg ast.Expr) (bool, bool) {
-	if cctx.SSAProg == nil || cctx.Tracer == nil {
-		return false, false
-	}
-
-	// For function literals, find the SSA function and check FreeVars
-	if lit, ok := callbackArg.(*ast.FuncLit); ok {
-		// Skip if closure has its own context parameter
-		if cctx.FuncLitHasContextParam(lit) {
-			return true, true
-		}
-
-		ssaFn := cctx.SSAProg.FindFuncLit(lit)
-		if ssaFn == nil {
-			return false, false // SSA lookup failed
-		}
-
-		return cctx.Tracer.ClosureCapturesContext(ssaFn, cctx.Carriers), true
-	}
-
-	// For other cases, fall back to AST
-	return false, false
-}
-
 // closureCheckFromAST falls back to AST-based analysis when SSA tracing fails.
 // Design principle: "prove safety" - if we can't prove ctx is used, report error.
 func closureCheckFromAST(cctx *context.CheckContext, callbackArg ast.Expr) bool {
 	// For function literals, check if they reference context
 	if lit, ok := callbackArg.(*ast.FuncLit); ok {
-		// Skip if closure has its own context parameter
-		if cctx.FuncLitHasContextParam(lit) {
-			return true
-		}
-		return cctx.FuncLitUsesContext(lit)
+		return cctx.CheckFuncLitCapturesContext(lit)
 	}
 
 	// For identifiers, try to find the function literal assignment
@@ -85,11 +57,7 @@ func closureCheckFromAST(cctx *context.CheckContext, callbackArg ast.Expr) bool 
 		if funcLit == nil {
 			return false // Can't trace (channel receive, type assertion, etc.)
 		}
-		// Skip if closure has its own context parameter
-		if cctx.FuncLitHasContextParam(funcLit) {
-			return true
-		}
-		return cctx.FuncLitUsesContext(funcLit)
+		return cctx.CheckFuncLitCapturesContext(funcLit)
 	}
 
 	// For call expressions, check if ctx is passed as argument

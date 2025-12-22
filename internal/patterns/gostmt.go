@@ -23,40 +23,14 @@ func (*GoStmtCapturesCtx) CheckGoStmt(cctx *context.CheckContext, stmt *ast.GoSt
 	}
 
 	// Try SSA-based check first (more accurate, includes nested closures)
-	if result, ok := goStmtCheckFromSSA(cctx, stmt); ok {
-		return GoStmtResult{OK: result}
+	if lit, ok := stmt.Call.Fun.(*ast.FuncLit); ok {
+		if result, ok := cctx.CheckFuncLitCapturesContextSSA(lit); ok {
+			return GoStmtResult{OK: result}
+		}
 	}
 
 	// Fall back to AST-based check when SSA fails
 	return GoStmtResult{OK: goStmtCheckFromAST(cctx, stmt)}
-}
-
-// goStmtCheckFromSSA uses SSA analysis to check if a goroutine captures context.
-// Returns (result, true) if SSA analysis succeeded, or (false, false) if it failed.
-func goStmtCheckFromSSA(cctx *context.CheckContext, stmt *ast.GoStmt) (bool, bool) {
-	if cctx.SSAProg == nil || cctx.Tracer == nil {
-		return false, false
-	}
-
-	call := stmt.Call
-
-	// For go func(){}(), find the SSA function and check FreeVars
-	if lit, ok := call.Fun.(*ast.FuncLit); ok {
-		// Skip if closure has its own context parameter
-		if cctx.FuncLitHasContextParam(lit) {
-			return true, true
-		}
-
-		ssaFn := cctx.SSAProg.FindFuncLit(lit)
-		if ssaFn == nil {
-			return false, false // SSA lookup failed
-		}
-
-		return cctx.Tracer.ClosureCapturesContext(ssaFn, cctx.Carriers), true
-	}
-
-	// For other cases (go fn()(), go fn()), fall back to AST
-	return false, false
 }
 
 func (*GoStmtCapturesCtx) Message(ctxName string) string {
@@ -73,11 +47,7 @@ func goStmtCheckFromAST(cctx *context.CheckContext, stmt *ast.GoStmt) bool {
 
 	// For go func(){}(), check the function literal
 	if lit, ok := call.Fun.(*ast.FuncLit); ok {
-		// Skip if closure has its own context parameter
-		if cctx.FuncLitHasContextParam(lit) {
-			return true
-		}
-		return cctx.FuncLitUsesContext(lit)
+		return cctx.CheckFuncLitCapturesContext(lit)
 	}
 
 	// For go fn()() (higher-order), check the factory function
@@ -106,13 +76,11 @@ func goStmtCheckHigherOrder(cctx *context.CheckContext, innerCall *ast.CallExpr)
 		}
 	}
 
-	// Check if the inner call's function is a func literal
+	// Check if the inner call's function is a func literal (factory IIFE)
 	if lit, ok := innerCall.Fun.(*ast.FuncLit); ok {
-		// Skip if closure has its own context parameter
 		if cctx.FuncLitHasContextParam(lit) {
 			return true
 		}
-		// Check if the factory returns a context-using func
 		return cctx.FactoryReturnsContextUsingFunc(lit)
 	}
 
