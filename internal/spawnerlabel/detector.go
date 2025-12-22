@@ -169,9 +169,7 @@ func isGotaskTaskType(pass *analysis.Pass, expr ast.Expr) bool {
 		return false
 	}
 
-	if ptr, ok := typ.(*types.Pointer); ok {
-		typ = ptr.Elem()
-	}
+	typ = typeutil.UnwrapPointer(typ)
 
 	named, ok := typ.(*types.Named)
 	if !ok {

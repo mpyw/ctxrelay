@@ -2,7 +2,6 @@ package patterns
 
 import (
 	"go/ast"
-	"go/token"
 	"go/types"
 	"strings"
 
@@ -71,7 +70,7 @@ func (p *ShouldCallDeriver) identCallsDeriver(cctx *context.CheckContext, ident 
 	}
 
 	// Try to find a CallExpr assignment (e.g., task := NewTask(fn))
-	callExpr := deriverFindCallExprAssignmentBefore(cctx, v, ident.Pos())
+	callExpr := cctx.FindCallExprAssignment(v, ident.Pos())
 	if callExpr != nil {
 		return p.callExprCallsDeriver(cctx, callExpr)
 	}
@@ -209,46 +208,4 @@ func (p *ShouldCallDeriver) funcLitReturnCallsDeriver(cctx *context.CheckContext
 
 func (p *ShouldCallDeriver) Message(apiName string, _ string) string {
 	return apiName + "() callback should call goroutine deriver"
-}
-
-// deriverFindCallExprAssignmentBefore finds the last CallExpr assigned to variable before pos.
-func deriverFindCallExprAssignmentBefore(cctx *context.CheckContext, v *types.Var, beforePos token.Pos) *ast.CallExpr {
-	var result *ast.CallExpr
-	declPos := v.Pos()
-
-	for _, f := range cctx.Pass.Files {
-		if f.Pos() > declPos || declPos >= f.End() {
-			continue
-		}
-
-		ast.Inspect(f, func(n ast.Node) bool {
-			assign, ok := n.(*ast.AssignStmt)
-			if !ok {
-				return true
-			}
-			if beforePos != token.NoPos && assign.Pos() >= beforePos {
-				return true
-			}
-
-			for i, lhs := range assign.Lhs {
-				ident, ok := lhs.(*ast.Ident)
-				if !ok {
-					continue
-				}
-				if cctx.Pass.TypesInfo.ObjectOf(ident) != v {
-					continue
-				}
-				if i >= len(assign.Rhs) {
-					continue
-				}
-				if call, ok := assign.Rhs[i].(*ast.CallExpr); ok {
-					result = call
-				}
-			}
-			return true
-		})
-		break
-	}
-
-	return result
 }

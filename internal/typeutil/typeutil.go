@@ -24,7 +24,7 @@ func IsNamedType(pass *analysis.Pass, expr ast.Expr, pkgPath, typeName string) b
 
 // isNamedTypeFromType checks if the type matches the given package path and type name.
 func isNamedTypeFromType(t types.Type, pkgPath, typeName string) bool {
-	t = unwrapPointer(t)
+	t = UnwrapPointer(t)
 
 	named, ok := t.(*types.Named)
 	if !ok {
@@ -39,8 +39,8 @@ func isNamedTypeFromType(t types.Type, pkgPath, typeName string) bool {
 	return obj.Pkg().Path() == pkgPath && obj.Name() == typeName
 }
 
-// unwrapPointer returns the element type if t is a pointer, otherwise returns t.
-func unwrapPointer(t types.Type) types.Type {
+// UnwrapPointer returns the element type if t is a pointer, otherwise returns t.
+func UnwrapPointer(t types.Type) types.Type {
 	if ptr, ok := t.(*types.Pointer); ok {
 		return ptr.Elem()
 	}

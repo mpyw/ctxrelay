@@ -8,6 +8,7 @@ import (
 	"golang.org/x/tools/go/analysis"
 
 	"github.com/mpyw/goroutinectx/internal/patterns"
+	"github.com/mpyw/goroutinectx/internal/typeutil"
 )
 
 // Entry represents a registered API with its pattern.
@@ -88,10 +89,7 @@ func (r *Registry) isMethodCall(pass *analysis.Pass, sel *ast.SelectorExpr, api 
 		return false
 	}
 
-	// Unwrap pointer
-	if ptr, ok := typ.(*types.Pointer); ok {
-		typ = ptr.Elem()
-	}
+	typ = typeutil.UnwrapPointer(typ)
 
 	named, ok := typ.(*types.Named)
 	if !ok {

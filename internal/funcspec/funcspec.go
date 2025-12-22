@@ -8,6 +8,8 @@ import (
 	"unicode"
 
 	"golang.org/x/tools/go/analysis"
+
+	"github.com/mpyw/goroutinectx/internal/typeutil"
 )
 
 // Spec holds parsed components of a function specification.
@@ -76,11 +78,7 @@ func (s Spec) Matches(fn *types.Func) bool {
 		return false
 	}
 
-	recvType := recv.Type()
-	// Handle pointer receivers
-	if ptr, ok := recvType.(*types.Pointer); ok {
-		recvType = ptr.Elem()
-	}
+	recvType := typeutil.UnwrapPointer(recv.Type())
 
 	named, ok := recvType.(*types.Named)
 	if !ok {

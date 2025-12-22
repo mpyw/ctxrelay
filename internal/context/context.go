@@ -164,6 +164,58 @@ func (c *CheckContext) findFuncLitInAssignment(assign *ast.AssignStmt, v *types.
 	return nil
 }
 
+// FindCallExprAssignment searches for the call expression assigned to the variable.
+// If beforePos is token.NoPos, returns the LAST assignment found.
+// If beforePos is set, returns the last assignment BEFORE that position.
+func (c *CheckContext) FindCallExprAssignment(v *types.Var, beforePos token.Pos) *ast.CallExpr {
+	var result *ast.CallExpr
+	declPos := v.Pos()
+
+	for _, f := range c.Pass.Files {
+		if f.Pos() > declPos || declPos >= f.End() {
+			continue
+		}
+
+		ast.Inspect(f, func(n ast.Node) bool {
+			assign, ok := n.(*ast.AssignStmt)
+			if !ok {
+				return true
+			}
+			// Skip assignments at or after beforePos
+			if beforePos != token.NoPos && assign.Pos() >= beforePos {
+				return true
+			}
+			if call := c.findCallExprInAssignment(assign, v); call != nil {
+				result = call // Keep updating - we want the LAST assignment
+			}
+			return true
+		})
+		break
+	}
+
+	return result
+}
+
+// findCallExprInAssignment checks if the assignment assigns a call expression to v.
+func (c *CheckContext) findCallExprInAssignment(assign *ast.AssignStmt, v *types.Var) *ast.CallExpr {
+	for i, lhs := range assign.Lhs {
+		ident, ok := lhs.(*ast.Ident)
+		if !ok {
+			continue
+		}
+		if c.Pass.TypesInfo.ObjectOf(ident) != v {
+			continue
+		}
+		if i >= len(assign.Rhs) {
+			continue
+		}
+		if call, ok := assign.Rhs[i].(*ast.CallExpr); ok {
+			return call
+		}
+	}
+	return nil
+}
+
 // BlockReturnsContextUsingFunc checks if a block's return statements
 // return functions that use context. Recursively checks nested func literals.
 // excludeFuncLit can be set to exclude a specific FuncLit from being counted (e.g., the parent).
