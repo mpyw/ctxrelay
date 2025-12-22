@@ -78,6 +78,22 @@ func (c *CheckContext) FuncDeclOf(fn *types.Func) *ast.FuncDecl {
 
 // FuncLitCapturesContextSSA uses SSA analysis to check if a func literal captures context.
 // Returns (result, true) if SSA analysis succeeded, or (false, false) if it failed.
+//
+// Example (captures context - returns true):
+//
+//	func example(ctx context.Context) {
+//	    g.Go(func() error {
+//	        return doWork(ctx)  // ctx is captured from outer scope
+//	    })
+//	}
+//
+// Example (does not capture - returns false):
+//
+//	func example(ctx context.Context) {
+//	    g.Go(func() error {
+//	        return doWork()  // ctx is not used
+//	    })
+//	}
 func (c *CheckContext) FuncLitCapturesContextSSA(lit *ast.FuncLit) (bool, bool) {
 	if c.SSAProg == nil || c.Tracer == nil {
 		return false, false
@@ -97,6 +113,16 @@ func (c *CheckContext) FuncLitCapturesContextSSA(lit *ast.FuncLit) (bool, bool) 
 }
 
 // FuncTypeHasContextParam checks if a function type has a context.Context parameter.
+//
+// Example (has context param - returns true):
+//
+//	func(ctx context.Context) error { ... }
+//	func(ctx context.Context, data []byte) error { ... }
+//
+// Example (no context param - returns false):
+//
+//	func() error { ... }
+//	func(data []byte) error { ... }
 func (c *CheckContext) FuncTypeHasContextParam(fnType *ast.FuncType) bool {
 	if fnType == nil || fnType.Params == nil {
 		return false
@@ -114,22 +140,65 @@ func (c *CheckContext) FuncTypeHasContextParam(fnType *ast.FuncType) bool {
 }
 
 // FuncLitHasContextParam checks if a function literal has a context.Context parameter.
+// This is a convenience wrapper around FuncTypeHasContextParam.
+//
+// Example (has context param - returns true):
+//
+//	g.Go(func(ctx context.Context) error {  // <-- this func lit
+//	    return doWork(ctx)
+//	})
 func (c *CheckContext) FuncLitHasContextParam(lit *ast.FuncLit) bool {
 	return c.FuncTypeHasContextParam(lit.Type)
 }
 
 // FuncLitCapturesContext checks if a func literal captures context (AST-based).
 // Returns true if the func has its own context param, or if it uses a context from outer scope.
+//
+// Example (has own param - returns true):
+//
+//	g.Go(func(ctx context.Context) error { return nil })
+//
+// Example (captures outer context - returns true):
+//
+//	func example(ctx context.Context) {
+//	    g.Go(func() error {
+//	        return doWork(ctx)  // uses outer ctx
+//	    })
+//	}
+//
+// Example (does not capture - returns false):
+//
+//	func example(ctx context.Context) {
+//	    g.Go(func() error {
+//	        return doWork()  // ctx not used
+//	    })
+//	}
 func (c *CheckContext) FuncLitCapturesContext(lit *ast.FuncLit) bool {
-	if c.FuncLitHasContextParam(lit) {
-		return true
-	}
-	return c.FuncLitUsesContext(lit)
+	return c.FuncLitHasContextParam(lit) || c.FuncLitUsesContext(lit)
 }
 
 // FuncLitUsesContext checks if a function literal references any context variable.
 // It does NOT descend into nested func literals - they have their own scope and
 // will be checked separately.
+//
+// Example (uses context - returns true):
+//
+//	func example(ctx context.Context) {
+//	    g.Go(func() error {
+//	        doWork(ctx)  // direct reference to ctx
+//	        return nil
+//	    })
+//	}
+//
+// Example (nested closure NOT counted - returns false):
+//
+//	func example(ctx context.Context) {
+//	    g.Go(func() error {
+//	        // ctx used in nested closure, NOT in this func lit
+//	        defer func() { _ = ctx }()
+//	        return nil
+//	    })
+//	}
 func (c *CheckContext) FuncLitUsesContext(lit *ast.FuncLit) bool {
 	return c.nodeReferencesContext(lit.Body, true)
 }
@@ -140,11 +209,28 @@ func (c *CheckContext) FuncOf(call *ast.CallExpr) *types.Func {
 }
 
 // ArgUsesContext checks if an expression references a context variable.
+// Unlike FuncLitUsesContext, this DOES descend into nested func literals.
+//
+// Example (direct reference - returns true):
+//
+//	doWork(ctx)  // ctx is an arg
+//
+// Example (wrapped in func lit - returns true):
+//
+//	doWork(func() { _ = ctx })  // ctx used inside arg
 func (c *CheckContext) ArgUsesContext(expr ast.Expr) bool {
 	return c.nodeReferencesContext(expr, false)
 }
 
 // ArgsUseContext checks if any argument references a context variable.
+//
+// Example (one arg uses context - returns true):
+//
+//	makeWorker(ctx, data)  // ctx is passed
+//
+// Example (no context - returns false):
+//
+//	makeWorker(data, 123)  // no context in args
 func (c *CheckContext) ArgsUseContext(args []ast.Expr) bool {
 	for _, arg := range args {
 		if c.ArgUsesContext(arg) {
@@ -186,6 +272,12 @@ func (c *CheckContext) nodeReferencesContext(node ast.Node, skipNestedFuncLit bo
 
 // FuncLitOfIdent is a convenience method that combines VarOf and FuncLitAssignedTo.
 // Returns nil if the identifier doesn't refer to a variable or no func literal assignment is found.
+//
+// Example:
+//
+//	fn := func() { doWork(ctx) }
+//	g.Go(fn)  // fn is an identifier
+//	// FuncLitOfIdent(ast_of_fn, pos_of_g.Go) returns the func literal
 func (c *CheckContext) FuncLitOfIdent(ident *ast.Ident, beforePos token.Pos) *ast.FuncLit {
 	v := c.VarOf(ident)
 	if v == nil {
@@ -197,6 +289,18 @@ func (c *CheckContext) FuncLitOfIdent(ident *ast.Ident, beforePos token.Pos) *as
 // FuncLitAssignedTo searches for the func literal assigned to the variable.
 // If beforePos is token.NoPos, returns the LAST assignment found.
 // If beforePos is set, returns the last assignment BEFORE that position.
+//
+// Example:
+//
+//	fn := func() { doWork(ctx) }  // <-- returns this FuncLit
+//	g.Go(fn)
+//	// FuncLitAssignedTo(v_of_fn, pos_of_g.Go) returns the func literal
+//
+// Example (multiple assignments):
+//
+//	fn := func() { doA(ctx) }  // first assignment
+//	fn = func() { doB(ctx) }   // second assignment  <-- returns this one
+//	g.Go(fn)
 func (c *CheckContext) FuncLitAssignedTo(v *types.Var, beforePos token.Pos) *ast.FuncLit {
 	f := c.FileOf(v.Pos())
 	if f == nil {
@@ -213,7 +317,7 @@ func (c *CheckContext) FuncLitAssignedTo(v *types.Var, beforePos token.Pos) *ast
 		if beforePos != token.NoPos && assign.Pos() >= beforePos {
 			return true
 		}
-		if fl := c.findFuncLitInAssignment(assign, v); fl != nil {
+		if fl := c.funcLitInAssignment(assign, v); fl != nil {
 			result = fl // Keep updating - we want the LAST assignment
 		}
 		return true
@@ -222,8 +326,8 @@ func (c *CheckContext) FuncLitAssignedTo(v *types.Var, beforePos token.Pos) *ast
 	return result
 }
 
-// findFuncLitInAssignment checks if the assignment assigns a func literal to v.
-func (c *CheckContext) findFuncLitInAssignment(assign *ast.AssignStmt, v *types.Var) *ast.FuncLit {
+// funcLitInAssignment checks if the assignment assigns a func literal to v.
+func (c *CheckContext) funcLitInAssignment(assign *ast.AssignStmt, v *types.Var) *ast.FuncLit {
 	for i, lhs := range assign.Lhs {
 		ident, ok := lhs.(*ast.Ident)
 		if !ok {
@@ -245,6 +349,12 @@ func (c *CheckContext) findFuncLitInAssignment(assign *ast.AssignStmt, v *types.
 // CallExprAssignedTo searches for the call expression assigned to the variable.
 // If beforePos is token.NoPos, returns the LAST assignment found.
 // If beforePos is set, returns the last assignment BEFORE that position.
+//
+// Example:
+//
+//	task := gotask.NewTask(fn)  // <-- returns this CallExpr
+//	gotask.DoAll(ctx, task)
+//	// CallExprAssignedTo(v_of_task, pos_of_DoAll) returns gotask.NewTask(fn)
 func (c *CheckContext) CallExprAssignedTo(v *types.Var, beforePos token.Pos) *ast.CallExpr {
 	f := c.FileOf(v.Pos())
 	if f == nil {
@@ -261,7 +371,7 @@ func (c *CheckContext) CallExprAssignedTo(v *types.Var, beforePos token.Pos) *as
 		if beforePos != token.NoPos && assign.Pos() >= beforePos {
 			return true
 		}
-		if call := c.findCallExprInAssignment(assign, v); call != nil {
+		if call := c.callExprInAssignment(assign, v); call != nil {
 			result = call // Keep updating - we want the LAST assignment
 		}
 		return true
@@ -270,8 +380,8 @@ func (c *CheckContext) CallExprAssignedTo(v *types.Var, beforePos token.Pos) *as
 	return result
 }
 
-// findCallExprInAssignment checks if the assignment assigns a call expression to v.
-func (c *CheckContext) findCallExprInAssignment(assign *ast.AssignStmt, v *types.Var) *ast.CallExpr {
+// callExprInAssignment checks if the assignment assigns a call expression to v.
+func (c *CheckContext) callExprInAssignment(assign *ast.AssignStmt, v *types.Var) *ast.CallExpr {
 	for i, lhs := range assign.Lhs {
 		ident, ok := lhs.(*ast.Ident)
 		if !ok {
@@ -293,6 +403,22 @@ func (c *CheckContext) findCallExprInAssignment(assign *ast.AssignStmt, v *types
 // BlockReturnsContextUsingFunc checks if a block's return statements
 // return functions that use context. Recursively checks nested func literals.
 // excludeFuncLit can be set to exclude a specific FuncLit from being counted (e.g., the parent).
+//
+// Example (returns context-using func - returns true):
+//
+//	func makeWorker(ctx context.Context) func() {
+//	    return func() {
+//	        doWork(ctx)  // returned func uses ctx
+//	    }
+//	}
+//
+// Example (returned func doesn't use context - returns false):
+//
+//	func makeWorker(ctx context.Context) func() {
+//	    return func() {
+//	        doWork()  // returned func ignores ctx
+//	    }
+//	}
 func (c *CheckContext) BlockReturnsContextUsingFunc(body *ast.BlockStmt, excludeFuncLit *ast.FuncLit) bool {
 	if body == nil {
 		return true // No body to check
@@ -338,12 +464,43 @@ func (c *CheckContext) BlockReturnsContextUsingFunc(body *ast.BlockStmt, exclude
 
 // FactoryReturnsContextUsingFunc checks if a factory FuncLit's return statements
 // return functions that use context.
+//
+// Example (factory returns context-using func - returns true):
+//
+//	func example(ctx context.Context) {
+//	    g.Go(func() func() error {  // <-- factory func lit
+//	        return func() error {
+//	            return doWork(ctx)  // returned func uses ctx
+//	        }
+//	    }())
+//	}
 func (c *CheckContext) FactoryReturnsContextUsingFunc(factory *ast.FuncLit) bool {
 	return c.BlockReturnsContextUsingFunc(factory.Body, factory)
 }
 
 // FactoryCallReturnsContextUsingFunc checks if a factory call returns a context-using func.
 // Handles: fn(ctx), fn() where fn captures ctx, (func(){...})(), and nested calls.
+//
+// Example (ctx passed to factory - returns true):
+//
+//	g.Go(makeWorker(ctx))  // ctx is passed to makeWorker
+//
+// Example (IIFE factory returns context-using func - returns true):
+//
+//	func example(ctx context.Context) {
+//	    g.Go(func() func() error {
+//	        return func() error { return doWork(ctx) }
+//	    }())  // IIFE returns func using ctx
+//	}
+//
+// Example (variable factory - returns true):
+//
+//	func example(ctx context.Context) {
+//	    factory := func() func() error {
+//	        return func() error { return doWork(ctx) }
+//	    }
+//	    g.Go(factory())  // factory returns func using ctx
+//	}
 func (c *CheckContext) FactoryCallReturnsContextUsingFunc(call *ast.CallExpr) bool {
 	// Check if ctx is passed as an argument to the call
 	if c.ArgsUseContext(call.Args) {
@@ -371,6 +528,25 @@ func (c *CheckContext) FactoryCallReturnsContextUsingFunc(call *ast.CallExpr) bo
 
 // IdentFactoryReturnsContextUsingFunc checks if an identifier refers to a factory
 // that returns a context-using func. Handles both local variables and package-level functions.
+//
+// Example (local variable factory - returns true):
+//
+//	func example(ctx context.Context) {
+//	    makeWorker := func() func() error {
+//	        return func() error { return doWork(ctx) }
+//	    }
+//	    g.Go(makeWorker())  // makeWorker is a local var
+//	}
+//
+// Example (package-level factory - returns true):
+//
+//	func makeWorker(ctx context.Context) func() error {
+//	    return func() error { return doWork(ctx) }
+//	}
+//
+//	func example(ctx context.Context) {
+//	    g.Go(makeWorker(ctx))  // makeWorker is package-level func
+//	}
 func (c *CheckContext) IdentFactoryReturnsContextUsingFunc(ident *ast.Ident) bool {
 	obj := c.Pass.TypesInfo.ObjectOf(ident)
 	if obj == nil {
@@ -429,6 +605,24 @@ func (c *CheckContext) returnedValueUsesContext(result ast.Expr) bool {
 
 // SelectorExprCapturesContext checks if a struct field func captures context.
 // Handles patterns like: s.handler where s is a struct with a func field.
+//
+// Example (struct field captures context - returns true):
+//
+//	func example(ctx context.Context) {
+//	    s := struct{ handler func() }{
+//	        handler: func() { doWork(ctx) },
+//	    }
+//	    go s.handler()  // s.handler captures ctx
+//	}
+//
+// Example (struct field doesn't capture - returns false):
+//
+//	func example(ctx context.Context) {
+//	    s := struct{ handler func() }{
+//	        handler: func() { doWork() },  // no ctx
+//	    }
+//	    go s.handler()
+//	}
 func (c *CheckContext) SelectorExprCapturesContext(sel *ast.SelectorExpr) bool {
 	ident, ok := sel.X.(*ast.Ident)
 	if !ok {
@@ -451,6 +645,33 @@ func (c *CheckContext) SelectorExprCapturesContext(sel *ast.SelectorExpr) bool {
 
 // IndexExprCapturesContext checks if a slice/map indexed func captures context.
 // Handles patterns like: handlers[0] or handlers["key"].
+//
+// Example (slice element captures context - returns true):
+//
+//	func example(ctx context.Context) {
+//	    handlers := []func(){
+//	        func() { doWork(ctx) },
+//	    }
+//	    go handlers[0]()  // handlers[0] captures ctx
+//	}
+//
+// Example (map value captures context - returns true):
+//
+//	func example(ctx context.Context) {
+//	    handlers := map[string]func(){
+//	        "work": func() { doWork(ctx) },
+//	    }
+//	    go handlers["work"]()  // handlers["work"] captures ctx
+//	}
+//
+// Example (no context capture - returns false):
+//
+//	func example(ctx context.Context) {
+//	    handlers := []func(){
+//	        func() { doWork() },  // no ctx
+//	    }
+//	    go handlers[0]()
+//	}
 func (c *CheckContext) IndexExprCapturesContext(idx *ast.IndexExpr) bool {
 	ident, ok := idx.X.(*ast.Ident)
 	if !ok {
@@ -471,6 +692,13 @@ func (c *CheckContext) IndexExprCapturesContext(idx *ast.IndexExpr) bool {
 }
 
 // FuncLitOfStructField finds a func literal assigned to a struct field.
+//
+// Example:
+//
+//	s := struct{ handler func() }{
+//	    handler: func() { ... },  // <-- returns this FuncLit
+//	}
+//	// FuncLitOfStructField(v_of_s, "handler") returns the func literal
 func (c *CheckContext) FuncLitOfStructField(v *types.Var, fieldName string) *ast.FuncLit {
 	f := c.FileOf(v.Pos())
 	if f == nil {
@@ -494,6 +722,21 @@ func (c *CheckContext) FuncLitOfStructField(v *types.Var, fieldName string) *ast
 }
 
 // FuncLitOfIndex finds a func literal at a specific index in a composite literal.
+//
+// Example (slice index):
+//
+//	handlers := []func(){
+//	    func() { ... },  // index 0
+//	    func() { ... },  // index 1
+//	}
+//	// FuncLitOfIndex(v_of_handlers, ast_of_0) returns the first func literal
+//
+// Example (map key):
+//
+//	handlers := map[string]func(){
+//	    "work": func() { ... },
+//	}
+//	// FuncLitOfIndex(v_of_handlers, ast_of_"work") returns the func literal
 func (c *CheckContext) FuncLitOfIndex(v *types.Var, indexExpr ast.Expr) *ast.FuncLit {
 	f := c.FileOf(v.Pos())
 	if f == nil {
@@ -568,14 +811,14 @@ func (c *CheckContext) funcLitOfIndexAssignment(assign *ast.AssignStmt, v *types
 			continue
 		}
 		if lit, ok := indexExpr.(*ast.BasicLit); ok {
-			return funcLitOfLiteralKey(compLit, lit)
+			return c.funcLitOfLiteralKey(compLit, lit)
 		}
 	}
 	return nil
 }
 
 // funcLitOfLiteralKey extracts a func literal by literal index/key from a composite literal.
-func funcLitOfLiteralKey(compLit *ast.CompositeLit, lit *ast.BasicLit) *ast.FuncLit {
+func (*CheckContext) funcLitOfLiteralKey(compLit *ast.CompositeLit, lit *ast.BasicLit) *ast.FuncLit {
 	switch lit.Kind {
 	case token.INT:
 		index := 0
