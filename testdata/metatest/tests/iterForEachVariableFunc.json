@@ -1,0 +1,15 @@
+{
+  "title": "iter.ForEach with variable function",
+  "targets": ["conc"],
+  "level": "iter",
+  "variants": {
+    "good": {
+      "description": "iter.ForEach with variable function that uses context.",
+      "functions": {"conc": "goodIterForEachVariableFunc"}
+    },
+    "bad": {
+      "description": "iter.ForEach with variable function without context.",
+      "functions": {"conc": "badIterForEachVariableFunc"}
+    }
+  }
+}

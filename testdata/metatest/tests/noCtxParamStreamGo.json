@@ -1,0 +1,12 @@
+{
+  "title": "No ctx param - stream.Stream.Go",
+  "targets": ["conc"],
+  "level": "stream",
+  "variants": {
+    "good": {
+      "description": "No context parameter - not checked.",
+      "functions": {"conc": "goodStreamGoNoCtxParam"}
+    },
+    "bad": null
+  }
+}

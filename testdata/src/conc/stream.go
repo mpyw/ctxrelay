@@ -11,7 +11,7 @@ import (
 
 // ===== stream.Stream.Go =====
 
-// [BAD]: stream.Stream.Go without ctx
+// [BAD]: stream.Stream.Go task context usage
 //
 // Stream.Go task does not use context.
 func badStreamGo(ctx context.Context) {
@@ -25,7 +25,7 @@ func badStreamGo(ctx context.Context) {
 	s.Wait()
 }
 
-// [GOOD]: stream.Stream.Go with ctx
+// [GOOD]: stream.Stream.Go task context usage
 //
 // Stream.Go task uses context.
 func goodStreamGo(ctx context.Context) {
@@ -40,7 +40,7 @@ func goodStreamGo(ctx context.Context) {
 	s.Wait()
 }
 
-// [GOOD]: stream.Stream.Go no ctx param
+// [GOOD]: No ctx param - stream.Stream.Go
 //
 // No context parameter - not checked.
 func goodStreamGoNoCtxParam() {
@@ -54,7 +54,7 @@ func goodStreamGoNoCtxParam() {
 	s.Wait()
 }
 
-// [BAD]: stream.Stream.Go variable func without ctx
+// [BAD]: stream.Stream.Go with variable task
 //
 // Variable task function without context.
 func badStreamGoVariableFunc(ctx context.Context) {
@@ -69,7 +69,7 @@ func badStreamGoVariableFunc(ctx context.Context) {
 	s.Wait()
 }
 
-// [GOOD]: stream.Stream.Go variable func with ctx
+// [GOOD]: stream.Stream.Go with variable task
 //
 // Variable task function uses context.
 func goodStreamGoVariableFunc(ctx context.Context) {
@@ -87,7 +87,7 @@ func goodStreamGoVariableFunc(ctx context.Context) {
 
 // ===== Loop patterns =====
 
-// [BAD]: stream.Stream.Go in loop without ctx
+// [BAD]: stream.Stream.Go in loop
 //
 // Stream.Go in loop without context.
 func badStreamGoLoop(ctx context.Context) {
@@ -100,7 +100,7 @@ func badStreamGoLoop(ctx context.Context) {
 	s.Wait()
 }
 
-// [GOOD]: stream.Stream.Go in loop with ctx
+// [GOOD]: stream.Stream.Go in loop
 //
 // Stream.Go in loop with context.
 func goodStreamGoLoop(ctx context.Context) {

@@ -1,0 +1,15 @@
+{
+  "title": "pool.Pool.Go with variable function",
+  "targets": ["conc"],
+  "level": "evil",
+  "variants": {
+    "good": {
+      "description": "pool.Pool.Go with variable function that uses context.",
+      "functions": {"conc": "goodPoolVariableFuncWithCtx"}
+    },
+    "bad": {
+      "description": "pool.Pool.Go with variable function without context.",
+      "functions": {"conc": "badPoolVariableFunc"}
+    }
+  }
+}

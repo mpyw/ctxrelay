@@ -319,8 +319,8 @@ func badFuncThroughInterfaceWithoutCtx(ctx context.Context) {
 // Using the middle of multiple context parameters is valid.
 //
 // See also:
-//   goroutine: goodUsesMiddleOfThreeContexts
 //   errgroup: goodUsesMiddleOfThreeContexts
+//   goroutine: goodUsesMiddleOfThreeContexts
 //   waitgroup: goodUsesMiddleOfThreeContexts
 func goodUsesMiddleOfThreeContexts(ctx1, ctx2, ctx3 context.Context) {
 	wg := conc.WaitGroup{}
@@ -335,8 +335,8 @@ func goodUsesMiddleOfThreeContexts(ctx1, ctx2, ctx3 context.Context) {
 // Using the last of multiple context parameters is valid.
 //
 // See also:
-//   goroutine: goodUsesLastOfThreeContexts
 //   errgroup: goodUsesLastOfThreeContexts
+//   goroutine: goodUsesLastOfThreeContexts
 //   waitgroup: goodUsesLastOfThreeContexts
 func goodUsesLastOfThreeContexts(ctx1, ctx2, ctx3 context.Context) {
 	wg := conc.WaitGroup{}
@@ -351,8 +351,8 @@ func goodUsesLastOfThreeContexts(ctx1, ctx2, ctx3 context.Context) {
 // Context in separate parameter group is detected and used.
 //
 // See also:
-//   goroutine: goodMultipleCtxSeparateGroups
 //   errgroup: goodMultipleCtxSeparateGroups
+//   goroutine: goodMultipleCtxSeparateGroups
 //   waitgroup: goodMultipleCtxSeparateGroups
 func goodMultipleCtxSeparateGroups(a int, ctx1 context.Context, b string, ctx2 context.Context) {
 	wg := conc.WaitGroup{}
@@ -367,8 +367,8 @@ func goodMultipleCtxSeparateGroups(a int, ctx1 context.Context, b string, ctx2 c
 // Context in separate parameter group is not used.
 //
 // See also:
-//   goroutine: badMultipleCtxSeparateGroups
 //   errgroup: badMultipleCtxSeparateGroups
+//   goroutine: badMultipleCtxSeparateGroups
 //   waitgroup: badMultipleCtxSeparateGroups
 func badMultipleCtxSeparateGroups(a int, ctx1 context.Context, b string, ctx2 context.Context) {
 	wg := conc.WaitGroup{}
@@ -383,8 +383,8 @@ func badMultipleCtxSeparateGroups(a int, ctx1 context.Context, b string, ctx2 co
 // When multiple contexts exist, using any one satisfies the check.
 //
 // See also:
-//   goroutine: goodUsesBothContexts
 //   errgroup: goodUsesBothContexts
+//   goroutine: goodUsesBothContexts
 //   waitgroup: goodUsesBothContexts
 func goodUsesBothContexts(ctx1, ctx2 context.Context) {
 	wg := conc.WaitGroup{}
@@ -400,8 +400,8 @@ func goodUsesBothContexts(ctx1, ctx2 context.Context) {
 // Factory function receives first context parameter.
 //
 // See also:
-//   goroutine: goodHigherOrderMultipleCtx
 //   errgroup: goodHigherOrderMultipleCtx
+//   goroutine: goodHigherOrderMultipleCtx
 //   waitgroup: goodHigherOrderMultipleCtx
 func goodHigherOrderMultipleCtx(ctx1, ctx2 context.Context) {
 	wg := conc.WaitGroup{}
@@ -414,8 +414,8 @@ func goodHigherOrderMultipleCtx(ctx1, ctx2 context.Context) {
 // Factory function receives second context parameter.
 //
 // See also:
-//   goroutine: goodHigherOrderMultipleCtxSecond
 //   errgroup: goodHigherOrderMultipleCtxSecond
+//   goroutine: goodHigherOrderMultipleCtxSecond
 //   waitgroup: goodHigherOrderMultipleCtxSecond
 func goodHigherOrderMultipleCtxSecond(ctx1, ctx2 context.Context) {
 	wg := conc.WaitGroup{}
@@ -430,8 +430,8 @@ func goodHigherOrderMultipleCtxSecond(ctx1, ctx2 context.Context) {
 // Factory function returns a variable that captures context.
 //
 // See also:
-//   goroutine: goodHigherOrderReturnsVariableWithCtx
 //   errgroup: goodHigherOrderReturnsVariableWithCtx
+//   goroutine: goodHigherOrderReturnsVariableWithCtx
 //   waitgroup: goodHigherOrderReturnsVariableWithCtx
 func goodHigherOrderReturnsVariableWithCtx(ctx context.Context) {
 	wg := conc.WaitGroup{}
@@ -450,8 +450,8 @@ func goodHigherOrderReturnsVariableWithCtx(ctx context.Context) {
 // Factory function returns a variable that does not capture context.
 //
 // See also:
-//   goroutine: badHigherOrderReturnsVariableWithoutCtx
 //   errgroup: badHigherOrderReturnsVariableWithoutCtx
+//   goroutine: badHigherOrderReturnsVariableWithoutCtx
 //   waitgroup: badHigherOrderReturnsVariableWithoutCtx
 func badHigherOrderReturnsVariableWithoutCtx(ctx context.Context) {
 	wg := conc.WaitGroup{}
@@ -467,7 +467,7 @@ func badHigherOrderReturnsVariableWithoutCtx(ctx context.Context) {
 
 // ===== POOL-SPECIFIC EVIL PATTERNS =====
 
-// [BAD]: pool.Pool variable func without ctx
+// [BAD]: pool.Pool.Go with variable function
 //
 // pool.Pool with variable function without context.
 func badPoolVariableFunc(ctx context.Context) {
@@ -479,7 +479,7 @@ func badPoolVariableFunc(ctx context.Context) {
 	p.Wait()
 }
 
-// [GOOD]: pool.Pool variable func with ctx
+// [GOOD]: pool.Pool.Go with variable function
 //
 // pool.Pool with variable function that captures context.
 func goodPoolVariableFuncWithCtx(ctx context.Context) {
@@ -547,7 +547,7 @@ func evilShadowingTwoLevels(ctx1 context.Context) {
 	}(ctx1)
 }
 
-// [BAD]: Two levels of shadowing - bad case
+// [BAD]: Two levels of shadowing
 //
 // Context is shadowed through two levels but not used.
 //
@@ -572,8 +572,8 @@ func evilShadowingTwoLevelsBad(ctx1 context.Context) {
 // Middle layer introduces context that inner goroutine uses.
 //
 // See also:
-//   goroutine: goodMiddleLayerIntroducesCtxUsed
 //   errgroup: evilMiddleLayerIntroducesCtx
+//   goroutine: goodMiddleLayerIntroducesCtxUsed
 //   waitgroup: evilMiddleLayerIntroducesCtx
 func evilMiddleLayerIntroducesCtx() {
 	func(ctx context.Context) {
@@ -589,7 +589,7 @@ func evilMiddleLayerIntroducesCtx() {
 	}(context.Background())
 }
 
-// [GOOD]: Middle layer introduces ctx - good case
+// [GOOD]: Middle layer introduces ctx
 //
 // Middle layer introduces context that inner goroutine uses.
 //
@@ -630,7 +630,7 @@ func evilInterleavedLayers(outerCtx context.Context) {
 	}()
 }
 
-// [GOOD]: Interleaved layers - good case
+// [GOOD]: Interleaved layers
 //
 // Nested function layers with context shadowing handled correctly.
 //
@@ -658,8 +658,8 @@ func evilInterleavedLayersGood(outerCtx context.Context) {
 // Factory function returns a reassigned variable that captures context.
 //
 // See also:
-//   goroutine: goodHigherOrderReturnsReassignedVariableWithCtx
 //   errgroup: goodHigherOrderReturnsReassignedVariableWithCtx
+//   goroutine: goodHigherOrderReturnsReassignedVariableWithCtx
 //   waitgroup: goodHigherOrderReturnsReassignedVariableWithCtx
 func goodHigherOrderReturnsReassignedVariableWithCtx(ctx context.Context) {
 	wg := conc.WaitGroup{}

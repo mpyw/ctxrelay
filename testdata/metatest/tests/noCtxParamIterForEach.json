@@ -1,0 +1,12 @@
+{
+  "title": "No ctx param - iter.ForEach",
+  "targets": ["conc"],
+  "level": "iter",
+  "variants": {
+    "good": {
+      "description": "No context parameter - not checked.",
+      "functions": {"conc": "goodIterForEachNoCtxParam"}
+    },
+    "bad": null
+  }
+}

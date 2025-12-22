@@ -1,0 +1,15 @@
+{
+  "title": "stream.Stream.Go in loop",
+  "targets": ["conc"],
+  "level": "stream",
+  "variants": {
+    "good": {
+      "description": "Stream.Go in loop with context.",
+      "functions": {"conc": "goodStreamGoLoop"}
+    },
+    "bad": {
+      "description": "Stream.Go in loop without context.",
+      "functions": {"conc": "badStreamGoLoop"}
+    }
+  }
+}

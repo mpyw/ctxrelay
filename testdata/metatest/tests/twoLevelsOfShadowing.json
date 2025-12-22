@@ -5,19 +5,16 @@
     "errgroup",
     "waitgroup"
   ],
+  "level": "evil",
   "variants": {
-    "bad": {
+    "good": {
       "description": "Context is shadowed through two levels of function nesting.",
       "functions": {
+        "conc": "evilShadowingTwoLevels",
         "errgroup": "evilShadowingTwoLevels",
         "waitgroup": "evilShadowingTwoLevels"
       }
     },
-    "good": {
-      "functions": {
-        "conc": "evilShadowingTwoLevels"
-      }
-    }
-  },
-  "level": "evil"
+    "bad": null
+  }
 }

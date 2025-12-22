@@ -365,6 +365,7 @@ func badGoroutineInInitWithoutCtx(ctx context.Context) {
 // Using the middle of multiple context parameters is valid.
 //
 // See also:
+//   conc: goodUsesMiddleOfThreeContexts
 //   errgroup: goodUsesMiddleOfThreeContexts
 //   waitgroup: goodUsesMiddleOfThreeContexts
 func goodUsesMiddleOfThreeContexts(ctx1, ctx2, ctx3 context.Context) {
@@ -378,6 +379,7 @@ func goodUsesMiddleOfThreeContexts(ctx1, ctx2, ctx3 context.Context) {
 // Using the last of multiple context parameters is valid.
 //
 // See also:
+//   conc: goodUsesLastOfThreeContexts
 //   errgroup: goodUsesLastOfThreeContexts
 //   waitgroup: goodUsesLastOfThreeContexts
 func goodUsesLastOfThreeContexts(ctx1, ctx2, ctx3 context.Context) {
@@ -391,6 +393,7 @@ func goodUsesLastOfThreeContexts(ctx1, ctx2, ctx3 context.Context) {
 // Context in separate parameter group is detected and used.
 //
 // See also:
+//   conc: goodMultipleCtxSeparateGroups
 //   errgroup: goodMultipleCtxSeparateGroups
 //   waitgroup: goodMultipleCtxSeparateGroups
 func goodMultipleCtxSeparateGroups(a int, ctx1 context.Context, b string, ctx2 context.Context) {
@@ -404,6 +407,7 @@ func goodMultipleCtxSeparateGroups(a int, ctx1 context.Context, b string, ctx2 c
 // Context in separate parameter group is not used.
 //
 // See also:
+//   conc: badMultipleCtxSeparateGroups
 //   errgroup: badMultipleCtxSeparateGroups
 //   waitgroup: badMultipleCtxSeparateGroups
 func badMultipleCtxSeparateGroups(a int, ctx1 context.Context, b string, ctx2 context.Context) {
@@ -417,6 +421,7 @@ func badMultipleCtxSeparateGroups(a int, ctx1 context.Context, b string, ctx2 co
 // When multiple contexts exist, using any one satisfies the check.
 //
 // See also:
+//   conc: goodUsesBothContexts
 //   errgroup: goodUsesBothContexts
 //   waitgroup: goodUsesBothContexts
 func goodUsesBothContexts(ctx1, ctx2 context.Context) {
@@ -455,6 +460,7 @@ func badNestedOnlyOuterUsesCtx(ctx1, ctx2 context.Context) {
 // Factory function receives first context parameter.
 //
 // See also:
+//   conc: goodHigherOrderMultipleCtx
 //   errgroup: goodHigherOrderMultipleCtx
 //   waitgroup: goodHigherOrderMultipleCtx
 func goodHigherOrderMultipleCtx(ctx1, ctx2 context.Context) {
@@ -466,6 +472,7 @@ func goodHigherOrderMultipleCtx(ctx1, ctx2 context.Context) {
 // Factory function receives second context parameter.
 //
 // See also:
+//   conc: goodHigherOrderMultipleCtxSecond
 //   errgroup: goodHigherOrderMultipleCtxSecond
 //   waitgroup: goodHigherOrderMultipleCtxSecond
 func goodHigherOrderMultipleCtxSecond(ctx1, ctx2 context.Context) {
@@ -550,6 +557,7 @@ func badTwoLevelArguments(ctx1 context.Context) {
 // Middle layer introduces context that inner goroutine uses.
 //
 // See also:
+//   conc: evilMiddleLayerIntroducesCtx
 //   errgroup: evilMiddleLayerIntroducesCtx
 //   waitgroup: evilMiddleLayerIntroducesCtx
 func goodMiddleLayerIntroducesCtxUsed() {
@@ -605,6 +613,7 @@ func badInterleavedLayersIgnored(outerCtx context.Context) {
 // Factory function returns a variable that captures context.
 //
 // See also:
+//   conc: goodHigherOrderReturnsVariableWithCtx
 //   errgroup: goodHigherOrderReturnsVariableWithCtx
 //   waitgroup: goodHigherOrderReturnsVariableWithCtx
 func goodHigherOrderReturnsVariableWithCtx(ctx context.Context) {
@@ -622,6 +631,7 @@ func goodHigherOrderReturnsVariableWithCtx(ctx context.Context) {
 // Factory function returns a variable that does not capture context.
 //
 // See also:
+//   conc: badHigherOrderReturnsVariableWithoutCtx
 //   errgroup: badHigherOrderReturnsVariableWithoutCtx
 //   waitgroup: badHigherOrderReturnsVariableWithoutCtx
 func badHigherOrderReturnsVariableWithoutCtx(ctx context.Context) {
@@ -639,6 +649,7 @@ func badHigherOrderReturnsVariableWithoutCtx(ctx context.Context) {
 // Factory function returns a reassigned variable that captures context.
 //
 // See also:
+//   conc: goodHigherOrderReturnsReassignedVariableWithCtx
 //   errgroup: goodHigherOrderReturnsReassignedVariableWithCtx
 //   waitgroup: goodHigherOrderReturnsReassignedVariableWithCtx
 func goodHigherOrderReturnsReassignedVariableWithCtx(ctx context.Context) {

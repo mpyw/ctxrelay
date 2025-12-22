@@ -1,0 +1,15 @@
+{
+  "title": "pool.Pool.Go in loop",
+  "targets": ["conc"],
+  "level": "advanced",
+  "variants": {
+    "good": {
+      "description": "pool.Pool.Go in loop with context.",
+      "functions": {"conc": "goodPoolLoopGo"}
+    },
+    "bad": {
+      "description": "pool.Pool.Go in loop without context.",
+      "functions": {"conc": "badPoolLoopGo"}
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "title": "iter.Mapper.Map callback context usage",
+  "targets": ["conc"],
+  "level": "iter",
+  "variants": {
+    "good": {
+      "description": "Mapper.Map callback uses context.",
+      "functions": {"conc": "goodMapperMap"}
+    },
+    "bad": {
+      "description": "Mapper.Map callback does not use context.",
+      "functions": {"conc": "badMapperMap"}
+    }
+  }
+}

@@ -11,7 +11,7 @@ import (
 
 // ===== iter.ForEach =====
 
-// [BAD]: iter.ForEach without ctx
+// [BAD]: iter.ForEach callback context usage
 //
 // iter.ForEach callback does not use context.
 func badIterForEach(ctx context.Context) {
@@ -21,7 +21,7 @@ func badIterForEach(ctx context.Context) {
 	})
 }
 
-// [GOOD]: iter.ForEach with ctx
+// [GOOD]: iter.ForEach callback context usage
 //
 // iter.ForEach callback uses context.
 func goodIterForEach(ctx context.Context) {
@@ -32,7 +32,7 @@ func goodIterForEach(ctx context.Context) {
 	})
 }
 
-// [GOOD]: iter.ForEach no ctx param
+// [GOOD]: No ctx param - iter.ForEach
 //
 // No context parameter - not checked.
 func goodIterForEachNoCtxParam() {
@@ -44,7 +44,7 @@ func goodIterForEachNoCtxParam() {
 
 // ===== iter.ForEachIdx =====
 
-// [BAD]: iter.ForEachIdx without ctx
+// [BAD]: iter.ForEachIdx callback context usage
 //
 // iter.ForEachIdx callback does not use context.
 func badIterForEachIdx(ctx context.Context) {
@@ -54,7 +54,7 @@ func badIterForEachIdx(ctx context.Context) {
 	})
 }
 
-// [GOOD]: iter.ForEachIdx with ctx
+// [GOOD]: iter.ForEachIdx callback context usage
 //
 // iter.ForEachIdx callback uses context.
 func goodIterForEachIdx(ctx context.Context) {
@@ -67,7 +67,7 @@ func goodIterForEachIdx(ctx context.Context) {
 
 // ===== iter.Map =====
 
-// [BAD]: iter.Map without ctx
+// [BAD]: iter.Map callback context usage
 //
 // iter.Map callback does not use context.
 func badIterMap(ctx context.Context) {
@@ -77,7 +77,7 @@ func badIterMap(ctx context.Context) {
 	})
 }
 
-// [GOOD]: iter.Map with ctx
+// [GOOD]: iter.Map callback context usage
 //
 // iter.Map callback uses context.
 func goodIterMap(ctx context.Context) {
@@ -90,7 +90,7 @@ func goodIterMap(ctx context.Context) {
 
 // ===== iter.MapErr =====
 
-// [BAD]: iter.MapErr without ctx
+// [BAD]: iter.MapErr callback context usage
 //
 // iter.MapErr callback does not use context.
 func badIterMapErr(ctx context.Context) {
@@ -100,7 +100,7 @@ func badIterMapErr(ctx context.Context) {
 	})
 }
 
-// [GOOD]: iter.MapErr with ctx
+// [GOOD]: iter.MapErr callback context usage
 //
 // iter.MapErr callback uses context.
 func goodIterMapErr(ctx context.Context) {
@@ -113,7 +113,7 @@ func goodIterMapErr(ctx context.Context) {
 
 // ===== iter.Iterator methods =====
 
-// [BAD]: Iterator.ForEach without ctx
+// [BAD]: iter.Iterator.ForEach callback context usage
 //
 // Iterator.ForEach callback does not use context.
 func badIteratorForEach(ctx context.Context) {
@@ -124,7 +124,7 @@ func badIteratorForEach(ctx context.Context) {
 	})
 }
 
-// [GOOD]: Iterator.ForEach with ctx
+// [GOOD]: iter.Iterator.ForEach callback context usage
 //
 // Iterator.ForEach callback uses context.
 func goodIteratorForEach(ctx context.Context) {
@@ -138,7 +138,7 @@ func goodIteratorForEach(ctx context.Context) {
 
 // ===== iter.Mapper methods =====
 
-// [BAD]: Mapper.Map without ctx
+// [BAD]: iter.Mapper.Map callback context usage
 //
 // Mapper.Map callback does not use context.
 func badMapperMap(ctx context.Context) {
@@ -149,7 +149,7 @@ func badMapperMap(ctx context.Context) {
 	})
 }
 
-// [GOOD]: Mapper.Map with ctx
+// [GOOD]: iter.Mapper.Map callback context usage
 //
 // Mapper.Map callback uses context.
 func goodMapperMap(ctx context.Context) {
@@ -163,7 +163,7 @@ func goodMapperMap(ctx context.Context) {
 
 // ===== Variable function patterns =====
 
-// [BAD]: iter.ForEach with variable func without ctx
+// [BAD]: iter.ForEach with variable function
 //
 // Variable function passed to ForEach without context.
 func badIterForEachVariableFunc(ctx context.Context) {
@@ -174,7 +174,7 @@ func badIterForEachVariableFunc(ctx context.Context) {
 	iter.ForEach(items, fn) // want `iter.ForEach\(\) callback should use context "ctx"`
 }
 
-// [GOOD]: iter.ForEach with variable func with ctx
+// [GOOD]: iter.ForEach with variable function
 //
 // Variable function passed to ForEach uses context.
 func goodIterForEachVariableFunc(ctx context.Context) {

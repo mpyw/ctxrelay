@@ -1,26 +1,23 @@
 {
   "title": "Interleaved layers",
-  "targets": [
-    "conc",
-    "errgroup",
-    "waitgroup"
-  ],
+  "targets": ["conc", "errgroup", "waitgroup"],
+  "level": "evil",
   "variants": {
     "good": {
       "description": "Nested function layers with context shadowing handled correctly.",
       "functions": {
+        "conc": "evilInterleavedLayersGood",
         "errgroup": "evilInterleavedLayersGood",
-        "waitgroup": "evilInterleavedLayersGood",
-        "conc": "evilInterleavedLayersGood"
+        "waitgroup": "evilInterleavedLayersGood"
       }
     },
     "bad": {
       "description": "Nested function layers where goroutine ignores available context.",
       "functions": {
+        "conc": "evilInterleavedLayers",
         "errgroup": "evilInterleavedLayers",
         "waitgroup": "evilInterleavedLayers"
       }
     }
-  },
-  "level": "evil"
+  }
 }

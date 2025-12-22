@@ -1,0 +1,15 @@
+{
+  "title": "stream.Stream.Go with variable task",
+  "targets": ["conc"],
+  "level": "stream",
+  "variants": {
+    "good": {
+      "description": "Stream.Go with variable task that uses context.",
+      "functions": {"conc": "goodStreamGoVariableFunc"}
+    },
+    "bad": {
+      "description": "Stream.Go with variable task without context.",
+      "functions": {"conc": "badStreamGoVariableFunc"}
+    }
+  }
+}

@@ -13,13 +13,13 @@ import (
 
 // ===== SHOULD REPORT =====
 
-// [BAD]: Literal without ctx - conc.WaitGroup
+// [BAD]: Literal without ctx
 //
 // Literal without ctx - basic bad case
 //
 // See also:
-//   goroutine: badGoroutineNoCapture
 //   errgroup: badErrgroupGo
+//   goroutine: badGoroutineNoCapture
 //   waitgroup: badWaitGroupGo
 func badConcWaitGroupGo(ctx context.Context) {
 	wg := conc.WaitGroup{}
@@ -29,13 +29,13 @@ func badConcWaitGroupGo(ctx context.Context) {
 	wg.Wait()
 }
 
-// [BAD]: Literal without ctx - pool.Pool
+// [BAD]: pool.Pool.Go closure context usage
 //
 // Literal without ctx - basic bad case
 //
 // See also:
-//   goroutine: badGoroutineNoCapture
 //   errgroup: badErrgroupGo
+//   goroutine: badGoroutineNoCapture
 //   waitgroup: badWaitGroupGo
 func badPoolGo(ctx context.Context) {
 	p := pool.New()
@@ -45,7 +45,7 @@ func badPoolGo(ctx context.Context) {
 	p.Wait()
 }
 
-// [BAD]: Literal without ctx - pool.ErrorPool
+// [BAD]: pool.ErrorPool.Go closure context usage
 //
 // Literal without ctx - basic bad case
 func badErrorPoolGo(ctx context.Context) {
@@ -80,8 +80,8 @@ func badConcWaitGroupGoMultiple(ctx context.Context) {
 // Closure directly references the context variable from enclosing scope.
 //
 // See also:
-//   goroutine: goodGoroutineCapturesCtx
 //   errgroup: goodErrgroupGoWithCtx
+//   goroutine: goodGoroutineCapturesCtx
 //   waitgroup: goodWaitGroupGoWithCtx
 func goodConcWaitGroupGoWithCtx(ctx context.Context) {
 	wg := conc.WaitGroup{}
@@ -91,7 +91,7 @@ func goodConcWaitGroupGoWithCtx(ctx context.Context) {
 	wg.Wait()
 }
 
-// [GOOD]: Literal with ctx - pool.Pool
+// [GOOD]: pool.Pool.Go closure context usage
 //
 // Closure directly references the context variable from enclosing scope.
 func goodPoolGoWithCtx(ctx context.Context) {
@@ -102,7 +102,7 @@ func goodPoolGoWithCtx(ctx context.Context) {
 	p.Wait()
 }
 
-// [GOOD]: Literal with ctx - pool.ErrorPool
+// [GOOD]: pool.ErrorPool.Go closure context usage
 //
 // Closure directly references the context variable from enclosing scope.
 func goodErrorPoolGoWithCtx(ctx context.Context) {
@@ -119,8 +119,8 @@ func goodErrorPoolGoWithCtx(ctx context.Context) {
 // Context is passed to helper function inside closure.
 //
 // See also:
-//   goroutine: goodGoroutineUsesCtxInCall
 //   errgroup: goodErrgroupGoCallsWithCtx
+//   goroutine: goodGoroutineUsesCtxInCall
 //   waitgroup: goodWaitGroupGoCallsWithCtx
 func goodConcWaitGroupGoCallsWithCtx(ctx context.Context) {
 	wg := conc.WaitGroup{}
@@ -135,8 +135,8 @@ func goodConcWaitGroupGoCallsWithCtx(ctx context.Context) {
 // No ctx param - not checked
 //
 // See also:
-//   goroutine: goodNoContextParam
 //   errgroup: goodNoContextParam
+//   goroutine: goodNoContextParam
 //   waitgroup: goodNoContextParam
 func goodNoContextParam() {
 	wg := conc.WaitGroup{}
@@ -152,8 +152,8 @@ func goodNoContextParam() {
 // Shadow with non-ctx type (string)
 //
 // See also:
-//   goroutine: badShadowingNonContext
 //   errgroup: badShadowingNonContext
+//   goroutine: badShadowingNonContext
 //   waitgroup: badShadowingNonContext
 func badShadowingNonContext(ctx context.Context) {
 	wg := conc.WaitGroup{}
@@ -169,8 +169,8 @@ func badShadowingNonContext(ctx context.Context) {
 // Uses ctx before shadow - valid usage
 //
 // See also:
-//   goroutine: goodUsesCtxBeforeShadowing
 //   errgroup: goodUsesCtxBeforeShadowing
+//   goroutine: goodUsesCtxBeforeShadowing
 //   waitgroup: goodUsesCtxBeforeShadowing
 func goodUsesCtxBeforeShadowing(ctx context.Context) {
 	wg := conc.WaitGroup{}
@@ -189,8 +189,8 @@ func goodUsesCtxBeforeShadowing(ctx context.Context) {
 // The //goroutinectx:ignore directive suppresses the warning.
 //
 // See also:
-//   goroutine: goodIgnoredSameLine
 //   errgroup: goodIgnoredSameLine
+//   goroutine: goodIgnoredSameLine
 //   waitgroup: goodIgnoredSameLine
 func goodIgnoredSameLine(ctx context.Context) {
 	wg := conc.WaitGroup{}
@@ -204,8 +204,8 @@ func goodIgnoredSameLine(ctx context.Context) {
 // The //goroutinectx:ignore directive suppresses the warning.
 //
 // See also:
-//   goroutine: goodIgnoredPreviousLine
 //   errgroup: goodIgnoredPreviousLine
+//   goroutine: goodIgnoredPreviousLine
 //   waitgroup: goodIgnoredPreviousLine
 func goodIgnoredPreviousLine(ctx context.Context) {
 	wg := conc.WaitGroup{}
@@ -222,8 +222,8 @@ func goodIgnoredPreviousLine(ctx context.Context) {
 // Multiple context parameters available but none are used.
 //
 // See also:
-//   goroutine: twoContextParams
 //   errgroup: twoContextParams
+//   goroutine: twoContextParams
 //   waitgroup: twoContextParams
 func twoContextParams(ctx1, ctx2 context.Context) {
 	wg := conc.WaitGroup{}
@@ -237,8 +237,8 @@ func twoContextParams(ctx1, ctx2 context.Context) {
 // One of the available context parameters is properly used.
 //
 // See also:
-//   goroutine: goodUsesOneOfTwoContexts
 //   errgroup: goodUsesOneOfTwoContexts
+//   goroutine: goodUsesOneOfTwoContexts
 //   waitgroup: goodUsesOneOfTwoContexts
 func goodUsesOneOfTwoContexts(ctx1, ctx2 context.Context) {
 	wg := conc.WaitGroup{}
@@ -253,8 +253,8 @@ func goodUsesOneOfTwoContexts(ctx1, ctx2 context.Context) {
 // One of the available context parameters is properly used.
 //
 // See also:
-//   goroutine: goodUsesSecondOfTwoContexts
 //   errgroup: goodUsesSecondOfTwoContexts
+//   goroutine: goodUsesSecondOfTwoContexts
 //   waitgroup: goodUsesSecondOfTwoContexts
 func goodUsesSecondOfTwoContexts(ctx1, ctx2 context.Context) {
 	wg := conc.WaitGroup{}
@@ -269,8 +269,8 @@ func goodUsesSecondOfTwoContexts(ctx1, ctx2 context.Context) {
 // Context is detected and used even when not the first parameter.
 //
 // See also:
-//   goroutine: goodCtxAsSecondParam
 //   errgroup: goodCtxAsSecondParam
+//   goroutine: goodCtxAsSecondParam
 //   waitgroup: goodCtxAsSecondParam
 func goodCtxAsSecondParam(logger interface{}, ctx context.Context) {
 	wg := conc.WaitGroup{}
@@ -285,8 +285,8 @@ func goodCtxAsSecondParam(logger interface{}, ctx context.Context) {
 // Context parameter exists but is not used in the closure.
 //
 // See also:
-//   goroutine: badCtxAsSecondParam
 //   errgroup: badCtxAsSecondParam
+//   goroutine: badCtxAsSecondParam
 //   waitgroup: badCtxAsSecondParam
 func badCtxAsSecondParam(logger interface{}, ctx context.Context) {
 	wg := conc.WaitGroup{}
@@ -298,7 +298,7 @@ func badCtxAsSecondParam(logger interface{}, ctx context.Context) {
 
 // ===== CONTEXT POOL SPECIAL CASE =====
 
-// [GOOD]: pool.ContextPool.Go receives ctx via callback parameter
+// [GOOD]: pool.ContextPool.Go callback context usage
 //
 // ContextPool.Go provides context to the callback - special case.
 func goodContextPoolGo(ctx context.Context) {
@@ -311,7 +311,7 @@ func goodContextPoolGo(ctx context.Context) {
 	_ = p.Wait()
 }
 
-// [BAD]: pool.ContextPool.Go callback ignores provided ctx
+// [BAD]: pool.ContextPool.Go callback context usage
 //
 // ContextPool.Go provides context but callback doesn't use it.
 func badContextPoolGoIgnoresCtx(ctx context.Context) {

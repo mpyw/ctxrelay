@@ -1,0 +1,15 @@
+{
+  "title": "iter.Iterator.ForEach callback context usage",
+  "targets": ["conc"],
+  "level": "iter",
+  "variants": {
+    "good": {
+      "description": "Iterator.ForEach callback uses context.",
+      "functions": {"conc": "goodIteratorForEach"}
+    },
+    "bad": {
+      "description": "Iterator.ForEach callback does not use context.",
+      "functions": {"conc": "badIteratorForEach"}
+    }
+  }
+}

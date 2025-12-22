@@ -18,6 +18,7 @@ import (
 // Go call in nested function does not use the outer context.
 //
 // See also:
+//   conc: badNestedInnerFunc
 //   errgroup: badNestedInnerFunc
 func badNestedInnerFunc(ctx context.Context) {
 	var wg sync.WaitGroup
@@ -34,6 +35,7 @@ func badNestedInnerFunc(ctx context.Context) {
 // Go call inside immediately invoked function expression without context.
 //
 // See also:
+//   conc: badNestedClosure
 //   errgroup: badNestedClosure
 func badNestedClosure(ctx context.Context) {
 	var wg sync.WaitGroup
@@ -49,6 +51,7 @@ func badNestedClosure(ctx context.Context) {
 // Go call inside immediately invoked function expression without context.
 //
 // See also:
+//   conc: badNestedDeep
 //   errgroup: badNestedDeep
 func badNestedDeep(ctx context.Context) {
 	var wg sync.WaitGroup
@@ -66,6 +69,7 @@ func badNestedDeep(ctx context.Context) {
 // Nested function properly captures and uses the outer context.
 //
 // See also:
+//   conc: goodNestedWithCtx
 //   errgroup: goodNestedWithCtx
 func goodNestedWithCtx(ctx context.Context) {
 	var wg sync.WaitGroup
@@ -83,6 +87,7 @@ func goodNestedWithCtx(ctx context.Context) {
 // Inner function declares its own context parameter and uses it.
 //
 // See also:
+//   conc: goodNestedInnerHasOwnCtx
 //   errgroup: goodNestedInnerHasOwnCtx
 //   goroutine: goodShadowingInnerCtxParam
 func goodNestedInnerHasOwnCtx(outerCtx context.Context) {
@@ -103,6 +108,7 @@ func goodNestedInnerHasOwnCtx(outerCtx context.Context) {
 // Conditional branches spawn goroutines without using context.
 //
 // See also:
+//   conc: badConditionalGo
 //   errgroup: badConditionalGo
 //   goroutine: badConditionalGoroutine
 func badConditionalGo(ctx context.Context, flag bool) {
@@ -141,6 +147,7 @@ func goodConditionalGo(ctx context.Context, flag bool) {
 // Goroutines spawned in loop iterations do not use context.
 //
 // See also:
+//   conc: badLoopGo
 //   errgroup: badLoopGo
 //   goroutine: badGoroutinesInLoop
 func badLoopGo(ctx context.Context) {
@@ -170,6 +177,7 @@ func goodLoopGo(ctx context.Context) {
 // Goroutines spawned in loop iterations do not use context.
 //
 // See also:
+//   conc: badRangeLoopGo
 //   errgroup: badRangeLoopGo
 //   goroutine: badGoroutinesInRangeLoop
 func badRangeLoopGo(ctx context.Context) {
@@ -190,6 +198,7 @@ func badRangeLoopGo(ctx context.Context) {
 // Closure with defer statement does not use context.
 //
 // See also:
+//   conc: badDeferInClosure
 //   errgroup: badDeferInClosure
 func badDeferInClosure(ctx context.Context) {
 	var wg sync.WaitGroup
@@ -216,6 +225,7 @@ func goodDeferWithCtxDirect(ctx context.Context) {
 // Context used only in deferred nested closure is not detected.
 //
 // See also:
+//   conc: limitationDeferNestedClosure
 //   errgroup: limitationDeferNestedClosure
 //   goroutine: limitationDeferNestedClosure
 func limitationDeferNestedClosure(ctx context.Context) {
