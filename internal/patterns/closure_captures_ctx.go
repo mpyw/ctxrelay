@@ -262,10 +262,8 @@ func closureFindFuncLitByLiteral(compLit *ast.CompositeLit, lit *ast.BasicLit) *
 //   - g.Go(makeWorker()) where makeWorker is a closure that captures ctx
 func closureCheckFactoryCall(cctx *context.CheckContext, call *ast.CallExpr) bool {
 	// Check if ctx is passed as an argument to the call
-	for _, arg := range call.Args {
-		if cctx.ArgUsesContext(arg) {
-			return true
-		}
+	if cctx.ArgsUseContext(call.Args) {
+		return true
 	}
 
 	// Check if the factory function itself is a closure that captures ctx

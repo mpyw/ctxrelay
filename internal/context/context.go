@@ -142,6 +142,16 @@ func (c *CheckContext) ArgUsesContext(expr ast.Expr) bool {
 	return c.nodeReferencesContext(expr, false)
 }
 
+// ArgsUseContext checks if any argument references a context variable.
+func (c *CheckContext) ArgsUseContext(args []ast.Expr) bool {
+	for _, arg := range args {
+		if c.ArgUsesContext(arg) {
+			return true
+		}
+	}
+	return false
+}
+
 // nodeReferencesContext checks if a node references any context variable.
 // If skipNestedFuncLit is true, nested function literals are not traversed.
 func (c *CheckContext) nodeReferencesContext(node ast.Node, skipNestedFuncLit bool) bool {

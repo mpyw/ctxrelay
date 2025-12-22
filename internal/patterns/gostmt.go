@@ -70,10 +70,8 @@ func goStmtCheckFromAST(cctx *context.CheckContext, stmt *ast.GoStmt) bool {
 // Handles arbitrary depth: go fn()(), go fn()()(), etc.
 func goStmtCheckHigherOrder(cctx *context.CheckContext, innerCall *ast.CallExpr) bool {
 	// Check if ctx is passed as an argument to the inner call
-	for _, arg := range innerCall.Args {
-		if cctx.ArgUsesContext(arg) {
-			return true
-		}
+	if cctx.ArgsUseContext(innerCall.Args) {
+		return true
 	}
 
 	// Check if the inner call's function is a func literal (factory IIFE)
