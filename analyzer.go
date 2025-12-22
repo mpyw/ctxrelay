@@ -153,11 +153,15 @@ func runASTChecks(
 	// Register errgroup/waitgroup/conc APIs with ClosureCapturesCtx pattern
 	internal.RegisterDefaultAPIs(reg, enableErrgroup, enableWaitgroup)
 
-	// Register gotask APIs with ShouldCallDeriver and ArgIsDeriverCall patterns
+	// Register gotask APIs with CallbackCallsDeriver and CallbackCallsDeriverOrCtxDerived patterns
 	if goroutineDeriver != "" && enableGotask {
 		matcher := deriver.NewMatcher(goroutineDeriver)
-		deriverPattern := &patterns.ShouldCallDeriver{Matcher: matcher}
-		doAsyncPattern := &patterns.ArgIsDeriverCall{Matcher: matcher}
+		deriverPattern := &patterns.CallbackCallsDeriver{Matcher: matcher}
+		doAsyncPattern := &patterns.CallbackCallsDeriverOrCtxDerived{
+			Matcher:         matcher,
+			ConstructorName: "NewTask",
+			PackagePrefix:   "github.com/siketyan/gotask",
+		}
 		internal.RegisterGotaskAPIs(reg, deriverPattern, doAsyncPattern)
 	}
 
@@ -181,11 +185,11 @@ func runASTChecks(
 
 	// Map pattern names to ignore checker names
 	checkerNames := map[string]ignore.CheckerName{
-		"GoStmtCapturesCtx":  ignore.Goroutine,
-		"GoStmtCallsDeriver": ignore.GoroutineDerive,
-		"ClosureCapturesCtx": ignore.Errgroup, // errgroup/waitgroup use this
-		"ShouldCallDeriver":  ignore.Gotask,   // gotask uses this
-		"ArgIsDeriverCall":   ignore.Gotask,   // gotask DoAsync uses this
+		"GoStmtCapturesCtx":                ignore.Goroutine,
+		"GoStmtCallsDeriver":               ignore.GoroutineDerive,
+		"ClosureCapturesCtx":               ignore.Errgroup, // errgroup/waitgroup use this
+		"CallbackCallsDeriver":             ignore.Gotask,   // gotask uses this
+		"CallbackCallsDeriverOrCtxDerived": ignore.Gotask,   // gotask DoAsync uses this
 	}
 
 	// Create and run unified checker

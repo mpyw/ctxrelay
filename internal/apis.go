@@ -113,7 +113,7 @@ func RegisterDefaultAPIs(reg *registry.Registry, enableErrgroup, enableWaitgroup
 }
 
 // RegisterGotaskAPIs registers gotask APIs with deriver pattern.
-func RegisterGotaskAPIs(reg *registry.Registry, deriverPattern *patterns.ShouldCallDeriver, doAsyncPattern *patterns.ArgIsDeriverCall) {
+func RegisterGotaskAPIs(reg *registry.Registry, deriverPattern *patterns.CallbackCallsDeriver, doAsyncPattern *patterns.CallbackCallsDeriverOrCtxDerived) {
 	// DoAll, DoAllSettled, DoRace - variadic Task arguments
 	// Each Task arg is traced through NewTask to check the callback body
 	reg.Register(deriverPattern,

@@ -1,0 +1,296 @@
+package patterns
+
+import (
+	"go/ast"
+	"go/types"
+	"strings"
+
+	"github.com/mpyw/goroutinectx/internal/context"
+	"github.com/mpyw/goroutinectx/internal/directives/deriver"
+)
+
+// CallbackCallsDeriverOrCtxDerived checks that EITHER:
+// - The ctx argument IS a deriver call (ctx is derived), OR
+// - The receiver's callback (passed to a constructor like NewTask) calls the deriver
+//
+// This pattern is a superset of CallbackCallsDeriver:
+// - CallbackCallsDeriver: callback MUST call deriver (no alternative)
+// - CallbackCallsDeriverOrCtxDerived: callback calls deriver OR ctx is derived
+//
+// Use this when the library allows flexibility in where the deriver is called.
+//
+// Example (ctx is derived):
+//
+//	task := lib.NewTask(func(ctx context.Context) error { return nil })
+//	task.DoAsync(apm.NewGoroutineContext(ctx), nil) // OK - ctx is derived
+//
+// Example (callback calls deriver):
+//
+//	task := lib.NewTask(func(ctx context.Context) error {
+//	    _ = apm.NewGoroutineContext(ctx)  // Deriver called here
+//	    return nil
+//	})
+//	task.DoAsync(ctx, nil) // OK - callback already calls deriver
+//
+// Example (neither):
+//
+//	task := lib.NewTask(func(ctx context.Context) error { return nil })
+//	task.DoAsync(ctx, nil) // BAD - neither ctx is derived nor callback calls deriver
+type CallbackCallsDeriverOrCtxDerived struct {
+	// Matcher is the deriver function matcher (OR/AND semantics).
+	Matcher *deriver.Matcher
+
+	// ConstructorName is the name of the constructor function (e.g., "NewTask").
+	ConstructorName string
+
+	// PackagePrefix is the package path prefix (e.g., "github.com/siketyan/gotask").
+	PackagePrefix string
+}
+
+func (*CallbackCallsDeriverOrCtxDerived) Name() string {
+	return "CallbackCallsDeriverOrCtxDerived"
+}
+
+func (p *CallbackCallsDeriverOrCtxDerived) Check(cctx *context.CheckContext, call *ast.CallExpr, callbackArg ast.Expr) bool {
+	if p.Matcher == nil || p.Matcher.IsEmpty() {
+		return true // No deriver configured
+	}
+
+	// Check 1: Is the ctx argument a deriver call?
+	if p.argIsDeriverCall(cctx, callbackArg) {
+		return true
+	}
+
+	// Check 2: Does the receiver's callback call the deriver?
+	return p.receiverCallbackCallsDeriver(cctx, call)
+}
+
+// argIsDeriverCall checks if the argument expression IS a call to the deriver.
+func (p *CallbackCallsDeriverOrCtxDerived) argIsDeriverCall(cctx *context.CheckContext, expr ast.Expr) bool {
+	call, ok := expr.(*ast.CallExpr)
+	if !ok {
+		// Not a call expression - check if it's a variable assigned a deriver call
+		if ident, ok := expr.(*ast.Ident); ok {
+			return p.identIsDeriverCall(cctx, ident)
+		}
+		return false
+	}
+
+	// Check if this call IS a deriver call
+	fn := cctx.FuncOf(call)
+	return fn != nil && p.Matcher.MatchesFunc(fn)
+}
+
+// identIsDeriverCall checks if a variable holds a deriver call result.
+func (p *CallbackCallsDeriverOrCtxDerived) identIsDeriverCall(cctx *context.CheckContext, ident *ast.Ident) bool {
+	v := cctx.VarOf(ident)
+	if v == nil {
+		return false
+	}
+
+	call := cctx.CallExprAssignedTo(v, ident.Pos())
+	if call == nil {
+		return false
+	}
+
+	fn := cctx.FuncOf(call)
+	return fn != nil && p.Matcher.MatchesFunc(fn)
+}
+
+// receiverCallbackCallsDeriver checks if the receiver's callback (from constructor) calls the deriver.
+// For: task.DoAsync(ctx, nil) where task = lib.NewTask(fn)
+// For: lib.NewTask(fn).DoAsync(ctx, nil)
+// For: lib.NewTask(fn).Cancelable().DoAsync(ctx, nil)
+func (p *CallbackCallsDeriverOrCtxDerived) receiverCallbackCallsDeriver(cctx *context.CheckContext, call *ast.CallExpr) bool {
+	// Get the receiver of the method call (task in task.DoAsync)
+	receiver := p.getMethodReceiver(call)
+	if receiver == nil {
+		return false
+	}
+
+	// Find the constructor call that created this object
+	constructorCall := p.findConstructorCall(cctx, receiver)
+	if constructorCall == nil {
+		return false
+	}
+
+	// Check if constructor's callback argument calls the deriver
+	if len(constructorCall.Args) == 0 {
+		return false
+	}
+
+	callbackArg := constructorCall.Args[0]
+	return p.callbackCallsDeriver(cctx, callbackArg)
+}
+
+// getMethodReceiver extracts the receiver from a method call.
+// For task.DoAsync(...), returns the task expression.
+func (*CallbackCallsDeriverOrCtxDerived) getMethodReceiver(call *ast.CallExpr) ast.Expr {
+	sel, ok := call.Fun.(*ast.SelectorExpr)
+	if !ok {
+		return nil
+	}
+	return sel.X
+}
+
+// findConstructorCall traces the receiver back to find the constructor call.
+// Handles:
+// - lib.NewTask(fn) - direct call
+// - lib.NewTask(fn).Cancelable() - chained call
+// - task (variable) - traces to assignment
+// - taskPtr (pointer) - traces through address-of
+func (p *CallbackCallsDeriverOrCtxDerived) findConstructorCall(cctx *context.CheckContext, receiver ast.Expr) *ast.CallExpr {
+	switch r := receiver.(type) {
+	case *ast.CallExpr:
+		// Could be NewTask(...) or NewTask(...).Cancelable()
+		return p.findConstructorFromCall(cctx, r)
+
+	case *ast.Ident:
+		// Variable: task.DoAsync(...)
+		return p.findConstructorFromIdent(cctx, r)
+
+	case *ast.UnaryExpr:
+		// Pointer dereference: (*taskPtr).DoAsync(...)
+		if r.Op.String() == "*" {
+			return p.findConstructorCall(cctx, r.X)
+		}
+
+	case *ast.StarExpr:
+		// Type assertion or pointer type - try inner expression
+		return p.findConstructorCall(cctx, r.X)
+	}
+
+	return nil
+}
+
+// findConstructorFromCall handles call expressions in the receiver chain.
+// - If it's the constructor (e.g., NewTask) → return it
+// - If it's a method call (e.g., Cancelable()) → recurse into its receiver
+func (p *CallbackCallsDeriverOrCtxDerived) findConstructorFromCall(cctx *context.CheckContext, call *ast.CallExpr) *ast.CallExpr {
+	if p.isConstructorCall(cctx, call) {
+		return call
+	}
+
+	// Check if it's a method call on a Task (e.g., Cancelable())
+	sel, ok := call.Fun.(*ast.SelectorExpr)
+	if !ok {
+		return nil
+	}
+
+	// Recurse into the receiver
+	return p.findConstructorCall(cctx, sel.X)
+}
+
+// findConstructorFromIdent traces a variable back to its constructor assignment.
+func (p *CallbackCallsDeriverOrCtxDerived) findConstructorFromIdent(cctx *context.CheckContext, ident *ast.Ident) *ast.CallExpr {
+	v := cctx.VarOf(ident)
+	if v == nil {
+		return nil
+	}
+
+	// Find call expression assigned to this variable
+	call := cctx.CallExprAssignedTo(v, ident.Pos())
+	if call == nil {
+		return nil
+	}
+
+	return p.findConstructorFromCall(cctx, call)
+}
+
+// isConstructorCall checks if a call is the configured constructor (e.g., lib.NewTask()).
+func (p *CallbackCallsDeriverOrCtxDerived) isConstructorCall(cctx *context.CheckContext, call *ast.CallExpr) bool {
+	sel, ok := call.Fun.(*ast.SelectorExpr)
+	if !ok {
+		return false
+	}
+
+	if sel.Sel.Name != p.ConstructorName {
+		return false
+	}
+
+	// Check package
+	ident, ok := sel.X.(*ast.Ident)
+	if !ok {
+		return false
+	}
+
+	obj := cctx.Pass.TypesInfo.ObjectOf(ident)
+	if obj == nil {
+		return false
+	}
+
+	pkgName, ok := obj.(*types.PkgName)
+	if !ok {
+		return false
+	}
+
+	return strings.HasPrefix(pkgName.Imported().Path(), p.PackagePrefix)
+}
+
+// callbackCallsDeriver checks if a callback expression calls the deriver.
+func (p *CallbackCallsDeriverOrCtxDerived) callbackCallsDeriver(cctx *context.CheckContext, expr ast.Expr) bool {
+	switch e := expr.(type) {
+	case *ast.FuncLit:
+		// Try SSA-based check first
+		if result, ok := p.checkFromSSA(cctx, e); ok {
+			return result
+		}
+		// Fall back to AST-based check
+		return p.Matcher.SatisfiesAnyGroup(cctx.Pass, e.Body)
+
+	case *ast.Ident:
+		// Variable: fn = func() { ... }
+		v := cctx.VarOf(e)
+		if v == nil {
+			return true // Can't trace, assume OK
+		}
+		funcLit := cctx.FuncLitAssignedTo(v, e.Pos())
+		if funcLit != nil {
+			return p.callbackCallsDeriver(cctx, funcLit)
+		}
+		return true // Can't trace
+
+	default:
+		return true // Can't trace, assume OK
+	}
+}
+
+// checkFromSSA uses SSA analysis to check deriver calls.
+func (p *CallbackCallsDeriverOrCtxDerived) checkFromSSA(cctx *context.CheckContext, lit *ast.FuncLit) (bool, bool) {
+	if cctx.SSAProg == nil || cctx.Tracer == nil {
+		return false, false
+	}
+
+	ssaFn := cctx.SSAProg.FindFuncLit(lit)
+	if ssaFn == nil {
+		return false, false
+	}
+
+	result := cctx.Tracer.ClosureCallsDeriver(ssaFn, p.Matcher)
+	// Accept deriver calls at start (not in defer)
+	return result.FoundAtStart, true
+}
+
+// Message formats the error message.
+func (*CallbackCallsDeriverOrCtxDerived) Message(apiName string, _ string) string {
+	parts := splitAPIName(apiName)
+	if len(parts) == 3 {
+		return "(*" + parts[0] + "." + parts[1] + ")." + parts[2] + "() 1st argument should call goroutine deriver"
+	}
+	return apiName + "() 1st argument should call goroutine deriver"
+}
+
+// splitAPIName splits an API name like "pkg.Type.Method" into parts.
+func splitAPIName(name string) []string {
+	var parts []string
+	for i := len(name) - 1; i >= 0; i-- {
+		if name[i] == '.' {
+			parts = append([]string{name[i+1:]}, parts...)
+			name = name[:i]
+		}
+	}
+	if name != "" {
+		parts = append([]string{name}, parts...)
+	}
+	return parts
+}
