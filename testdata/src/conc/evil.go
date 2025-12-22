@@ -490,3 +490,188 @@ func goodPoolVariableFuncWithCtx(ctx context.Context) {
 	p.Go(fn) // OK - fn uses ctx
 	p.Wait()
 }
+
+// ===== ADVANCED NESTED PATTERNS (SHADOWING, ARGUMENT PASSING) =====
+
+// [BAD]: Shadowing - inner ctx shadows outer
+//
+// Inner function's context parameter shadows the outer one.
+//
+// See also:
+//   errgroup: evilShadowingInnerHasCtx
+//   waitgroup: evilShadowingInnerHasCtx
+func evilShadowingInnerHasCtx(outerCtx context.Context) {
+	innerFunc := func(ctx context.Context) {
+		wg := conc.WaitGroup{}
+		wg.Go(func() {
+			_ = ctx // uses inner ctx
+		})
+		wg.Wait()
+	}
+	innerFunc(outerCtx)
+}
+
+// [BAD]: Shadowing - inner ignores ctx
+//
+// Inner function ignores the shadowed context.
+//
+// See also:
+//   errgroup: evilShadowingInnerIgnoresCtx
+//   waitgroup: evilShadowingInnerIgnoresCtx
+func evilShadowingInnerIgnoresCtx(outerCtx context.Context) {
+	innerFunc := func(ctx context.Context) {
+		wg := conc.WaitGroup{}
+		wg.Go(func() { // want `conc.WaitGroup.Go\(\) closure should use context "ctx"`
+		})
+		wg.Wait()
+	}
+	innerFunc(outerCtx)
+}
+
+// [GOOD]: Two levels of shadowing
+//
+// Context is shadowed through two levels of function nesting.
+//
+// See also:
+//   errgroup: evilShadowingTwoLevels
+//   waitgroup: evilShadowingTwoLevels
+func evilShadowingTwoLevels(ctx1 context.Context) {
+	func(ctx2 context.Context) {
+		func(ctx3 context.Context) {
+			wg := conc.WaitGroup{}
+			wg.Go(func() {
+				_ = ctx3 // uses ctx3
+			})
+			wg.Wait()
+		}(ctx2)
+	}(ctx1)
+}
+
+// [BAD]: Two levels of shadowing - bad case
+//
+// Context is shadowed through two levels but not used.
+//
+// See also:
+//   errgroup: evilShadowingTwoLevelsBad
+//   waitgroup: evilShadowingTwoLevelsBad
+func evilShadowingTwoLevelsBad(ctx1 context.Context) {
+	func(ctx2 context.Context) {
+		func(ctx3 context.Context) {
+			wg := conc.WaitGroup{}
+			wg.Go(func() { // want `conc.WaitGroup.Go\(\) closure should use context "ctx3"`
+			})
+			wg.Wait()
+		}(ctx2)
+	}(ctx1)
+}
+
+// ===== MIDDLE LAYER INTRODUCES CTX (OUTER HAS NONE) =====
+
+// [GOOD]: Middle layer introduces ctx - goroutine uses it
+//
+// Middle layer introduces context that inner goroutine uses.
+//
+// See also:
+//   goroutine: goodMiddleLayerIntroducesCtxUsed
+//   errgroup: evilMiddleLayerIntroducesCtx
+//   waitgroup: evilMiddleLayerIntroducesCtx
+func evilMiddleLayerIntroducesCtx() {
+	func(ctx context.Context) {
+		wg := conc.WaitGroup{}
+		wg.Go(func() {
+			_ = ctx
+		})
+		func() {
+			wg.Go(func() { // want `conc.WaitGroup.Go\(\) closure should use context "ctx"`
+			})
+		}()
+		wg.Wait()
+	}(context.Background())
+}
+
+// [GOOD]: Middle layer introduces ctx - good case
+//
+// Middle layer introduces context that inner goroutine uses.
+//
+// See also:
+//   errgroup: evilMiddleLayerIntroducesCtxGood
+//   waitgroup: evilMiddleLayerIntroducesCtxGood
+func evilMiddleLayerIntroducesCtxGood() {
+	func(ctx context.Context) {
+		wg := conc.WaitGroup{}
+		func() {
+			wg.Go(func() {
+				_ = ctx
+			})
+		}()
+		wg.Wait()
+	}(context.Background())
+}
+
+// ===== INTERLEAVED LAYERS (ctx -> no ctx -> ctx shadowing) =====
+
+// [BAD]: Interleaved layers
+//
+// Nested function layers where goroutine ignores available context.
+//
+// See also:
+//   errgroup: evilInterleavedLayers
+//   waitgroup: evilInterleavedLayers
+func evilInterleavedLayers(outerCtx context.Context) {
+	func() {
+		func(middleCtx context.Context) {
+			wg := conc.WaitGroup{}
+			func() {
+				wg.Go(func() { // want `conc.WaitGroup.Go\(\) closure should use context "middleCtx"`
+				})
+			}()
+			wg.Wait()
+		}(outerCtx)
+	}()
+}
+
+// [GOOD]: Interleaved layers - good case
+//
+// Nested function layers with context shadowing handled correctly.
+//
+// See also:
+//   errgroup: evilInterleavedLayersGood
+//   waitgroup: evilInterleavedLayersGood
+func evilInterleavedLayersGood(outerCtx context.Context) {
+	func() {
+		func(middleCtx context.Context) {
+			wg := conc.WaitGroup{}
+			func() {
+				wg.Go(func() {
+					_ = middleCtx
+				})
+			}()
+			wg.Wait()
+		}(outerCtx)
+	}()
+}
+
+// ===== HIGHER-ORDER WITH REASSIGNED VARIABLE RETURN =====
+
+// [GOOD]: Higher-order returns reassigned variable - with ctx
+//
+// Factory function returns a reassigned variable that captures context.
+//
+// See also:
+//   goroutine: goodHigherOrderReturnsReassignedVariableWithCtx
+//   errgroup: goodHigherOrderReturnsReassignedVariableWithCtx
+//   waitgroup: goodHigherOrderReturnsReassignedVariableWithCtx
+func goodHigherOrderReturnsReassignedVariableWithCtx(ctx context.Context) {
+	wg := conc.WaitGroup{}
+	makeWorker := func() func() {
+		worker := func() {
+			fmt.Println("first assignment")
+		}
+		worker = func() {
+			_ = ctx // Last assignment uses ctx
+		}
+		return worker
+	}
+	wg.Go(makeWorker())
+	wg.Wait()
+}

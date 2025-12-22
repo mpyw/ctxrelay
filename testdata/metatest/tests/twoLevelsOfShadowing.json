@@ -1,6 +1,7 @@
 {
   "title": "Two levels of shadowing",
   "targets": [
+    "conc",
     "errgroup",
     "waitgroup"
   ],
@@ -12,7 +13,11 @@
         "waitgroup": "evilShadowingTwoLevels"
       }
     },
-    "good": null
+    "good": {
+      "functions": {
+        "conc": "evilShadowingTwoLevels"
+      }
+    }
   },
   "level": "evil"
 }

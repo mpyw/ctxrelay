@@ -1,8 +1,9 @@
 {
   "title": "Middle layer introduces ctx - goroutine uses it",
   "targets": [
-    "goroutine",
+    "conc",
     "errgroup",
+    "goroutine",
     "waitgroup"
   ],
   "variants": {
@@ -11,7 +12,8 @@
       "functions": {
         "goroutine": "goodMiddleLayerIntroducesCtxUsed",
         "errgroup": "evilMiddleLayerIntroducesCtx",
-        "waitgroup": "evilMiddleLayerIntroducesCtx"
+        "waitgroup": "evilMiddleLayerIntroducesCtx",
+        "conc": "evilMiddleLayerIntroducesCtx"
       }
     },
     "bad": null

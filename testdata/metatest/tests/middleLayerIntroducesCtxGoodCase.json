@@ -1,6 +1,7 @@
 {
   "title": "Middle layer introduces ctx",
   "targets": [
+    "conc",
     "errgroup",
     "waitgroup"
   ],
@@ -9,7 +10,8 @@
       "description": "Middle layer introduces context that inner goroutine uses.",
       "functions": {
         "errgroup": "evilMiddleLayerIntroducesCtxGood",
-        "waitgroup": "evilMiddleLayerIntroducesCtxGood"
+        "waitgroup": "evilMiddleLayerIntroducesCtxGood",
+        "conc": "evilMiddleLayerIntroducesCtxGood"
       }
     },
     "bad": null

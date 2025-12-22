@@ -1,6 +1,7 @@
 {
   "title": "Two levels of shadowing",
   "targets": [
+    "conc",
     "errgroup",
     "waitgroup"
   ],
@@ -9,7 +10,8 @@
       "description": "Context is shadowed through two levels of function nesting.",
       "functions": {
         "errgroup": "evilShadowingTwoLevelsBad",
-        "waitgroup": "evilShadowingTwoLevelsBad"
+        "waitgroup": "evilShadowingTwoLevelsBad",
+        "conc": "evilShadowingTwoLevelsBad"
       }
     },
     "good": null

@@ -1,6 +1,7 @@
 {
   "title": "Interleaved layers",
   "targets": [
+    "conc",
     "errgroup",
     "waitgroup"
   ],
@@ -9,7 +10,8 @@
       "description": "Nested function layers with context shadowing handled correctly.",
       "functions": {
         "errgroup": "evilInterleavedLayersGood",
-        "waitgroup": "evilInterleavedLayersGood"
+        "waitgroup": "evilInterleavedLayersGood",
+        "conc": "evilInterleavedLayersGood"
       }
     },
     "bad": {
