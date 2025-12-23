@@ -11,6 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **goroutine**: Detect `go func()` that doesn't capture/use context
 - **errgroup**: Detect `errgroup.Group.Go()` closures without context
 - **waitgroup**: Detect `sync.WaitGroup.Go()` closures without context (Go 1.25+)
+- **conc**: Detect `github.com/sourcegraph/conc` pool closures without context
 - **spawner**: Detect calls to spawner functions that pass closures without context
   - Directive: `//goroutinectx:spawner` marks local functions
   - Flag: `-external-spawner=pkg/path.Func` or `-external-spawner=pkg/path.Type.Method` for external functions
@@ -437,7 +438,7 @@ When improving code quality, follow this iterative cycle:
 
    **Keep as function** when:
    - There are 2+ arguments and it's unclear which is the "subject"
-   - Example: `FindFuncLitAssignment(cctx, v)` - finding for `v` using `cctx` (ambiguous subject)
+   - Example: `closureFindFieldInAssignment(cctx, assign, v, fieldName)` - multiple subjects makes method conversion unclear
 
 ### Phase 4: Newbie - Naive Questions
 Become a complete beginner who has never seen the code. Ask genuinely confused questions:
