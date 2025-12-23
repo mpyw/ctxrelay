@@ -143,6 +143,35 @@ func handler(ctx context.Context) {
 }
 ```
 
+### [conc](https://pkg.go.dev/github.com/sourcegraph/conc)
+
+Detects [conc](https://pkg.go.dev/github.com/sourcegraph/conc) API calls where closures don't use context:
+
+```go
+func handler(ctx context.Context) {
+    p := pool.New()
+
+    // Bad: closure doesn't use ctx
+    p.Go(func() {
+        doSomething()
+    })
+
+    // Good: closure uses ctx
+    p.Go(func() {
+        doSomething(ctx)
+    })
+}
+```
+
+Supported APIs:
+- [`conc.Pool.Go`](https://pkg.go.dev/github.com/sourcegraph/conc#Pool.Go), [`conc.WaitGroup.Go`](https://pkg.go.dev/github.com/sourcegraph/conc#WaitGroup.Go)
+- [`pool.Pool.Go`](https://pkg.go.dev/github.com/sourcegraph/conc/pool#Pool.Go), [`pool.ResultPool[T].Go`](https://pkg.go.dev/github.com/sourcegraph/conc/pool#ResultPool.Go), [`pool.ContextPool.Go`](https://pkg.go.dev/github.com/sourcegraph/conc/pool#ContextPool.Go), [`pool.ResultContextPool[T].Go`](https://pkg.go.dev/github.com/sourcegraph/conc/pool#ResultContextPool.Go)
+- [`pool.ErrorPool.Go`](https://pkg.go.dev/github.com/sourcegraph/conc/pool#ErrorPool.Go), [`pool.ResultErrorPool[T].Go`](https://pkg.go.dev/github.com/sourcegraph/conc/pool#ResultErrorPool.Go)
+- [`stream.Stream.Go`](https://pkg.go.dev/github.com/sourcegraph/conc/stream#Stream.Go)
+- [`iter.ForEach`](https://pkg.go.dev/github.com/sourcegraph/conc/iter#ForEach), [`iter.ForEachIdx`](https://pkg.go.dev/github.com/sourcegraph/conc/iter#ForEachIdx), [`iter.Map`](https://pkg.go.dev/github.com/sourcegraph/conc/iter#Map), [`iter.MapErr`](https://pkg.go.dev/github.com/sourcegraph/conc/iter#MapErr)
+- [`iter.Iterator.ForEach`](https://pkg.go.dev/github.com/sourcegraph/conc/iter#Iterator.ForEach), [`iter.Iterator.ForEachIdx`](https://pkg.go.dev/github.com/sourcegraph/conc/iter#Iterator.ForEachIdx)
+- [`iter.Mapper.Map`](https://pkg.go.dev/github.com/sourcegraph/conc/iter#Mapper.Map), [`iter.Mapper.MapErr`](https://pkg.go.dev/github.com/sourcegraph/conc/iter#Mapper.MapErr)
+
 ### [gotask](https://pkg.go.dev/github.com/siketyan/gotask/v2) (requires `-goroutine-deriver`)
 
 Detects [gotask](https://pkg.go.dev/github.com/siketyan/gotask/v2) calls where task functions don't call the context deriver. Since tasks run as goroutines, they need to call the deriver function (e.g., `apm.NewGoroutineContext`) inside their body - there's no way to wrap the context at the call site.
@@ -234,11 +263,12 @@ func handler(ctx context.Context) {
 **Available checker names:**
 - `goroutine` - `go func()` statements
 - `goroutinederive` - goroutine derive function requirement
-- `waitgroup` - `sync.WaitGroup.Go()` calls
-- `errgroup` - `errgroup.Group.Go()` calls
+- `waitgroup` - [`sync.WaitGroup.Go`](https://pkg.go.dev/sync#WaitGroup.Go) calls
+- `errgroup` - [`errgroup.Group.Go`](https://pkg.go.dev/golang.org/x/sync/errgroup#Group.Go) calls
+- `conc` - [conc](https://pkg.go.dev/github.com/sourcegraph/conc) library checks
 - `spawner` - spawner directive checks
 - `spawnerlabel` - spawner label requirement
-- `gotask` - gotask library checks
+- `gotask` - [gotask](https://pkg.go.dev/github.com/siketyan/gotask/v2) library checks
 
 #### Unused Ignore Detection
 
@@ -326,11 +356,13 @@ Treat additional types as context carriers (like [`context.Context`](https://pkg
 
 ```bash
 # Treat echo.Context as a context carrier
-goroutinectx -context-carriers=github.com/labstack/echo/v4.Context ./...
+goroutinectx -context-carriers='github.com/labstack/echo/v4.Context' ./...
 
 # Multiple carriers (comma-separated)
-goroutinectx -context-carriers=github.com/labstack/echo/v4.Context,github.com/urfave/cli/v2.Context ./...
+goroutinectx -context-carriers='github.com/labstack/echo/v4.Context,github.com/urfave/cli/v2.Context' ./...
 ```
+
+Example with [`echo.Context`](https://pkg.go.dev/github.com/labstack/echo/v4#Context) and [`cli.Context`](https://pkg.go.dev/github.com/urfave/cli/v2#Context).
 
 When a function has a context carrier parameter, goroutinectx will check that it's properly propagated to goroutines and other APIs.
 
@@ -361,13 +393,13 @@ Available flags:
 - `-waitgroup` (default: true)
 - `-errgroup` (default: true)
 - `-conc` (default: true) - Check [conc](https://pkg.go.dev/github.com/sourcegraph/conc) APIs:
-  - `conc.Pool.Go`, `conc.WaitGroup.Go`
-  - `pool.Pool.Go`, `pool.ResultPool[T].Go`, `pool.ContextPool.Go`, `pool.ResultContextPool[T].Go`
-  - `pool.ErrorPool.Go`, `pool.ResultErrorPool[T].Go`
-  - `stream.Stream.Go`
-  - `iter.ForEach`, `iter.ForEachIdx`, `iter.Map`, `iter.MapErr`
-  - `iter.Iterator.ForEach`, `iter.Iterator.ForEachIdx`
-  - `iter.Mapper.Map`, `iter.Mapper.MapErr`
+  - [`conc.Pool.Go`](https://pkg.go.dev/github.com/sourcegraph/conc#Pool.Go), [`conc.WaitGroup.Go`](https://pkg.go.dev/github.com/sourcegraph/conc#WaitGroup.Go)
+  - [`pool.Pool.Go`](https://pkg.go.dev/github.com/sourcegraph/conc/pool#Pool.Go), [`pool.ResultPool[T].Go`](https://pkg.go.dev/github.com/sourcegraph/conc/pool#ResultPool.Go), [`pool.ContextPool.Go`](https://pkg.go.dev/github.com/sourcegraph/conc/pool#ContextPool.Go), [`pool.ResultContextPool[T].Go`](https://pkg.go.dev/github.com/sourcegraph/conc/pool#ResultContextPool.Go)
+  - [`pool.ErrorPool.Go`](https://pkg.go.dev/github.com/sourcegraph/conc/pool#ErrorPool.Go), [`pool.ResultErrorPool[T].Go`](https://pkg.go.dev/github.com/sourcegraph/conc/pool#ResultErrorPool.Go)
+  - [`stream.Stream.Go`](https://pkg.go.dev/github.com/sourcegraph/conc/stream#Stream.Go)
+  - [`iter.ForEach`](https://pkg.go.dev/github.com/sourcegraph/conc/iter#ForEach), [`iter.ForEachIdx`](https://pkg.go.dev/github.com/sourcegraph/conc/iter#ForEachIdx), [`iter.Map`](https://pkg.go.dev/github.com/sourcegraph/conc/iter#Map), [`iter.MapErr`](https://pkg.go.dev/github.com/sourcegraph/conc/iter#MapErr)
+  - [`iter.Iterator.ForEach`](https://pkg.go.dev/github.com/sourcegraph/conc/iter#Iterator.ForEach), [`iter.Iterator.ForEachIdx`](https://pkg.go.dev/github.com/sourcegraph/conc/iter#Iterator.ForEachIdx)
+  - [`iter.Mapper.Map`](https://pkg.go.dev/github.com/sourcegraph/conc/iter#Mapper.Map), [`iter.Mapper.MapErr`](https://pkg.go.dev/github.com/sourcegraph/conc/iter#Mapper.MapErr)
 - `-spawner` (default: true)
 - `-spawnerlabel` (default: false) - Check that spawner functions are properly labeled
 - `-gotask` (default: true, requires `-goroutine-deriver`)
@@ -390,7 +422,7 @@ goroutinectx -test=false ./...
 When enabled, checks that functions calling spawn methods with func arguments have the `//goroutinectx:spawner` directive:
 
 ```go
-// Bad: calls errgroup.Group.Go with func argument but missing directive
+// Bad: calls errgroup.Group.Go() with func argument but missing directive
 func runTask(task func() error) {  // Warning: should have //goroutinectx:spawner
     g := new(errgroup.Group)
     g.Go(task)
