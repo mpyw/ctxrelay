@@ -93,8 +93,22 @@ func run(pass *analysis.Pass) (any, error) {
 	// Build SSA program
 	ssaProg := internalssa.Build(pass)
 
-	// Run AST-based checks (goroutine, errgroup, waitgroup)
-	runASTChecks(pass, insp, ignoreMaps, carriers, spawners, skipFiles, reg, ssaProg)
+	// Spawner map (nil if disabled)
+	var spawnerMap *spawner.Map
+	if enableSpawner {
+		spawnerMap = spawners
+	}
+
+	// Create and run unified checker
+	runner := internal.NewRunner(
+		reg,
+		spawnerMap,
+		ssaProg,
+		carriers,
+		ignoreMaps,
+		skipFiles,
+	)
+	runner.Run(pass, insp)
 
 	// Run spawnerlabel checker if enabled
 	if enableSpawnerlabel {
@@ -152,35 +166,6 @@ func buildRegistry() *registry.Registry {
 	internal.RegisterGotaskAPIs(reg, goroutineDeriver, enableGotask)
 
 	return reg
-}
-
-// runASTChecks runs checkers on the pass using the unified SSA-based internal.
-func runASTChecks(
-	pass *analysis.Pass,
-	insp *inspector.Inspector,
-	ignoreMaps map[string]ignore.Map,
-	carriers []carrier.Carrier,
-	spawners *spawner.Map,
-	skipFiles map[string]bool,
-	reg *registry.Registry,
-	ssaProg *internalssa.Program,
-) {
-	// Spawner map (nil if disabled)
-	var spawnerMap *spawner.Map
-	if enableSpawner {
-		spawnerMap = spawners
-	}
-
-	// Create and run unified checker
-	unifiedChecker := internal.NewRunner(
-		reg,
-		spawnerMap,
-		ssaProg,
-		carriers,
-		ignoreMaps,
-		skipFiles,
-	)
-	unifiedChecker.Run(pass, insp)
 }
 
 // buildEnabledCheckers creates a map of which checkers are enabled.

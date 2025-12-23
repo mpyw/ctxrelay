@@ -16,7 +16,6 @@ import (
 	"github.com/mpyw/goroutinectx/internal/patterns"
 	"github.com/mpyw/goroutinectx/internal/registry"
 	internalssa "github.com/mpyw/goroutinectx/internal/ssa"
-	"github.com/mpyw/goroutinectx/internal/typeutil"
 )
 
 // Runner is the unified SSA-based checker.
@@ -53,7 +52,7 @@ func NewRunner(
 // Run executes the checker on the given pass.
 func (c *Runner) Run(pass *analysis.Pass, insp *inspector.Inspector) {
 	// Build context scopes for functions with context parameters
-	funcScopes := buildFuncScopes(pass, insp, c.carriers)
+	funcScopes := context.BuildFuncScopes(pass, insp, c.carriers)
 
 	// Node types we're interested in
 	nodeFilter := []ast.Node{
@@ -74,7 +73,7 @@ func (c *Runner) Run(pass *analysis.Pass, insp *inspector.Inspector) {
 			return true
 		}
 
-		scope := findEnclosingScope(funcScopes, stack)
+		scope := context.FindEnclosingScope(funcScopes, stack)
 		if scope == nil {
 			return true // No context in scope
 		}
@@ -83,7 +82,7 @@ func (c *Runner) Run(pass *analysis.Pass, insp *inspector.Inspector) {
 			Pass:     pass,
 			Tracer:   c.tracer,
 			SSAProg:  c.ssaProg,
-			CtxNames: scope.ctxNames,
+			CtxNames: scope.CtxNames,
 			Carriers: c.carriers,
 		}
 
@@ -99,7 +98,7 @@ func (c *Runner) Run(pass *analysis.Pass, insp *inspector.Inspector) {
 }
 
 // checkGoStmt checks a go statement against all registered go patterns.
-func (c *Runner) checkGoStmt(cctx *context.CheckContext, stmt *ast.GoStmt, scope *contextScope) {
+func (c *Runner) checkGoStmt(cctx *context.CheckContext, stmt *ast.GoStmt, scope *context.Scope) {
 	for _, pattern := range c.registry.GoStmtPatterns() {
 		if c.shouldIgnore(cctx.Pass, stmt.Pos(), pattern.CheckerName()) {
 			continue
@@ -113,9 +112,9 @@ func (c *Runner) checkGoStmt(cctx *context.CheckContext, stmt *ast.GoStmt, scope
 		var msg string
 		if result.DeferOnly {
 			// Deriver found but only in defer - use special message
-			msg = pattern.DeferMessage(scope.ctxName())
+			msg = pattern.DeferMessage(scope.CtxName())
 		} else {
-			msg = pattern.Message(scope.ctxName())
+			msg = pattern.Message(scope.CtxName())
 		}
 
 		if msg != "" {
@@ -125,7 +124,7 @@ func (c *Runner) checkGoStmt(cctx *context.CheckContext, stmt *ast.GoStmt, scope
 }
 
 // checkCallExpr checks a call expression against registered API patterns and spawner directives.
-func (c *Runner) checkCallExpr(cctx *context.CheckContext, call *ast.CallExpr, scope *contextScope) {
+func (c *Runner) checkCallExpr(cctx *context.CheckContext, call *ast.CallExpr, scope *context.Scope) {
 	// Check against registered API patterns
 	c.checkRegistryCall(cctx, call, scope)
 
@@ -134,7 +133,7 @@ func (c *Runner) checkCallExpr(cctx *context.CheckContext, call *ast.CallExpr, s
 }
 
 // checkRegistryCall checks a call expression against registered API patterns.
-func (c *Runner) checkRegistryCall(cctx *context.CheckContext, call *ast.CallExpr, scope *contextScope) {
+func (c *Runner) checkRegistryCall(cctx *context.CheckContext, call *ast.CallExpr, scope *context.Scope) {
 	// Try CallArgPattern match first
 	c.checkCallArgPattern(cctx, call, scope)
 
@@ -143,7 +142,7 @@ func (c *Runner) checkRegistryCall(cctx *context.CheckContext, call *ast.CallExp
 }
 
 // checkCallArgPattern checks a call against registered CallArg APIs.
-func (c *Runner) checkCallArgPattern(cctx *context.CheckContext, call *ast.CallExpr, scope *contextScope) {
+func (c *Runner) checkCallArgPattern(cctx *context.CheckContext, call *ast.CallExpr, scope *context.Scope) {
 	entry, callbackArg := c.registry.MatchCallArg(cctx.Pass, call)
 	if entry == nil {
 		return
@@ -167,7 +166,7 @@ func (c *Runner) checkCallArgPattern(cctx *context.CheckContext, call *ast.CallE
 		}
 
 		if !pattern.Check(cctx, callbackArg, entry.TaskConstructor) {
-			msg := pattern.Message(entry.Spec.FullName(), scope.ctxName())
+			msg := pattern.Message(entry.Spec.FullName(), scope.CtxName())
 			// Report at method selector position for chained calls
 			reportPos := getCallReportPos(call)
 			cctx.Pass.Reportf(reportPos, "%s", msg)
@@ -176,7 +175,7 @@ func (c *Runner) checkCallArgPattern(cctx *context.CheckContext, call *ast.CallE
 }
 
 // checkTaskSourcePattern checks a call against registered TaskSource APIs.
-func (c *Runner) checkTaskSourcePattern(cctx *context.CheckContext, call *ast.CallExpr, scope *contextScope) {
+func (c *Runner) checkTaskSourcePattern(cctx *context.CheckContext, call *ast.CallExpr, scope *context.Scope) {
 	entry := c.registry.MatchTaskSource(cctx.Pass, call)
 	if entry == nil {
 		return
@@ -200,7 +199,7 @@ func (c *Runner) checkTaskSourcePattern(cctx *context.CheckContext, call *ast.Ca
 		}
 
 		if !pattern.Check(tcctx, call) {
-			msg := pattern.Message(entry.Spec.FullName(), scope.ctxName())
+			msg := pattern.Message(entry.Spec.FullName(), scope.CtxName())
 			reportPos := getCallReportPos(call)
 			cctx.Pass.Reportf(reportPos, "%s", msg)
 		}
@@ -208,7 +207,7 @@ func (c *Runner) checkTaskSourcePattern(cctx *context.CheckContext, call *ast.Ca
 }
 
 // checkSpawnerCall checks if this is a call to a spawner-marked function.
-func (c *Runner) checkSpawnerCall(cctx *context.CheckContext, call *ast.CallExpr, scope *contextScope) {
+func (c *Runner) checkSpawnerCall(cctx *context.CheckContext, call *ast.CallExpr, scope *context.Scope) {
 	if c.spawners == nil || c.spawners.Len() == 0 {
 		return
 	}
@@ -228,7 +227,7 @@ func (c *Runner) checkSpawnerCall(cctx *context.CheckContext, call *ast.CallExpr
 
 	for _, arg := range funcArgs {
 		if !pattern.Check(cctx, arg, nil) {
-			cctx.Pass.Reportf(arg.Pos(), "%s() func argument should use context %q", fn.Name(), scope.ctxName())
+			cctx.Pass.Reportf(arg.Pos(), "%s() func argument should use context %q", fn.Name(), scope.CtxName())
 		}
 	}
 }
@@ -248,7 +247,7 @@ func (c *Runner) checkVariadicCallExpr(
 	cctx *context.CheckContext,
 	call *ast.CallExpr,
 	entry *registry.CallArgEntry,
-	scope *contextScope,
+	scope *context.Scope,
 ) {
 	startIdx := entry.CallbackArgIdx
 	if startIdx < 0 || startIdx >= len(call.Args) {
@@ -317,81 +316,4 @@ func (c *Runner) shouldIgnore(pass *analysis.Pass, pos token.Pos, checkerName ig
 	}
 	line := pass.Fset.Position(pos).Line
 	return ignoreMap.ShouldIgnore(line, checkerName)
-}
-
-// contextScope holds context information for a function scope.
-type contextScope struct {
-	ctxNames []string
-}
-
-func (s *contextScope) ctxName() string {
-	if len(s.ctxNames) > 0 {
-		return s.ctxNames[0]
-	}
-	return "ctx"
-}
-
-// buildFuncScopes identifies functions with context parameters.
-func buildFuncScopes(
-	pass *analysis.Pass,
-	insp *inspector.Inspector,
-	carriers []carrier.Carrier,
-) map[ast.Node]*contextScope {
-	funcScopes := make(map[ast.Node]*contextScope)
-
-	insp.Preorder([]ast.Node{(*ast.FuncDecl)(nil), (*ast.FuncLit)(nil)}, func(n ast.Node) {
-		var fnType *ast.FuncType
-
-		switch fn := n.(type) {
-		case *ast.FuncDecl:
-			fnType = fn.Type
-		case *ast.FuncLit:
-			fnType = fn.Type
-		}
-
-		if scope := findContextScope(pass, fnType, carriers); scope != nil {
-			funcScopes[n] = scope
-		}
-	})
-
-	return funcScopes
-}
-
-// findContextScope checks if the function has context parameters.
-func findContextScope(pass *analysis.Pass, fnType *ast.FuncType, carriers []carrier.Carrier) *contextScope {
-	if fnType == nil || fnType.Params == nil {
-		return nil
-	}
-
-	var ctxNames []string
-
-	for _, field := range fnType.Params.List {
-		typ := pass.TypesInfo.TypeOf(field.Type)
-		if typ == nil {
-			continue
-		}
-
-		if typeutil.IsContextOrCarrierType(typ, carriers) {
-			for _, name := range field.Names {
-				ctxNames = append(ctxNames, name.Name)
-			}
-		}
-	}
-
-	if len(ctxNames) == 0 {
-		return nil
-	}
-
-	return &contextScope{ctxNames: ctxNames}
-}
-
-// findEnclosingScope finds the closest enclosing function with a context parameter.
-func findEnclosingScope(funcScopes map[ast.Node]*contextScope, stack []ast.Node) *contextScope {
-	for i := len(stack) - 1; i >= 0; i-- {
-		if scope, ok := funcScopes[stack[i]]; ok {
-			return scope
-		}
-	}
-
-	return nil
 }
