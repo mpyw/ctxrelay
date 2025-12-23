@@ -40,11 +40,11 @@ Like `errcheck` (error handling only) and `bodyclose` (res.Body.Close only), gor
 
 ### 2. go/analysis Framework
 
-All modern Go linters use `golang.org/x/tools/go/analysis`. Benefits:
+All modern Go linters use [`go/analysis`](https://pkg.go.dev/golang.org/x/tools/go/analysis). Benefits:
 - Integration with `go vet`
 - Integration with `golangci-lint`
 - Standard fact mechanism for cross-package analysis
-- Built-in testing via `analysistest`
+- Built-in testing via [`analysistest`](https://pkg.go.dev/golang.org/x/tools/go/analysis/analysistest)
 
 ### 3. Library-First Design
 
@@ -246,7 +246,7 @@ func UsesContext(pass *analysis.Pass, body *ast.BlockStmt, contextVar *types.Var
 For patterns like `g.Go(fn)` where `fn` is a variable:
 
 ```go
-func FindFuncLitAssignment(pass *analysis.Pass, ident *ast.Ident) *ast.FuncLit
+func (c *CheckContext) FuncLitAssignedTo(v *types.Var, beforePos token.Pos) *ast.FuncLit
 ```
 
 Traces variable assignments to find the original function literal.
@@ -263,7 +263,7 @@ When `-goroutine-deriver` is set, goroutines must call the specified function(s)
 
 ### analysistest
 
-All checker tests use `golang.org/x/tools/go/analysis/analysistest`:
+All checker tests use [`analysistest`](https://pkg.go.dev/golang.org/x/tools/go/analysis/analysistest):
 
 ```go
 func TestGoroutine(t *testing.T) {

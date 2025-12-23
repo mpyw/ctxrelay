@@ -4,13 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**goroutinectx** is a Go linter that enforces context propagation best practices in goroutines. It detects cases where a `context.Context` is available in function parameters but not properly passed to goroutines and related APIs.
+**goroutinectx** is a Go linter that enforces context propagation best practices in goroutines. It detects cases where a [`context.Context`](https://pkg.go.dev/context#Context) is available in function parameters but not properly passed to goroutines and related APIs.
 
 ### Supported Checkers
 
 - **goroutine**: Detect `go func()` that doesn't capture/use context
-- **errgroup**: Detect `errgroup.Group.Go()` closures without context
-- **waitgroup**: Detect `sync.WaitGroup.Go()` closures without context (Go 1.25+)
+- **errgroup**: Detect [`errgroup.Group.Go()`](https://pkg.go.dev/golang.org/x/sync/errgroup#Group.Go) closures without context
+- **waitgroup**: Detect [`sync.WaitGroup.Go()`](https://pkg.go.dev/sync#WaitGroup.Go) closures without context (Go 1.25+)
+- **conc**: Detect [conc](https://pkg.go.dev/github.com/sourcegraph/conc) pool closures without context
 - **spawner**: Detect calls to spawner functions that pass closures without context
   - Directive: `//goroutinectx:spawner` marks local functions
   - Flag: `-external-spawner=pkg/path.Func` or `-external-spawner=pkg/path.Type.Method` for external functions
@@ -19,9 +20,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - OR (comma): `-goroutine-deriver=pkg1.Func1,pkg2.Func2` - at least one must be called
   - AND (plus): `-goroutine-deriver=pkg1.Func1+pkg2.Func2` - all must be called
   - Mixed: `-goroutine-deriver=pkg1.Func1+pkg2.Func2,pkg3.Func3` - (Func1 AND Func2) OR Func3
-- **gotask**: Detect `github.com/siketyan/gotask` task functions without context derivation (requires `-goroutine-deriver`)
+- **gotask**: Detect [gotask](https://pkg.go.dev/github.com/siketyan/gotask/v2) task functions without context derivation (requires `-goroutine-deriver`)
   - `Do*` functions: checks that task arguments call the deriver
-  - `Task.DoAsync` / `CancelableTask.DoAsync`: checks that ctx argument is derived
+  - [`Task.DoAsync`](https://pkg.go.dev/github.com/siketyan/gotask/v2#Task.DoAsync) / [`CancelableTask.DoAsync`](https://pkg.go.dev/github.com/siketyan/gotask/v2#CancelableTask.DoAsync): checks that ctx argument is derived
 
 ### Directives
 
@@ -74,8 +75,8 @@ goroutinectx/
 
 ### Key Design Decisions
 
-1. **Type-safe analysis**: Uses `go/types` for accurate detection (not just name-based)
-2. **Nested function support**: Uses `inspector.WithStack` to track context through closures
+1. **Type-safe analysis**: Uses [`go/types`](https://pkg.go.dev/go/types) for accurate detection (not just name-based)
+2. **Nested function support**: Uses [`inspector.WithStack`](https://pkg.go.dev/golang.org/x/tools/go/ast/inspector#Inspector.WithStack) to track context through closures
 3. **Shadowing support**: `UsesContext` uses type identity, not name matching
 4. **Interface segregation**: `CallChecker` and `GoStmtChecker` interfaces (no BaseChecker)
 5. **Minimal exports**: Only necessary types/functions are exported from `checkers` package
@@ -163,7 +164,7 @@ func (m *DeriveMatcher) SatisfiesAnyGroup(pass *analysis.Pass, node ast.Node) bo
 
 ### gotask Checker
 
-The gotask checker handles `github.com/siketyan/gotask` library:
+The gotask checker handles the [gotask](https://pkg.go.dev/github.com/siketyan/gotask/v2) library:
 
 | Target | Check |
 |--------|-------|
@@ -246,8 +247,8 @@ func (c *Checker) CheckGoStmt(cctx *context.CheckContext, stmt *ast.GoStmt) {
 ## Code Style
 
 - Follow standard Go conventions
-- Use `go/analysis` framework
-- Prefer `inspector.WithStack` over `ast.Inspect` for traversal
+- Use [`go/analysis`](https://pkg.go.dev/golang.org/x/tools/go/analysis) framework
+- Prefer [`inspector.WithStack`](https://pkg.go.dev/golang.org/x/tools/go/ast/inspector#Inspector.WithStack) over [`ast.Inspect`](https://pkg.go.dev/go/ast#Inspect) for traversal
 - Type utilities go in `internal/typeutil/` (unexported)
 - Checker types are unexported; only interface and registry are public
 - Prefix file-specific variables with checker name (e.g., `errgroupGoMethod`)
@@ -437,7 +438,7 @@ When improving code quality, follow this iterative cycle:
 
    **Keep as function** when:
    - There are 2+ arguments and it's unclear which is the "subject"
-   - Example: `FindFuncLitAssignment(cctx, v)` - finding for `v` using `cctx` (ambiguous subject)
+   - Example: `closureFindFieldInAssignment(cctx, assign, v, fieldName)` - multiple subjects makes method conversion unclear
 
 ### Phase 4: Newbie - Naive Questions
 Become a complete beginner who has never seen the code. Ask genuinely confused questions:
@@ -504,4 +505,4 @@ When search scope is large, prioritize reliability over speed by executing searc
 - [zerologlintctx](https://github.com/mpyw/zerologlintctx) - Zerolog context propagation linter
 - [ctxweaver](https://github.com/mpyw/ctxweaver) - Code generator for context-aware instrumentation
 - [gormreuse](https://github.com/mpyw/gormreuse) - GORM instance reuse linter
-- [contextcheck](https://github.com/kkHAIKE/contextcheck) - Detects [`context.Background()`](https://pkg.go.dev/context#Background)/[`context.TODO()`](https://pkg.go.dev/context#TODO) misuse
+- [contextcheck](https://github.com/kkHAIKE/contextcheck) - Detects [`context.Background`](https://pkg.go.dev/context#Background)/[`context.TODO`](https://pkg.go.dev/context#TODO) misuse
