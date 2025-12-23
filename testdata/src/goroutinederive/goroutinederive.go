@@ -248,3 +248,44 @@ func notCheckedIIFEFactoryReturnsCtxParam(ctx context.Context) {
 		}
 	})()(ctx)
 }
+
+// ===== VARIABLE FACTORY PATTERNS =====
+
+// [NOTCHECKED]: Variable factory has own context param
+//
+// Factory variable has its own context parameter, so not checked.
+func notCheckedVariableFactoryOwnCtxParam(ctx context.Context) {
+	factory := func(ctx context.Context) func() {
+		return func() {
+			_ = ctx
+		}
+	}
+	go factory(ctx)()
+}
+
+// [GOOD]: Factory returns nested func with own ctx param
+//
+// Factory returns a nested func that has its own context parameter.
+func goodFactoryNestedFuncWithCtxParam(ctx context.Context) {
+	go (func() func(context.Context) {
+		return func(ctx context.Context) {
+			_ = ctx
+		}
+	})()
+}
+
+// [GOOD]: Factory returns variable with ctx param
+//
+// Factory returns a variable pointing to a func with its own ctx param.
+func goodFactoryReturnsVariableWithCtxParam(ctx context.Context) {
+	factory := func() func() {
+		worker := func(ctx context.Context) {
+			_ = ctx
+		}
+		// Return wrapper that calls worker
+		return func() {
+			worker(ctx)
+		}
+	}
+	go factory()()
+}

@@ -400,3 +400,25 @@ func goodShadowingInnerCtxParam(outerCtx context.Context) {
 		_ = ctx.Done() // uses inner ctx - OK
 	}(outerCtx)
 }
+
+// ===== INDEX EXPRESSION PATTERNS =====
+
+// [GOOD]: Index expression captures ctx
+//
+// Function in slice captures context.
+func goodIndexExprCapturesCtx(ctx context.Context) {
+	handlers := []func(){
+		func() { _ = ctx },
+	}
+	go handlers[0]()
+}
+
+// [BAD]: Index expression captures ctx
+//
+// Function in slice does not capture context.
+func badIndexExprMissingCtx(ctx context.Context) {
+	handlers := []func(){
+		func() { fmt.Println("no ctx") },
+	}
+	go handlers[0]() // want `goroutine does not propagate context "ctx"`
+}
