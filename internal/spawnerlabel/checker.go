@@ -190,14 +190,14 @@ func (c *Checker) checkCallForSpawn(call *ssa.CallCommon, visited map[*ssa.Funct
 	}
 
 	// Check against registry
-	if entry := c.registry.MatchFunc(calledFn); entry != nil {
+	if api := c.registry.MatchFunc(calledFn); api != nil {
 		// For spawnerlabel, we need func arguments
-		if hasFuncArgsInCall(call, entry.API.CallbackArgIdx) {
-			return &spawnCallInfo{methodName: entry.API.FullName()}
+		if hasFuncArgsInCall(call, api.CallbackArgIdx) {
+			return &spawnCallInfo{methodName: api.FullName()}
 		}
-		// Method with TaskArgConfig always spawns
-		if entry.API.Kind == registry.KindMethod && entry.API.TaskArgConfig != nil {
-			return &spawnCallInfo{methodName: entry.API.FullName()}
+		// Method with TaskConstructor always spawns
+		if api.Kind == registry.KindMethod && api.TaskConstructor != nil {
+			return &spawnCallInfo{methodName: api.FullName()}
 		}
 	}
 

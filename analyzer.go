@@ -149,7 +149,7 @@ func buildRegistry() *registry.Registry {
 
 	// Build closure patterns for errgroup/waitgroup/conc APIs
 	// Always check ctx capture; optionally check deriver call
-	closurePatterns := []patterns.Pattern{&patterns.ClosureCapturesCtx{}}
+	closurePatterns := []patterns.CallArgPattern{&patterns.ClosureCapturesCtx{}}
 	// TODO: Add ClosureCallsDeriver when -goroutine-deriver is set
 	// if goroutineDeriver != "" {
 	//     matcher := deriver.NewMatcher(goroutineDeriver)
@@ -162,12 +162,12 @@ func buildRegistry() *registry.Registry {
 	// Build gotask patterns
 	// - With patterns: enables unified checker to verify context propagation
 	// - Without patterns (empty): enables spawnerlabel detection only
-	var deriverPatterns []patterns.Pattern
-	var doAsyncPatterns []patterns.Pattern
+	var deriverPatterns []patterns.CallArgPattern
+	var doAsyncPatterns []patterns.TaskSourcePattern
 	if goroutineDeriver != "" && enableGotask {
 		matcher := deriver.NewMatcher(goroutineDeriver)
-		deriverPatterns = []patterns.Pattern{&patterns.CallbackCallsDeriver{Matcher: matcher}}
-		doAsyncPatterns = []patterns.Pattern{&patterns.CallbackCallsDeriverOrCtxDerived{Matcher: matcher}}
+		deriverPatterns = []patterns.CallArgPattern{&patterns.CallbackCallsDeriver{Matcher: matcher}}
+		doAsyncPatterns = []patterns.TaskSourcePattern{&patterns.CallbackCallsDeriverOrCtxDerived{Matcher: matcher}}
 	}
 	internal.RegisterGotaskAPIs(reg, deriverPatterns, doAsyncPatterns)
 

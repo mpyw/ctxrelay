@@ -112,7 +112,7 @@ func (c *Runner) checkGoStmt(cctx *context.CheckContext, stmt *ast.GoStmt, scope
 			continue
 		}
 
-		result := pattern.CheckGoStmt(cctx, stmt)
+		result := pattern.Check(cctx, stmt)
 		if result.OK {
 			continue
 		}
@@ -142,7 +142,16 @@ func (c *Runner) checkCallExpr(cctx *context.CheckContext, call *ast.CallExpr, s
 
 // checkRegistryCall checks a call expression against registered API patterns.
 func (c *Runner) checkRegistryCall(cctx *context.CheckContext, call *ast.CallExpr, scope *contextScope) {
-	entry, callbackArg := c.registry.Match(cctx.Pass, call)
+	// Try CallArgPattern match first
+	c.checkCallArgPattern(cctx, call, scope)
+
+	// Try TaskSourcePattern match
+	c.checkTaskSourcePattern(cctx, call, scope)
+}
+
+// checkCallArgPattern checks a call against registered CallArg APIs.
+func (c *Runner) checkCallArgPattern(cctx *context.CheckContext, call *ast.CallExpr, scope *contextScope) {
+	entry, callbackArg := c.registry.MatchCallArg(cctx.Pass, call)
 	if entry == nil {
 		return
 	}
@@ -158,15 +167,6 @@ func (c *Runner) checkRegistryCall(cctx *context.CheckContext, call *ast.CallExp
 		return
 	}
 
-	// Build TaskArgument if API has task config
-	var taskArg *patterns.TaskArgument
-	if entry.API.TaskArgConfig != nil {
-		taskArg = &patterns.TaskArgument{
-			Call:   call,
-			Config: entry.API.TaskArgConfig,
-		}
-	}
-
 	// Check each pattern - all must be satisfied
 	for _, pattern := range entry.Patterns {
 		checkerName := c.getCheckerName(pattern.Name())
@@ -174,9 +174,42 @@ func (c *Runner) checkRegistryCall(cctx *context.CheckContext, call *ast.CallExp
 			continue
 		}
 
-		if !pattern.Check(cctx, callbackArg, taskArg) {
+		if !pattern.Check(cctx, callbackArg, entry.API.TaskConstructor) {
 			msg := pattern.Message(entry.API.FullName(), scope.ctxName())
 			// Report at method selector position for chained calls
+			reportPos := getCallReportPos(call)
+			cctx.Pass.Reportf(reportPos, "%s", msg)
+		}
+	}
+}
+
+// checkTaskSourcePattern checks a call against registered TaskSource APIs.
+func (c *Runner) checkTaskSourcePattern(cctx *context.CheckContext, call *ast.CallExpr, scope *contextScope) {
+	entry := c.registry.MatchTaskSource(cctx.Pass, call)
+	if entry == nil {
+		return
+	}
+
+	// Skip if no patterns
+	if len(entry.Patterns) == 0 {
+		return
+	}
+
+	// Build TaskCheckContext
+	tcctx := &patterns.TaskCheckContext{
+		CheckContext: cctx,
+		Constructor:  entry.API.TaskConstructor,
+	}
+
+	// Check each pattern
+	for _, pattern := range entry.Patterns {
+		checkerName := c.getCheckerName(pattern.Name())
+		if c.shouldIgnore(cctx.Pass, call.Pos(), checkerName) {
+			continue
+		}
+
+		if !pattern.Check(tcctx, call) {
+			msg := pattern.Message(entry.API.FullName(), scope.ctxName())
 			reportPos := getCallReportPos(call)
 			cctx.Pass.Reportf(reportPos, "%s", msg)
 		}
@@ -223,7 +256,7 @@ func getCallReportPos(call *ast.CallExpr) token.Pos {
 func (c *Runner) checkVariadicCallExpr(
 	cctx *context.CheckContext,
 	call *ast.CallExpr,
-	entry *registry.Entry,
+	entry *registry.CallArgEntry,
 	scope *contextScope,
 ) {
 	startIdx := entry.API.CallbackArgIdx
@@ -234,15 +267,6 @@ func (c *Runner) checkVariadicCallExpr(
 	// Check if this is a variadic expansion (e.g., DoAllFns(ctx, slice...))
 	isVariadicExpansion := call.Ellipsis.IsValid()
 
-	// Build TaskArgument if API has task config
-	var taskArg *patterns.TaskArgument
-	if entry.API.TaskArgConfig != nil {
-		taskArg = &patterns.TaskArgument{
-			Call:   call,
-			Config: entry.API.TaskArgConfig,
-		}
-	}
-
 	for i := startIdx; i < len(call.Args); i++ {
 		arg := call.Args[i]
 		// Check each pattern for this argument
@@ -252,7 +276,7 @@ func (c *Runner) checkVariadicCallExpr(
 				continue
 			}
 
-			if !pattern.Check(cctx, arg, taskArg) {
+			if !pattern.Check(cctx, arg, entry.API.TaskConstructor) {
 				var msg string
 				if isVariadicExpansion {
 					// For variadic expansion, we can't determine the position

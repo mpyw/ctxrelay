@@ -38,12 +38,11 @@ type API struct {
 	// Used for APIs like DoAllFns(ctx, fn1, fn2, ...) where multiple callbacks are passed.
 	Variadic bool
 
-	// TaskArgConfig defines how to locate and trace a task argument.
-	// If set, we trace the task to its constructor to find the callback body.
-	//
-	// Example: For task.DoAsync(ctx), TaskArgConfig.Idx is TaskReceiverIdx (-1),
-	// meaning the task comes from the receiver. We trace task -> NewTask(fn) -> fn.
-	TaskArgConfig *patterns.TaskArgumentConfig
+	// TaskConstructor defines how to trace a task back to its callback.
+	// Used by:
+	// - CallArgPattern: to trace task args (DoAll) back to NewTask
+	// - TaskSourcePattern: to trace task receiver (DoAsync) back to NewTask
+	TaskConstructor *patterns.TaskConstructorConfig
 }
 
 // FullName returns a human-readable name for the API.

@@ -10,15 +10,24 @@ import (
 	"github.com/mpyw/goroutinectx/internal/typeutil"
 )
 
-// Entry represents a registered API with its patterns.
-type Entry struct {
+// CallArgEntry represents a registered API with CallArgPatterns.
+// Used for: errgroup.Go, DoAllFns, DoAll (callback in call arguments).
+type CallArgEntry struct {
 	API      API
-	Patterns []patterns.Pattern
+	Patterns []patterns.CallArgPattern
+}
+
+// TaskSourceEntry represents a registered API with TaskSourcePatterns.
+// Used for: task.DoAsync (callback in constructor, task is receiver).
+type TaskSourceEntry struct {
+	API      API
+	Patterns []patterns.TaskSourcePattern
 }
 
 // Registry holds registered APIs and their patterns.
 type Registry struct {
-	entries []Entry
+	callArgEntries    []CallArgEntry
+	taskSourceEntries []TaskSourceEntry
 }
 
 // New creates a new empty registry.
@@ -26,30 +35,54 @@ func New() *Registry {
 	return &Registry{}
 }
 
-// Register adds an API with its patterns to the registry.
-// All patterns must be satisfied for the check to pass.
-func (r *Registry) Register(api API, patterns ...patterns.Pattern) {
-	r.entries = append(r.entries, Entry{
+// RegisterCallArg adds an API with CallArgPatterns to the registry.
+func (r *Registry) RegisterCallArg(api API, patterns ...patterns.CallArgPattern) {
+	r.callArgEntries = append(r.callArgEntries, CallArgEntry{
 		API:      api,
 		Patterns: patterns,
 	})
 }
 
-// Entries returns all registered entries.
-func (r *Registry) Entries() []Entry {
-	return r.entries
+// RegisterTaskSource adds an API with TaskSourcePatterns to the registry.
+func (r *Registry) RegisterTaskSource(api API, patterns ...patterns.TaskSourcePattern) {
+	r.taskSourceEntries = append(r.taskSourceEntries, TaskSourceEntry{
+		API:      api,
+		Patterns: patterns,
+	})
 }
 
-// Match attempts to match a call expression against registered APIs.
+// CallArgEntries returns all registered CallArgEntries.
+func (r *Registry) CallArgEntries() []CallArgEntry {
+	return r.callArgEntries
+}
+
+// TaskSourceEntries returns all registered TaskSourceEntries.
+func (r *Registry) TaskSourceEntries() []TaskSourceEntry {
+	return r.taskSourceEntries
+}
+
+// MatchCallArg attempts to match a call expression against registered CallArg APIs.
 // Returns the matched entry and callback argument, or nil if no match.
-func (r *Registry) Match(pass *analysis.Pass, call *ast.CallExpr) (*Entry, ast.Expr) {
-	for i := range r.entries {
-		entry := &r.entries[i]
+func (r *Registry) MatchCallArg(pass *analysis.Pass, call *ast.CallExpr) (*CallArgEntry, ast.Expr) {
+	for i := range r.callArgEntries {
+		entry := &r.callArgEntries[i]
 		if callbackArg := r.matchAPI(pass, call, entry.API); callbackArg != nil {
 			return entry, callbackArg
 		}
 	}
 	return nil, nil
+}
+
+// MatchTaskSource attempts to match a call expression against registered TaskSource APIs.
+// Returns the matched entry, or nil if no match.
+func (r *Registry) MatchTaskSource(pass *analysis.Pass, call *ast.CallExpr) *TaskSourceEntry {
+	for i := range r.taskSourceEntries {
+		entry := &r.taskSourceEntries[i]
+		if r.matchAPI(pass, call, entry.API) != nil {
+			return entry
+		}
+	}
+	return nil
 }
 
 // matchAPI checks if a call matches the given API.
@@ -148,13 +181,19 @@ func (r *Registry) getCallbackArg(call *ast.CallExpr, api API) ast.Expr {
 }
 
 // MatchFunc attempts to match a types.Func against registered APIs.
-// Returns the matched entry or nil if no match.
+// Returns the matched API or nil if no match.
 // This is used for SSA-based analysis where we have types.Func instead of ast.CallExpr.
-func (r *Registry) MatchFunc(fn *types.Func) *Entry {
-	for i := range r.entries {
-		entry := &r.entries[i]
+func (r *Registry) MatchFunc(fn *types.Func) *API {
+	for i := range r.callArgEntries {
+		entry := &r.callArgEntries[i]
 		if matchFuncToAPI(fn, entry.API) {
-			return entry
+			return &entry.API
+		}
+	}
+	for i := range r.taskSourceEntries {
+		entry := &r.taskSourceEntries[i]
+		if matchFuncToAPI(fn, entry.API) {
+			return &entry.API
 		}
 	}
 	return nil

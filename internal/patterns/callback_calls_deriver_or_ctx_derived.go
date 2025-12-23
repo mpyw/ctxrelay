@@ -11,11 +11,7 @@ import (
 // - The ctx argument IS a deriver call (ctx is derived), OR
 // - The receiver's callback (passed to a task constructor like NewTask) calls the deriver
 //
-// This pattern is a superset of CallbackCallsDeriver:
-// - CallbackCallsDeriver: callback MUST call deriver (no alternative)
-// - CallbackCallsDeriverOrCtxDerived: callback calls deriver OR ctx is derived
-//
-// Use this when the library allows flexibility in where the deriver is called.
+// This is a TaskSourcePattern - the task is always the method receiver.
 //
 // Example (ctx is derived):
 //
@@ -43,22 +39,23 @@ func (*CallbackCallsDeriverOrCtxDerived) Name() string {
 	return "CallbackCallsDeriverOrCtxDerived"
 }
 
-func (p *CallbackCallsDeriverOrCtxDerived) Check(cctx *context.CheckContext, callbackArg ast.Expr, taskArg *TaskArgument) bool {
+func (p *CallbackCallsDeriverOrCtxDerived) Check(tcctx *TaskCheckContext, call *ast.CallExpr) bool {
 	if p.Matcher == nil || p.Matcher.IsEmpty() {
 		return true // No deriver configured
 	}
 
-	// Check 1: Is the ctx argument a deriver call?
-	if p.argIsDeriverCall(cctx, callbackArg) {
-		return true
+	// Check 1: Is the ctx argument (first arg) a deriver call?
+	if len(call.Args) > 0 {
+		if p.argIsDeriverCall(tcctx.CheckContext, call.Args[0]) {
+			return true
+		}
 	}
 
 	// Check 2: Does the task's callback call the deriver?
-	// This requires taskArg to trace back to the constructor
-	if taskArg == nil || taskArg.Config == nil || taskArg.Config.Constructor == nil {
+	if tcctx.Constructor == nil {
 		return false // No constructor info, can't trace
 	}
-	return p.taskCallbackCallsDeriver(cctx, taskArg)
+	return p.taskCallbackCallsDeriver(tcctx, call)
 }
 
 // argIsDeriverCall checks if the argument expression IS a call to the deriver.
@@ -94,37 +91,28 @@ func (p *CallbackCallsDeriverOrCtxDerived) identIsDeriverCall(cctx *context.Chec
 }
 
 // taskCallbackCallsDeriver checks if the task's callback (from constructor) calls the deriver.
-func (p *CallbackCallsDeriverOrCtxDerived) taskCallbackCallsDeriver(cctx *context.CheckContext, taskArg *TaskArgument) bool {
-	call := taskArg.Call
-	cfg := taskArg.Config
-
-	// Get the task expression based on cfg.Idx
-	var taskExpr ast.Expr
-	if cfg.Idx == TaskReceiverIdx {
-		// Task is the method receiver (e.g., task.DoAsync)
-		taskExpr = getMethodReceiver(call)
-	} else if cfg.Idx >= 0 && cfg.Idx < len(call.Args) {
-		// Task is an argument
-		taskExpr = call.Args[cfg.Idx]
-	}
+// Task is always the method receiver.
+func (p *CallbackCallsDeriverOrCtxDerived) taskCallbackCallsDeriver(tcctx *TaskCheckContext, call *ast.CallExpr) bool {
+	// Task is always the method receiver (e.g., task.DoAsync)
+	taskExpr := getMethodReceiver(call)
 	if taskExpr == nil {
 		return false
 	}
 
 	// Find the constructor call that created this task
-	constructorCall := p.findConstructorCall(cctx, taskExpr, cfg.Constructor)
+	constructorCall := p.findConstructorCall(tcctx.CheckContext, taskExpr, tcctx.Constructor)
 	if constructorCall == nil {
 		return false
 	}
 
 	// Check if constructor's callback argument calls the deriver
-	argIdx := cfg.Constructor.CallbackArgIdx
+	argIdx := tcctx.Constructor.CallbackArgIdx
 	if argIdx < 0 || argIdx >= len(constructorCall.Args) {
 		return false
 	}
 
 	callbackArg := constructorCall.Args[argIdx]
-	return p.callbackCallsDeriver(cctx, callbackArg)
+	return p.callbackCallsDeriver(tcctx.CheckContext, callbackArg)
 }
 
 // getMethodReceiver extracts the receiver from a method call.

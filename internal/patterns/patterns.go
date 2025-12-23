@@ -8,11 +8,6 @@ import (
 	"github.com/mpyw/goroutinectx/internal/context"
 )
 
-// TaskReceiverIdx is a special index value indicating the receiver of a method call.
-// Used in TaskConstructor or API definitions when the task/callback comes from
-// the method receiver (e.g., task.DoAsync() where task is the receiver).
-const TaskReceiverIdx = -1
-
 // TaskConstructorConfig defines how tasks are created for task-based APIs.
 // Used to trace back from executor APIs (e.g., DoAsync) to find the actual callback.
 //
@@ -33,28 +28,6 @@ type TaskConstructorConfig struct {
 	CallbackArgIdx int
 }
 
-// TaskArgumentConfig is static configuration from API definition.
-// Describes how to locate and trace back a task to its callback.
-type TaskArgumentConfig struct {
-	// Constructor defines how the task is constructed (e.g., NewTask).
-	Constructor *TaskConstructorConfig
-
-	// Idx is the argument index where the task is located.
-	//   - TaskReceiverIdx (-1): task is the method receiver
-	//   - 0+: task is at that argument index
-	Idx int
-}
-
-// TaskArgument combines dynamic call info with static config.
-// Used by task-based APIs (e.g., gotask) to trace back to the callback.
-type TaskArgument struct {
-	// Call is the current call expression (dynamic, per-invocation).
-	Call *ast.CallExpr
-
-	// Config is the static API configuration.
-	Config *TaskArgumentConfig
-}
-
 // FullName returns a human-readable name for the task constructor.
 func (c TaskConstructorConfig) FullName() string {
 	pkgName := shortPkgName(c.Pkg)
@@ -72,15 +45,39 @@ func shortPkgName(pkgPath string) string {
 	return pkgPath
 }
 
-// Pattern defines the interface for context propagation patterns.
-type Pattern interface {
+// TaskCheckContext provides context for task-source pattern checks.
+// Embeds CheckContext and adds task constructor configuration.
+type TaskCheckContext struct {
+	*context.CheckContext
+	// Constructor defines how to trace back to the task's callback (e.g., NewTask).
+	Constructor *TaskConstructorConfig
+}
+
+// CallArgPattern checks callback arguments passed directly to APIs.
+// Used for: errgroup.Go(fn), DoAllFns(ctx, fn1, fn2, ...), DoAll(ctx, task1, task2, ...)
+type CallArgPattern interface {
 	// Name returns a human-readable name for the pattern.
 	Name() string
 
-	// Check checks if the pattern is satisfied for the given call.
-	// Returns true if the pattern is satisfied (no error).
-	// taskArg may be nil if the API doesn't use task-based patterns (e.g., errgroup, conc).
-	Check(cctx *context.CheckContext, callbackArg ast.Expr, taskArg *TaskArgument) bool
+	// Check checks if the callback argument satisfies the pattern.
+	// constructor is optional - nil for direct fn args (errgroup.Go, DoAllFns),
+	// non-nil for task args that need tracing (DoAll).
+	Check(cctx *context.CheckContext, arg ast.Expr, constructor *TaskConstructorConfig) bool
+
+	// Message returns the diagnostic message when the pattern is violated.
+	Message(apiName string, ctxName string) string
+}
+
+// TaskSourcePattern checks APIs where the callback is in a task constructor.
+// Used for: task.DoAsync(ctx) where task = NewTask(fn)
+// The pattern traces the receiver back to the constructor to find the callback.
+type TaskSourcePattern interface {
+	// Name returns a human-readable name for the pattern.
+	Name() string
+
+	// Check checks if the task's callback (from constructor) satisfies the pattern.
+	// The task is always the method receiver.
+	Check(tcctx *TaskCheckContext, call *ast.CallExpr) bool
 
 	// Message returns the diagnostic message when the pattern is violated.
 	Message(apiName string, ctxName string) string
@@ -100,8 +97,8 @@ type GoStmtPattern interface {
 	// Name returns a human-readable name for the pattern.
 	Name() string
 
-	// CheckGoStmt checks if the pattern is satisfied for the given go statement.
-	CheckGoStmt(cctx *context.CheckContext, stmt *ast.GoStmt) GoStmtResult
+	// Check checks if the pattern is satisfied for the given go statement.
+	Check(cctx *context.CheckContext, stmt *ast.GoStmt) GoStmtResult
 
 	// Message returns the diagnostic message when the pattern is violated.
 	Message(ctxName string) string

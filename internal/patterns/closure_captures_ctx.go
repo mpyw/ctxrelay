@@ -16,21 +16,21 @@ func (*ClosureCapturesCtx) Name() string {
 	return "ClosureCapturesCtx"
 }
 
-func (p *ClosureCapturesCtx) Check(cctx *context.CheckContext, callbackArg ast.Expr, _ *TaskArgument) bool {
+func (p *ClosureCapturesCtx) Check(cctx *context.CheckContext, arg ast.Expr, _ *TaskConstructorConfig) bool {
 	// If no context names in scope (from AST), nothing to check
 	if len(cctx.CtxNames) == 0 {
 		return true
 	}
 
 	// Try SSA-based check first (more accurate, includes nested closures)
-	if lit, ok := callbackArg.(*ast.FuncLit); ok {
+	if lit, ok := arg.(*ast.FuncLit); ok {
 		if result, ok := cctx.FuncLitCapturesContextSSA(lit); ok {
 			return result
 		}
 	}
 
 	// Fall back to AST-based check when SSA fails
-	return p.checkFromAST(cctx, callbackArg)
+	return p.checkFromAST(cctx, arg)
 }
 
 func (*ClosureCapturesCtx) Message(apiName string, ctxName string) string {

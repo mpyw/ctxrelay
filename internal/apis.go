@@ -6,10 +6,10 @@ import (
 )
 
 // RegisterDefaultAPIs registers all default APIs with the registry.
-func RegisterDefaultAPIs(reg *registry.Registry, enableErrgroup, enableWaitgroup, enableConc bool, closurePatterns []patterns.Pattern) {
+func RegisterDefaultAPIs(reg *registry.Registry, enableErrgroup, enableWaitgroup, enableConc bool, closurePatterns []patterns.CallArgPattern) {
 	// errgroup.Group.Go, TryGo - closure should capture ctx
 	if enableErrgroup {
-		reg.Register(registry.API{
+		reg.RegisterCallArg(registry.API{
 			Pkg:            "golang.org/x/sync/errgroup",
 			Type:           "Group",
 			Name:           "Go",
@@ -17,7 +17,7 @@ func RegisterDefaultAPIs(reg *registry.Registry, enableErrgroup, enableWaitgroup
 			CallbackArgIdx: 0,
 		}, closurePatterns...)
 
-		reg.Register(registry.API{
+		reg.RegisterCallArg(registry.API{
 			Pkg:            "golang.org/x/sync/errgroup",
 			Type:           "Group",
 			Name:           "TryGo",
@@ -28,7 +28,7 @@ func RegisterDefaultAPIs(reg *registry.Registry, enableErrgroup, enableWaitgroup
 
 	// sync.WaitGroup.Go (Go 1.25+) - closure should capture ctx
 	if enableWaitgroup {
-		reg.Register(registry.API{
+		reg.RegisterCallArg(registry.API{
 			Pkg:            "sync",
 			Type:           "WaitGroup",
 			Name:           "Go",
@@ -43,7 +43,7 @@ func RegisterDefaultAPIs(reg *registry.Registry, enableErrgroup, enableWaitgroup
 	}
 
 	// conc.Pool.Go
-	reg.Register(registry.API{
+	reg.RegisterCallArg(registry.API{
 		Pkg:            "github.com/sourcegraph/conc",
 		Type:           "Pool",
 		Name:           "Go",
@@ -52,7 +52,7 @@ func RegisterDefaultAPIs(reg *registry.Registry, enableErrgroup, enableWaitgroup
 	}, closurePatterns...)
 
 	// conc.WaitGroup.Go
-	reg.Register(registry.API{
+	reg.RegisterCallArg(registry.API{
 		Pkg:            "github.com/sourcegraph/conc",
 		Type:           "WaitGroup",
 		Name:           "Go",
@@ -61,7 +61,7 @@ func RegisterDefaultAPIs(reg *registry.Registry, enableErrgroup, enableWaitgroup
 	}, closurePatterns...)
 
 	// pool.Pool.Go
-	reg.Register(registry.API{
+	reg.RegisterCallArg(registry.API{
 		Pkg:            "github.com/sourcegraph/conc/pool",
 		Type:           "Pool",
 		Name:           "Go",
@@ -70,7 +70,7 @@ func RegisterDefaultAPIs(reg *registry.Registry, enableErrgroup, enableWaitgroup
 	}, closurePatterns...)
 
 	// pool.ResultPool[T].Go
-	reg.Register(registry.API{
+	reg.RegisterCallArg(registry.API{
 		Pkg:            "github.com/sourcegraph/conc/pool",
 		Type:           "ResultPool",
 		Name:           "Go",
@@ -79,7 +79,7 @@ func RegisterDefaultAPIs(reg *registry.Registry, enableErrgroup, enableWaitgroup
 	}, closurePatterns...)
 
 	// pool.ContextPool.Go
-	reg.Register(registry.API{
+	reg.RegisterCallArg(registry.API{
 		Pkg:            "github.com/sourcegraph/conc/pool",
 		Type:           "ContextPool",
 		Name:           "Go",
@@ -88,7 +88,7 @@ func RegisterDefaultAPIs(reg *registry.Registry, enableErrgroup, enableWaitgroup
 	}, closurePatterns...)
 
 	// pool.ResultContextPool[T].Go
-	reg.Register(registry.API{
+	reg.RegisterCallArg(registry.API{
 		Pkg:            "github.com/sourcegraph/conc/pool",
 		Type:           "ResultContextPool",
 		Name:           "Go",
@@ -97,7 +97,7 @@ func RegisterDefaultAPIs(reg *registry.Registry, enableErrgroup, enableWaitgroup
 	}, closurePatterns...)
 
 	// pool.ErrorPool.Go
-	reg.Register(registry.API{
+	reg.RegisterCallArg(registry.API{
 		Pkg:            "github.com/sourcegraph/conc/pool",
 		Type:           "ErrorPool",
 		Name:           "Go",
@@ -106,7 +106,7 @@ func RegisterDefaultAPIs(reg *registry.Registry, enableErrgroup, enableWaitgroup
 	}, closurePatterns...)
 
 	// pool.ResultErrorPool[T].Go
-	reg.Register(registry.API{
+	reg.RegisterCallArg(registry.API{
 		Pkg:            "github.com/sourcegraph/conc/pool",
 		Type:           "ResultErrorPool",
 		Name:           "Go",
@@ -115,7 +115,7 @@ func RegisterDefaultAPIs(reg *registry.Registry, enableErrgroup, enableWaitgroup
 	}, closurePatterns...)
 
 	// stream.Stream.Go
-	reg.Register(registry.API{
+	reg.RegisterCallArg(registry.API{
 		Pkg:            "github.com/sourcegraph/conc/stream",
 		Type:           "Stream",
 		Name:           "Go",
@@ -124,7 +124,7 @@ func RegisterDefaultAPIs(reg *registry.Registry, enableErrgroup, enableWaitgroup
 	}, closurePatterns...)
 
 	// iter.ForEach
-	reg.Register(registry.API{
+	reg.RegisterCallArg(registry.API{
 		Pkg:            "github.com/sourcegraph/conc/iter",
 		Type:           "",
 		Name:           "ForEach",
@@ -133,7 +133,7 @@ func RegisterDefaultAPIs(reg *registry.Registry, enableErrgroup, enableWaitgroup
 	}, closurePatterns...)
 
 	// iter.ForEachIdx
-	reg.Register(registry.API{
+	reg.RegisterCallArg(registry.API{
 		Pkg:            "github.com/sourcegraph/conc/iter",
 		Type:           "",
 		Name:           "ForEachIdx",
@@ -142,7 +142,7 @@ func RegisterDefaultAPIs(reg *registry.Registry, enableErrgroup, enableWaitgroup
 	}, closurePatterns...)
 
 	// iter.Map
-	reg.Register(registry.API{
+	reg.RegisterCallArg(registry.API{
 		Pkg:            "github.com/sourcegraph/conc/iter",
 		Type:           "",
 		Name:           "Map",
@@ -151,7 +151,7 @@ func RegisterDefaultAPIs(reg *registry.Registry, enableErrgroup, enableWaitgroup
 	}, closurePatterns...)
 
 	// iter.MapErr
-	reg.Register(registry.API{
+	reg.RegisterCallArg(registry.API{
 		Pkg:            "github.com/sourcegraph/conc/iter",
 		Type:           "",
 		Name:           "MapErr",
@@ -160,7 +160,7 @@ func RegisterDefaultAPIs(reg *registry.Registry, enableErrgroup, enableWaitgroup
 	}, closurePatterns...)
 
 	// iter.Iterator.ForEach
-	reg.Register(registry.API{
+	reg.RegisterCallArg(registry.API{
 		Pkg:            "github.com/sourcegraph/conc/iter",
 		Type:           "Iterator",
 		Name:           "ForEach",
@@ -169,7 +169,7 @@ func RegisterDefaultAPIs(reg *registry.Registry, enableErrgroup, enableWaitgroup
 	}, closurePatterns...)
 
 	// iter.Iterator.ForEachIdx
-	reg.Register(registry.API{
+	reg.RegisterCallArg(registry.API{
 		Pkg:            "github.com/sourcegraph/conc/iter",
 		Type:           "Iterator",
 		Name:           "ForEachIdx",
@@ -178,7 +178,7 @@ func RegisterDefaultAPIs(reg *registry.Registry, enableErrgroup, enableWaitgroup
 	}, closurePatterns...)
 
 	// iter.Mapper.Map
-	reg.Register(registry.API{
+	reg.RegisterCallArg(registry.API{
 		Pkg:            "github.com/sourcegraph/conc/iter",
 		Type:           "Mapper",
 		Name:           "Map",
@@ -187,7 +187,7 @@ func RegisterDefaultAPIs(reg *registry.Registry, enableErrgroup, enableWaitgroup
 	}, closurePatterns...)
 
 	// iter.Mapper.MapErr
-	reg.Register(registry.API{
+	reg.RegisterCallArg(registry.API{
 		Pkg:            "github.com/sourcegraph/conc/iter",
 		Type:           "Mapper",
 		Name:           "MapErr",
@@ -199,7 +199,7 @@ func RegisterDefaultAPIs(reg *registry.Registry, enableErrgroup, enableWaitgroup
 // RegisterGotaskAPIs registers gotask APIs.
 // If patterns are empty, APIs are registered for detection only (spawnerlabel).
 // If patterns are provided, APIs are registered with pattern checking (unified checker).
-func RegisterGotaskAPIs(reg *registry.Registry, deriverPatterns []patterns.Pattern, doAsyncPatterns []patterns.Pattern) {
+func RegisterGotaskAPIs(reg *registry.Registry, deriverPatterns []patterns.CallArgPattern, doAsyncPatterns []patterns.TaskSourcePattern) {
 	// gotaskConstructor defines how gotask tasks are created.
 	// Used to trace DoAll/DoAsync calls back to NewTask to find the callback.
 	gotaskConstructor := &patterns.TaskConstructorConfig{
@@ -208,54 +208,41 @@ func RegisterGotaskAPIs(reg *registry.Registry, deriverPatterns []patterns.Patte
 		CallbackArgIdx: 0,
 	}
 
-	// taskArgConfig for variadic Task arguments (DoAll, etc.)
-	// Idx is not used for variadic APIs - each argument is checked independently
-	variadicTaskArgConfig := &patterns.TaskArgumentConfig{
-		Constructor: gotaskConstructor,
-		Idx:         0, // Not used for variadic
-	}
-
-	// taskArgConfig for DoAsync (task comes from receiver)
-	doAsyncTaskArgConfig := &patterns.TaskArgumentConfig{
-		Constructor: gotaskConstructor,
-		Idx:         patterns.TaskReceiverIdx,
-	}
-
 	// DoAll, DoAllSettled, DoRace - variadic Task arguments
 	// Each Task arg is traced through NewTask to check the callback body
-	reg.Register(registry.API{
-		Pkg:            "github.com/siketyan/gotask",
-		Type:           "",
-		Name:           "DoAll",
-		Kind:           registry.KindFunc,
-		CallbackArgIdx: 1, // Tasks start at index 1 (after ctx)
-		Variadic:       true,
-		TaskArgConfig:  variadicTaskArgConfig,
+	reg.RegisterCallArg(registry.API{
+		Pkg:             "github.com/siketyan/gotask",
+		Type:            "",
+		Name:            "DoAll",
+		Kind:            registry.KindFunc,
+		CallbackArgIdx:  1, // Tasks start at index 1 (after ctx)
+		Variadic:        true,
+		TaskConstructor: gotaskConstructor,
 	}, deriverPatterns...)
 
-	reg.Register(registry.API{
-		Pkg:            "github.com/siketyan/gotask",
-		Type:           "",
-		Name:           "DoAllSettled",
-		Kind:           registry.KindFunc,
-		CallbackArgIdx: 1,
-		Variadic:       true,
-		TaskArgConfig:  variadicTaskArgConfig,
+	reg.RegisterCallArg(registry.API{
+		Pkg:             "github.com/siketyan/gotask",
+		Type:            "",
+		Name:            "DoAllSettled",
+		Kind:            registry.KindFunc,
+		CallbackArgIdx:  1,
+		Variadic:        true,
+		TaskConstructor: gotaskConstructor,
 	}, deriverPatterns...)
 
-	reg.Register(registry.API{
-		Pkg:            "github.com/siketyan/gotask",
-		Type:           "",
-		Name:           "DoRace",
-		Kind:           registry.KindFunc,
-		CallbackArgIdx: 1,
-		Variadic:       true,
-		TaskArgConfig:  variadicTaskArgConfig,
+	reg.RegisterCallArg(registry.API{
+		Pkg:             "github.com/siketyan/gotask",
+		Type:            "",
+		Name:            "DoRace",
+		Kind:            registry.KindFunc,
+		CallbackArgIdx:  1,
+		Variadic:        true,
+		TaskConstructor: gotaskConstructor,
 	}, deriverPatterns...)
 
 	// DoAllFns, DoAllFnsSettled, DoRaceFns - variadic functions
 	// Each fn argument should call deriver in its body (no task constructor needed)
-	reg.Register(registry.API{
+	reg.RegisterCallArg(registry.API{
 		Pkg:            "github.com/siketyan/gotask",
 		Type:           "",
 		Name:           "DoAllFns",
@@ -264,7 +251,7 @@ func RegisterGotaskAPIs(reg *registry.Registry, deriverPatterns []patterns.Patte
 		Variadic:       true,
 	}, deriverPatterns...)
 
-	reg.Register(registry.API{
+	reg.RegisterCallArg(registry.API{
 		Pkg:            "github.com/siketyan/gotask",
 		Type:           "",
 		Name:           "DoAllFnsSettled",
@@ -273,7 +260,7 @@ func RegisterGotaskAPIs(reg *registry.Registry, deriverPatterns []patterns.Patte
 		Variadic:       true,
 	}, deriverPatterns...)
 
-	reg.Register(registry.API{
+	reg.RegisterCallArg(registry.API{
 		Pkg:            "github.com/siketyan/gotask",
 		Type:           "",
 		Name:           "DoRaceFns",
@@ -284,21 +271,21 @@ func RegisterGotaskAPIs(reg *registry.Registry, deriverPatterns []patterns.Patte
 
 	// Task.DoAsync, CancelableTask.DoAsync - ctx arg should BE a deriver call
 	// OR the task's callback (from NewTask) should call deriver
-	reg.Register(registry.API{
-		Pkg:            "github.com/siketyan/gotask",
-		Type:           "Task",
-		Name:           "DoAsync",
-		Kind:           registry.KindMethod,
-		CallbackArgIdx: 0, // ctx is first argument
-		TaskArgConfig:  doAsyncTaskArgConfig,
+	reg.RegisterTaskSource(registry.API{
+		Pkg:             "github.com/siketyan/gotask",
+		Type:            "Task",
+		Name:            "DoAsync",
+		Kind:            registry.KindMethod,
+		CallbackArgIdx:  0, // ctx is first argument
+		TaskConstructor: gotaskConstructor,
 	}, doAsyncPatterns...)
 
-	reg.Register(registry.API{
-		Pkg:            "github.com/siketyan/gotask",
-		Type:           "CancelableTask",
-		Name:           "DoAsync",
-		Kind:           registry.KindMethod,
-		CallbackArgIdx: 0,
-		TaskArgConfig:  doAsyncTaskArgConfig,
+	reg.RegisterTaskSource(registry.API{
+		Pkg:             "github.com/siketyan/gotask",
+		Type:            "CancelableTask",
+		Name:            "DoAsync",
+		Kind:            registry.KindMethod,
+		CallbackArgIdx:  0,
+		TaskConstructor: gotaskConstructor,
 	}, doAsyncPatterns...)
 }

@@ -15,7 +15,7 @@ func (*GoStmtCapturesCtx) Name() string {
 	return "GoStmtCapturesCtx"
 }
 
-func (p *GoStmtCapturesCtx) CheckGoStmt(cctx *context.CheckContext, stmt *ast.GoStmt) GoStmtResult {
+func (p *GoStmtCapturesCtx) Check(cctx *context.CheckContext, stmt *ast.GoStmt) GoStmtResult {
 	// If no context names in scope (from AST), nothing to check
 	if len(cctx.CtxNames) == 0 {
 		return GoStmtResult{OK: true}
@@ -86,7 +86,7 @@ func (*GoStmtCallsDeriver) Name() string {
 	return "GoStmtCallsDeriver"
 }
 
-func (p *GoStmtCallsDeriver) CheckGoStmt(cctx *context.CheckContext, stmt *ast.GoStmt) GoStmtResult {
+func (p *GoStmtCallsDeriver) Check(cctx *context.CheckContext, stmt *ast.GoStmt) GoStmtResult {
 	if p.Matcher == nil || p.Matcher.IsEmpty() {
 		return GoStmtResult{OK: true} // No deriver configured
 	}
