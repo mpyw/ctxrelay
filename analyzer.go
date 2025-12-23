@@ -14,10 +14,8 @@ import (
 
 	"github.com/mpyw/goroutinectx/internal"
 	"github.com/mpyw/goroutinectx/internal/directives/carrier"
-	"github.com/mpyw/goroutinectx/internal/directives/deriver"
 	"github.com/mpyw/goroutinectx/internal/directives/ignore"
 	"github.com/mpyw/goroutinectx/internal/directives/spawner"
-	"github.com/mpyw/goroutinectx/internal/patterns"
 	"github.com/mpyw/goroutinectx/internal/registry"
 	"github.com/mpyw/goroutinectx/internal/spawnerlabel"
 	internalssa "github.com/mpyw/goroutinectx/internal/ssa"
@@ -147,32 +145,11 @@ func buildIgnoreMaps(pass *analysis.Pass, skipFiles map[string]bool) map[string]
 func buildRegistry() *registry.Registry {
 	reg := registry.New()
 
-	// Register GoStmt patterns
 	internal.RegisterGoStmtPatterns(reg, enableGoroutine, goroutineDeriver)
-
-	// Build closure patterns for each checker type with their respective checker names
-	errgroupPatterns := []patterns.CallArgPattern{patterns.NewClosureCapturesCtx(ignore.Errgroup)}
-	waitgroupPatterns := []patterns.CallArgPattern{patterns.NewClosureCapturesCtx(ignore.Waitgroup)}
-	concPatterns := []patterns.CallArgPattern{patterns.NewClosureCapturesCtx(ignore.Errgroup)} // conc uses errgroup checker name
-
-	// Register errgroup/waitgroup/conc APIs
-	internal.RegisterErrgroupAPIs(reg, enableErrgroup, errgroupPatterns)
-	internal.RegisterWaitgroupAPIs(reg, enableWaitgroup, waitgroupPatterns)
-	internal.RegisterConcAPIs(reg, enableConc, concPatterns)
-
-	// Build gotask patterns
-	// - With patterns: enables unified checker to verify context propagation
-	// - Without patterns (empty): enables spawnerlabel detection only
-	var deriverPatterns []patterns.CallArgPattern
-	var doAsyncPatterns []patterns.TaskSourcePattern
-	if goroutineDeriver != "" && enableGotask {
-		matcher := deriver.NewMatcher(goroutineDeriver)
-		deriverPatterns = []patterns.CallArgPattern{&patterns.CallbackCallsDeriver{Matcher: matcher}}
-		doAsyncPatterns = []patterns.TaskSourcePattern{&patterns.CallbackCallsDeriverOrCtxDerived{
-			CallbackCallsDeriver: patterns.CallbackCallsDeriver{Matcher: matcher},
-		}}
-	}
-	internal.RegisterGotaskAPIs(reg, deriverPatterns, doAsyncPatterns)
+	internal.RegisterErrgroupAPIs(reg, enableErrgroup)
+	internal.RegisterWaitgroupAPIs(reg, enableWaitgroup)
+	internal.RegisterConcAPIs(reg, enableConc)
+	internal.RegisterGotaskAPIs(reg, goroutineDeriver, enableGotask)
 
 	return reg
 }
