@@ -360,7 +360,7 @@ Available flags:
 - `-goroutine` (default: true)
 - `-waitgroup` (default: true)
 - `-errgroup` (default: true)
-- `-conc` (default: true) - Check `github.com/sourcegraph/conc` APIs:
+- `-conc` (default: true) - Check [conc](https://pkg.go.dev/github.com/sourcegraph/conc) APIs:
   - `conc.Pool.Go`, `conc.WaitGroup.Go`
   - `pool.Pool.Go`, `pool.ResultPool[T].Go`, `pool.ContextPool.Go`, `pool.ResultContextPool[T].Go`
   - `pool.ErrorPool.Go`, `pool.ResultErrorPool[T].Go`
