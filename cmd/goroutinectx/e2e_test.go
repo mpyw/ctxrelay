@@ -215,3 +215,78 @@ func TestE2E_Version(t *testing.T) {
 		t.Errorf("expected analyzer name in version output, got:\n%s", output)
 	}
 }
+
+func TestE2E_Spawner(t *testing.T) {
+	testdata := filepath.Join(getE2ETestdata(), "spawner")
+
+	cmd := exec.Command(binaryPath, "./...")
+	cmd.Dir = testdata
+	out, err := cmd.CombinedOutput()
+
+	if err == nil {
+		t.Fatal("expected non-zero exit code for code with issues")
+	}
+
+	output := string(out)
+
+	// Should detect spawner directive issues
+	if !strings.Contains(output, `runTask() func argument should use context "ctx"`) &&
+		!strings.Contains(output, `runMultipleTasks() func argument should use context "ctx"`) {
+		t.Errorf("expected spawner warning, got:\n%s", output)
+	}
+}
+
+func TestE2E_Spawnerlabel(t *testing.T) {
+	testdata := filepath.Join(getE2ETestdata(), "spawnerlabel")
+
+	cmd := exec.Command(binaryPath, "-spawnerlabel=true", "./...")
+	cmd.Dir = testdata
+	out, err := cmd.CombinedOutput()
+
+	if err == nil {
+		t.Fatal("expected non-zero exit code for code with issues")
+	}
+
+	output := string(out)
+
+	// Should detect missing spawner label
+	if !strings.Contains(output, "//goroutinectx:spawner directive") {
+		t.Errorf("expected spawnerlabel warning, got:\n%s", output)
+	}
+}
+
+func TestE2E_GoroutineDerive(t *testing.T) {
+	testdata := filepath.Join(getE2ETestdata(), "goroutinederive")
+
+	cmd := exec.Command(binaryPath,
+		"-goroutine-deriver=example.com/goroutinederive/apm.NewGoroutineContext",
+		"./...",
+	)
+	cmd.Dir = testdata
+	out, err := cmd.CombinedOutput()
+
+	if err == nil {
+		t.Fatal("expected non-zero exit code for code with issues")
+	}
+
+	output := string(out)
+
+	// Should detect missing deriver call
+	if !strings.Contains(output, "apm.NewGoroutineContext") {
+		t.Errorf("expected deriver warning, got:\n%s", output)
+	}
+}
+
+func TestE2E_DisableSpawnerChecker(t *testing.T) {
+	testdata := filepath.Join(getE2ETestdata(), "spawner")
+
+	// Disable spawner checker
+	cmd := exec.Command(binaryPath, "-spawner=false", "./...")
+	cmd.Dir = testdata
+	out, err := cmd.CombinedOutput()
+
+	// Should exit with zero when spawner checker is disabled
+	if err != nil {
+		t.Errorf("expected zero exit code when spawner checker disabled, got error: %v\noutput:\n%s", err, out)
+	}
+}
