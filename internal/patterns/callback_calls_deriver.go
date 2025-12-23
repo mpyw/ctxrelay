@@ -230,8 +230,8 @@ func isTaskConstructorCall(cctx *context.CheckContext, call *ast.CallExpr, tc *T
 		return typeutil.MatchPkg(pkgName.Imported().Path(), tc.Pkg)
 	}
 
-	// Check for method call (Type is set)
-	// TODO: Support method-style constructors if needed
+	// Method-style constructors (Type is set) are not supported.
+	// They don't work with generics and are rarely used in practice.
 	return false
 }
 
