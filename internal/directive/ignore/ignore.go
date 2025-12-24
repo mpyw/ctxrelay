@@ -28,21 +28,6 @@ type Entry struct {
 	used     map[CheckerName]bool // Track usage per checker
 }
 
-// Pos returns the position of the ignore comment.
-func (e *Entry) Pos() token.Pos {
-	return e.pos
-}
-
-// Checkers returns the list of checker names.
-func (e *Entry) Checkers() []CheckerName {
-	return e.checkers
-}
-
-// Used returns the usage tracking map.
-func (e *Entry) Used() map[CheckerName]bool {
-	return e.used
-}
-
 // Map tracks ignore entries by line number.
 type Map map[int]*Entry
 
