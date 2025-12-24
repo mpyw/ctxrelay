@@ -125,21 +125,3 @@ func isSpawnerComment(text string) bool {
 	text = strings.TrimSpace(text)
 	return strings.HasPrefix(text, "goroutinectx:spawner")
 }
-
-// FindFuncArgs finds all arguments in a call that are func types.
-func FindFuncArgs(pass *analysis.Pass, call *ast.CallExpr) []ast.Expr {
-	var funcArgs []ast.Expr
-
-	for _, arg := range call.Args {
-		tv, ok := pass.TypesInfo.Types[arg]
-		if !ok {
-			continue
-		}
-
-		if _, isFunc := tv.Type.Underlying().(*types.Signature); isFunc {
-			funcArgs = append(funcArgs, arg)
-		}
-	}
-
-	return funcArgs
-}

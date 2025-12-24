@@ -42,28 +42,6 @@ func (p *Program) FuncAt(pos ast.Node) *ssa.Function {
 	return nil
 }
 
-// EnclosingFunc returns the SSA function that encloses the given position.
-func (p *Program) EnclosingFunc(pos ast.Node) *ssa.Function {
-	topFn := p.FuncAt(pos)
-	if topFn == nil {
-		return nil
-	}
-	return p.findEnclosingFunc(topFn, pos)
-}
-
-func (p *Program) findEnclosingFunc(fn *ssa.Function, pos ast.Node) *ssa.Function {
-	for _, anon := range fn.AnonFuncs {
-		syntax := anon.Syntax()
-		if syntax == nil {
-			continue
-		}
-		if syntax.Pos() <= pos.Pos() && pos.End() <= syntax.End() {
-			return p.findEnclosingFunc(anon, pos)
-		}
-	}
-	return fn
-}
-
 // FindFuncLit finds the SSA function for a given FuncLit AST node.
 func (p *Program) FindFuncLit(lit *ast.FuncLit) *ssa.Function {
 	if p == nil || lit == nil {

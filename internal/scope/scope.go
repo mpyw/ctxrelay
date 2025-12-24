@@ -16,14 +16,6 @@ type Scope struct {
 	CtxNames []string
 }
 
-// CtxName returns the first context name, or "ctx" as default.
-func (s *Scope) CtxName() string {
-	if len(s.CtxNames) > 0 {
-		return s.CtxNames[0]
-	}
-	return "ctx"
-}
-
 // Map maps AST nodes to their scopes.
 type Map map[ast.Node]*Scope
 

@@ -16,15 +16,6 @@ func (c *Context) FuncLitOfIdent(ident *ast.Ident) *ast.FuncLit {
 	return c.FuncLitAssignedTo(v, token.NoPos)
 }
 
-// FuncLitOfIdentBefore is like FuncLitOfIdent but only considers assignments before beforePos.
-func (c *Context) FuncLitOfIdentBefore(ident *ast.Ident, beforePos token.Pos) *ast.FuncLit {
-	v := c.VarOf(ident)
-	if v == nil {
-		return nil
-	}
-	return c.FuncLitAssignedTo(v, beforePos)
-}
-
 // FuncLitAssignedTo searches for the func literal assigned to the variable.
 // If beforePos is token.NoPos, returns the LAST assignment found.
 // If beforePos is set, returns the last assignment BEFORE that position.

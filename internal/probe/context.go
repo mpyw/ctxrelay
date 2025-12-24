@@ -8,7 +8,6 @@ import (
 	"golang.org/x/tools/go/analysis"
 
 	"github.com/mpyw/goroutinectx/internal/directive/carrier"
-	"github.com/mpyw/goroutinectx/internal/funcspec"
 	"github.com/mpyw/goroutinectx/internal/ssa"
 )
 
@@ -19,11 +18,6 @@ type Context struct {
 	SSAProg  *ssa.Program
 	CtxNames []string
 	Carriers []carrier.Carrier
-}
-
-// Report reports a diagnostic at the given position.
-func (c *Context) Report(pos token.Pos, msg string) {
-	c.Pass.Reportf(pos, "%s", msg)
 }
 
 // VarOf extracts *types.Var from an identifier.
@@ -64,9 +58,4 @@ func (c *Context) FuncDeclOf(fn *types.Func) *ast.FuncDecl {
 		}
 	}
 	return nil
-}
-
-// FuncOf extracts the types.Func from a call expression.
-func (c *Context) FuncOf(call *ast.CallExpr) *types.Func {
-	return funcspec.ExtractFunc(c.Pass, call)
 }
