@@ -7,7 +7,7 @@ import (
 
 	"golang.org/x/tools/go/analysis"
 
-	internal "github.com/mpyw/goroutinectx/internal"
+	"github.com/mpyw/goroutinectx/internal"
 	"github.com/mpyw/goroutinectx/internal/deriver"
 	"github.com/mpyw/goroutinectx/internal/directive/ignore"
 	"github.com/mpyw/goroutinectx/internal/funcspec"

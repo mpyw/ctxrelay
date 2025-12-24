@@ -3,7 +3,7 @@ package checkers
 import (
 	"go/ast"
 
-	internal "github.com/mpyw/goroutinectx/internal"
+	"github.com/mpyw/goroutinectx/internal"
 	"github.com/mpyw/goroutinectx/internal/deriver"
 	"github.com/mpyw/goroutinectx/internal/directive/ignore"
 	"github.com/mpyw/goroutinectx/internal/probe"
