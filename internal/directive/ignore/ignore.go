@@ -21,19 +21,6 @@ const (
 	Gotask          CheckerName = "gotask"
 )
 
-// AllCheckerNames returns all valid checker names.
-func AllCheckerNames() []CheckerName {
-	return []CheckerName{
-		Goroutine,
-		GoroutineDerive,
-		Waitgroup,
-		Errgroup,
-		Spawner,
-		Spawnerlabel,
-		Gotask,
-	}
-}
-
 // Entry tracks an ignore directive and its usage.
 type Entry struct {
 	pos      token.Pos            // Position of the ignore comment
