@@ -264,6 +264,9 @@ func (c *GotaskChecker) findConstructorCall(cctx *probe.Context, receiver ast.Ex
 
 	case *ast.StarExpr:
 		return c.findConstructorCall(cctx, r.X)
+
+	case *ast.ParenExpr:
+		return c.findConstructorCall(cctx, r.X)
 	}
 
 	return nil
