@@ -87,6 +87,11 @@ func (c *CallArgChecker) checkSingleArg(cctx *probe.Context, call *ast.CallExpr,
 	if len(cctx.CtxNames) > 0 {
 		ctxName = cctx.CtxNames[0]
 	}
+
+	// Format error message based on whether deriver is configured
+	if c.derivers != nil && !c.derivers.IsEmpty() {
+		return internal.Fail(fmt.Sprintf("%s() closure should use context %q or call goroutine deriver", entry.Spec.FullName(), ctxName))
+	}
 	return internal.Fail(fmt.Sprintf("%s() closure should use context %q", entry.Spec.FullName(), ctxName))
 }
 
@@ -97,7 +102,7 @@ func (c *CallArgChecker) checkArg(cctx *probe.Context, arg ast.Expr) bool {
 
 	// Try SSA-based check first
 	if lit, ok := arg.(*ast.FuncLit); ok {
-		if result, ok := cctx.FuncLitCapturesContextSSA(lit); ok {
+		if result, ok := c.checkFuncLitSSA(cctx, lit); ok {
 			return result
 		}
 	}
@@ -106,9 +111,42 @@ func (c *CallArgChecker) checkArg(cctx *probe.Context, arg ast.Expr) bool {
 	return c.checkArgFromAST(cctx, arg)
 }
 
+// checkFuncLitSSA checks a func literal using SSA analysis.
+// Returns (result, true) if SSA succeeded, or (false, false) if SSA failed.
+func (c *CallArgChecker) checkFuncLitSSA(cctx *probe.Context, lit *ast.FuncLit) (bool, bool) {
+	if cctx.SSAProg == nil || cctx.Tracer == nil {
+		return false, false
+	}
+
+	// If func lit has context param, it's OK
+	if cctx.FuncLitHasContextParam(lit) {
+		return true, true
+	}
+
+	ssaFn := cctx.SSAProg.FindFuncLit(lit)
+	if ssaFn == nil {
+		return false, false
+	}
+
+	// Check if closure captures context
+	if cctx.Tracer.ClosureCapturesContext(ssaFn, cctx.Carriers) {
+		return true, true
+	}
+
+	// If derivers configured, also check if deriver is called
+	if c.derivers != nil && !c.derivers.IsEmpty() {
+		result := cctx.Tracer.ClosureCallsDeriver(ssaFn, c.derivers)
+		if result.FoundAtStart {
+			return true, true
+		}
+	}
+
+	return false, true
+}
+
 func (c *CallArgChecker) checkArgFromAST(cctx *probe.Context, arg ast.Expr) bool {
 	if lit, ok := arg.(*ast.FuncLit); ok {
-		return cctx.FuncLitCapturesContext(lit)
+		return c.checkFuncLitAST(cctx, lit)
 	}
 
 	if ident, ok := arg.(*ast.Ident); ok {
@@ -116,7 +154,7 @@ func (c *CallArgChecker) checkArgFromAST(cctx *probe.Context, arg ast.Expr) bool
 		if funcLit == nil {
 			return true
 		}
-		return cctx.FuncLitCapturesContext(funcLit)
+		return c.checkFuncLitAST(cctx, funcLit)
 	}
 
 	if call, ok := arg.(*ast.CallExpr); ok {
@@ -132,6 +170,23 @@ func (c *CallArgChecker) checkArgFromAST(cctx *probe.Context, arg ast.Expr) bool
 	}
 
 	return true
+}
+
+// checkFuncLitAST checks a func literal using AST-based analysis.
+func (c *CallArgChecker) checkFuncLitAST(cctx *probe.Context, lit *ast.FuncLit) bool {
+	// Check context capture
+	if cctx.FuncLitCapturesContext(lit) {
+		return true
+	}
+
+	// If derivers configured, also check if deriver is called
+	if c.derivers != nil && !c.derivers.IsEmpty() {
+		if c.derivers.SatisfiesAnyGroup(cctx.Pass, lit.Body) {
+			return true
+		}
+	}
+
+	return false
 }
 
 // =============================================================================
@@ -251,10 +306,16 @@ func (c *SpawnerChecker) CheckCall(cctx *probe.Context, call *ast.CallExpr) *int
 		ctxName = cctx.CtxNames[0]
 	}
 
+	// Format error message based on whether deriver is configured
+	msgFormat := "%s() func argument should use context %q"
+	if c.derivers != nil && !c.derivers.IsEmpty() {
+		msgFormat = "%s() func argument should use context %q or call goroutine deriver"
+	}
+
 	// Report each failing argument at its position
 	for _, arg := range funcArgs {
 		if !c.checkFuncArg(cctx, arg) {
-			cctx.Pass.Reportf(arg.Pos(), "%s() func argument should use context %q", fn.Name(), ctxName)
+			cctx.Pass.Reportf(arg.Pos(), msgFormat, fn.Name(), ctxName)
 		}
 	}
 
@@ -265,10 +326,10 @@ func (c *SpawnerChecker) CheckCall(cctx *probe.Context, call *ast.CallExpr) *int
 func (c *SpawnerChecker) checkFuncArg(cctx *probe.Context, arg ast.Expr) bool {
 	// Try SSA-based check first
 	if lit, ok := arg.(*ast.FuncLit); ok {
-		if result, ok := cctx.FuncLitCapturesContextSSA(lit); ok {
+		if result, ok := c.checkFuncLitSSA(cctx, lit); ok {
 			return result
 		}
-		return cctx.FuncLitCapturesContext(lit)
+		return c.checkFuncLitAST(cctx, lit)
 	}
 
 	if ident, ok := arg.(*ast.Ident); ok {
@@ -276,7 +337,7 @@ func (c *SpawnerChecker) checkFuncArg(cctx *probe.Context, arg ast.Expr) bool {
 		if funcLit == nil {
 			return true
 		}
-		return cctx.FuncLitCapturesContext(funcLit)
+		return c.checkFuncLitAST(cctx, funcLit)
 	}
 
 	if call, ok := arg.(*ast.CallExpr); ok {
@@ -284,6 +345,50 @@ func (c *SpawnerChecker) checkFuncArg(cctx *probe.Context, arg ast.Expr) bool {
 	}
 
 	return true
+}
+
+// checkFuncLitSSA checks a func literal using SSA analysis for SpawnerChecker.
+func (c *SpawnerChecker) checkFuncLitSSA(cctx *probe.Context, lit *ast.FuncLit) (bool, bool) {
+	if cctx.SSAProg == nil || cctx.Tracer == nil {
+		return false, false
+	}
+
+	if cctx.FuncLitHasContextParam(lit) {
+		return true, true
+	}
+
+	ssaFn := cctx.SSAProg.FindFuncLit(lit)
+	if ssaFn == nil {
+		return false, false
+	}
+
+	if cctx.Tracer.ClosureCapturesContext(ssaFn, cctx.Carriers) {
+		return true, true
+	}
+
+	if c.derivers != nil && !c.derivers.IsEmpty() {
+		result := cctx.Tracer.ClosureCallsDeriver(ssaFn, c.derivers)
+		if result.FoundAtStart {
+			return true, true
+		}
+	}
+
+	return false, true
+}
+
+// checkFuncLitAST checks a func literal using AST analysis for SpawnerChecker.
+func (c *SpawnerChecker) checkFuncLitAST(cctx *probe.Context, lit *ast.FuncLit) bool {
+	if cctx.FuncLitCapturesContext(lit) {
+		return true
+	}
+
+	if c.derivers != nil && !c.derivers.IsEmpty() {
+		if c.derivers.SatisfiesAnyGroup(cctx.Pass, lit.Body) {
+			return true
+		}
+	}
+
+	return false
 }
 
 // findFuncArgs finds all arguments in a call that are func types.
