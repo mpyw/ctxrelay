@@ -18,6 +18,21 @@ func TestErrgroup(t *testing.T) {
 	analysistest.Run(t, testdata, goroutinectx.Analyzer, "errgroup")
 }
 
+func TestErrgroupDerive(t *testing.T) {
+	testdata := analysistest.TestData()
+
+	deriveFunc := "github.com/my-example-app/telemetry/apm.NewGoroutineContext"
+	if err := goroutinectx.Analyzer.Flags.Set("goroutine-deriver", deriveFunc); err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() {
+		_ = goroutinectx.Analyzer.Flags.Set("goroutine-deriver", "")
+	}()
+
+	analysistest.Run(t, testdata, goroutinectx.Analyzer, "errgroupderive")
+}
+
 func TestConc(t *testing.T) {
 	testdata := analysistest.TestData()
 	analysistest.Run(t, testdata, goroutinectx.Analyzer, "conc")

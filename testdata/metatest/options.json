@@ -4,6 +4,7 @@
     "golang.org",
     "filefilter",
     "filefilterskip",
-    "conc"
+    "conc",
+    "errgroupderive"
   ]
 }
