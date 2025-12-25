@@ -45,8 +45,8 @@
 //	    &checkers.GoroutineDerive{Derivers: deriveMatcher},
 //	}
 //	callCheckers := []CallChecker{
-//	    checkers.NewErrgroupChecker(),
-//	    checkers.NewWaitgroupChecker(),
+//	    checkers.NewErrgroupChecker(deriveMatcher),
+//	    checkers.NewWaitgroupChecker(deriveMatcher),
 //	}
 //
 // # Execution Flow

@@ -23,23 +23,6 @@ func IsContextType(t types.Type) bool {
 	return obj.Pkg().Path() == contextPkgPath && obj.Name() == "Context"
 }
 
-// MatchPkgPath checks if pkgPath matches targetPkg, allowing version suffixes.
-// For example, "github.com/pkg/v2" matches "github.com/pkg".
-func MatchPkgPath(pkgPath, targetPkg string) bool {
-	if pkgPath == targetPkg {
-		return true
-	}
-	prefix := targetPkg + "/v"
-	if len(pkgPath) <= len(prefix) {
-		return false
-	}
-	if pkgPath[:len(prefix)] != prefix {
-		return false
-	}
-	rest := pkgPath[len(prefix):]
-	return len(rest) > 0 && rest[0] >= '0' && rest[0] <= '9'
-}
-
 // UnwrapPointer recursively unwraps all pointer layers.
 //
 // This is critical for SSA-based carrier type matching. When a closure captures
