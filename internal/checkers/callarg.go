@@ -8,7 +8,6 @@ import (
 	"golang.org/x/tools/go/analysis"
 
 	"github.com/mpyw/goroutinectx/internal"
-	"github.com/mpyw/goroutinectx/internal/deriver"
 	"github.com/mpyw/goroutinectx/internal/directive/ignore"
 	"github.com/mpyw/goroutinectx/internal/funcspec"
 	"github.com/mpyw/goroutinectx/internal/probe"
@@ -18,7 +17,6 @@ import (
 type CallArgChecker struct {
 	checkerName ignore.CheckerName
 	entries     []CallArgEntry
-	derivers    *deriver.Matcher
 }
 
 // CallArgEntry defines a function that takes a callback argument.
@@ -28,11 +26,10 @@ type CallArgEntry struct {
 }
 
 // NewCallArgChecker creates a new CallArgChecker.
-func NewCallArgChecker(name ignore.CheckerName, entries []CallArgEntry, derivers *deriver.Matcher) *CallArgChecker {
+func NewCallArgChecker(name ignore.CheckerName, entries []CallArgEntry) *CallArgChecker {
 	return &CallArgChecker{
 		checkerName: name,
 		entries:     entries,
-		derivers:    derivers,
 	}
 }
 
@@ -139,22 +136,22 @@ func (c *CallArgChecker) checkArgFromAST(cctx *probe.Context, arg ast.Expr) bool
 // =============================================================================
 
 // NewErrgroupChecker creates the errgroup checker.
-func NewErrgroupChecker(derivers *deriver.Matcher) *CallArgChecker {
+func NewErrgroupChecker() *CallArgChecker {
 	return NewCallArgChecker(ignore.Errgroup, []CallArgEntry{
 		{Spec: funcspec.Spec{PkgPath: "golang.org/x/sync/errgroup", TypeName: "Group", FuncName: "Go"}, CallbackArgIdx: 0},
 		{Spec: funcspec.Spec{PkgPath: "golang.org/x/sync/errgroup", TypeName: "Group", FuncName: "TryGo"}, CallbackArgIdx: 0},
-	}, derivers)
+	})
 }
 
 // NewWaitgroupChecker creates the waitgroup checker (Go 1.25+).
-func NewWaitgroupChecker(derivers *deriver.Matcher) *CallArgChecker {
+func NewWaitgroupChecker() *CallArgChecker {
 	return NewCallArgChecker(ignore.Waitgroup, []CallArgEntry{
 		{Spec: funcspec.Spec{PkgPath: "sync", TypeName: "WaitGroup", FuncName: "Go"}, CallbackArgIdx: 0},
-	}, derivers)
+	})
 }
 
 // NewConcChecker creates the conc checker.
-func NewConcChecker(derivers *deriver.Matcher) *CallArgChecker {
+func NewConcChecker() *CallArgChecker {
 	return NewCallArgChecker(ignore.Errgroup, []CallArgEntry{
 		// conc.Pool.Go
 		{Spec: funcspec.Spec{PkgPath: "github.com/sourcegraph/conc", TypeName: "Pool", FuncName: "Go"}, CallbackArgIdx: 0},
@@ -190,7 +187,7 @@ func NewConcChecker(derivers *deriver.Matcher) *CallArgChecker {
 		{Spec: funcspec.Spec{PkgPath: "github.com/sourcegraph/conc/iter", TypeName: "Mapper", FuncName: "Map"}, CallbackArgIdx: 1},
 		// iter.Mapper.MapErr
 		{Spec: funcspec.Spec{PkgPath: "github.com/sourcegraph/conc/iter", TypeName: "Mapper", FuncName: "MapErr"}, CallbackArgIdx: 1},
-	}, derivers)
+	})
 }
 
 // =============================================================================
@@ -200,7 +197,6 @@ func NewConcChecker(derivers *deriver.Matcher) *CallArgChecker {
 // SpawnerChecker checks calls to spawner-marked functions.
 type SpawnerChecker struct {
 	spawners SpawnerMap
-	derivers *deriver.Matcher
 }
 
 // SpawnerMap interface for checking if a function is a spawner.
@@ -209,10 +205,9 @@ type SpawnerMap interface {
 }
 
 // NewSpawnerChecker creates a spawner checker.
-func NewSpawnerChecker(spawners SpawnerMap, derivers *deriver.Matcher) *SpawnerChecker {
+func NewSpawnerChecker(spawners SpawnerMap) *SpawnerChecker {
 	return &SpawnerChecker{
 		spawners: spawners,
-		derivers: derivers,
 	}
 }
 

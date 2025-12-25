@@ -178,19 +178,19 @@ func buildCheckers(derivers *deriver.Matcher, spawners *spawner.Map) ([]internal
 
 	// Call checkers
 	if enableErrgroup {
-		callCheckers = append(callCheckers, checkers.NewErrgroupChecker(derivers))
+		callCheckers = append(callCheckers, checkers.NewErrgroupChecker())
 	}
 
 	if enableWaitgroup {
-		callCheckers = append(callCheckers, checkers.NewWaitgroupChecker(derivers))
+		callCheckers = append(callCheckers, checkers.NewWaitgroupChecker())
 	}
 
 	if enableConc {
-		callCheckers = append(callCheckers, checkers.NewConcChecker(derivers))
+		callCheckers = append(callCheckers, checkers.NewConcChecker())
 	}
 
 	if enableSpawner && spawners.Len() > 0 {
-		callCheckers = append(callCheckers, checkers.NewSpawnerChecker(spawners, derivers))
+		callCheckers = append(callCheckers, checkers.NewSpawnerChecker(spawners))
 	}
 
 	if enableGotask && derivers != nil {
