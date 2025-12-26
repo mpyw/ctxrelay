@@ -683,3 +683,163 @@ func goodHigherOrderReturnsReassignedVariableWithCtx(ctx context.Context) {
 	g.Go(makeWorker())
 	_ = g.Wait()
 }
+
+// ===== UNTRACEABLE PATTERNS (FUNCTION PARAMETERS) =====
+
+// [LIMITATION]: Function from parameter - cannot trace
+//
+// Function passed as parameter cannot be traced statically.
+// We assume it's OK (zero false positives policy).
+func limitationFuncFromParameter(ctx context.Context, fn func() error) {
+	g := new(errgroup.Group)
+	// fn comes from parameter - can't trace its body
+	g.Go(fn) // No error - can't trace parameter function
+	_ = g.Wait()
+}
+
+// [LIMITATION]: Function from variadic parameter - cannot trace
+//
+// Functions passed as variadic parameter cannot be traced statically.
+func limitationFuncFromVariadicParameter(ctx context.Context, fns ...func() error) {
+	g := new(errgroup.Group)
+	for _, fn := range fns {
+		g.Go(fn) // No error - can't trace parameter function
+	}
+	_ = g.Wait()
+}
+
+// ===== NESTED FACTORY PATTERNS (IIFE) =====
+
+// [LIMITATION]: IIFE factory with parentheses - not traced
+//
+// Parenthesized IIFE pattern cannot be traced (ParenExpr not handled).
+func limitationIIFEFactoryWithParentheses(ctx context.Context) {
+	g := new(errgroup.Group)
+	// (func() ...)() wrapped in parens - ParenExpr not traced
+	g.Go((func() func() error {
+		return func() error {
+			fmt.Println("no ctx")
+			return nil
+		}
+	})()) // No error - ParenExpr not handled
+	_ = g.Wait()
+}
+
+// [GOOD]: Inline factory variable with context
+//
+// Inline factory variable that captures context.
+func goodInlineFactoryVariableWithCtx(ctx context.Context) {
+	g := new(errgroup.Group)
+	makeWorker := func() func() error {
+		return func() error {
+			_ = ctx
+			return nil
+		}
+	}
+	g.Go(makeWorker())
+	_ = g.Wait()
+}
+
+// [BAD]: Inline factory variable without context
+//
+// Inline factory variable that does not capture context.
+func badInlineFactoryVariableWithoutCtx(ctx context.Context) {
+	g := new(errgroup.Group)
+	makeWorker := func() func() error {
+		return func() error {
+			fmt.Println("no ctx")
+			return nil
+		}
+	}
+	g.Go(makeWorker()) // want `errgroup.Group.Go\(\) closure should use context "ctx"`
+	_ = g.Wait()
+}
+
+// ===== IIFE PATTERNS (DIRECT, WITHOUT PARENTHESES) =====
+
+// [GOOD]: IIFE factory with context
+//
+// Immediately invoked function expression that captures context.
+func goodIIFEFactoryWithCtx(ctx context.Context) {
+	g := new(errgroup.Group)
+	// Direct IIFE (no parentheses around func) - goes to *ast.FuncLit case
+	g.Go(func() func() error {
+		return func() error {
+			_ = ctx
+			return nil
+		}
+	}())
+	_ = g.Wait()
+}
+
+// [BAD]: IIFE factory without context
+//
+// Immediately invoked function expression that does not capture context.
+func badIIFEFactoryWithoutCtx(ctx context.Context) {
+	g := new(errgroup.Group)
+	// Direct IIFE (no parentheses around func) - goes to *ast.FuncLit case
+	g.Go(func() func() error { // want `errgroup.Group.Go\(\) closure should use context "ctx"`
+		return func() error {
+			fmt.Println("no ctx")
+			return nil
+		}
+	}())
+	_ = g.Wait()
+}
+
+// [GOOD]: IIFE factory with context param
+//
+// Immediately invoked function expression with context parameter.
+func goodIIFEFactoryWithCtxParam(ctx context.Context) {
+	g := new(errgroup.Group)
+	// IIFE with context param - FuncLitHasContextParam returns true
+	g.Go(func(c context.Context) func() error {
+		return func() error {
+			_ = c
+			return nil
+		}
+	}(ctx))
+	_ = g.Wait()
+}
+
+// ===== NESTED FACTORY PATTERNS =====
+
+//vt:helper
+func makeFactory() func() func() error {
+	return func() func() error {
+		return func() error {
+			fmt.Println("no ctx")
+			return nil
+		}
+	}
+}
+
+//vt:helper
+func makeFactoryWithCtx(ctx context.Context) func() func() error {
+	return func() func() error {
+		return func() error {
+			_ = ctx
+			return nil
+		}
+	}
+}
+
+// [GOOD]: Nested factory call with context
+//
+// Nested factory call where ctx is passed to outer factory.
+func goodNestedFactoryWithCtx(ctx context.Context) {
+	g := new(errgroup.Group)
+	// makeFactoryWithCtx(ctx)() returns func() error - recursive CallExpr case
+	g.Go(makeFactoryWithCtx(ctx)())
+	_ = g.Wait()
+}
+
+// [BAD]: Nested factory call without context
+//
+// Nested factory call where no context is captured.
+func badNestedFactoryWithoutCtx(ctx context.Context) {
+	g := new(errgroup.Group)
+	// makeFactory()() returns func() error - recursive CallExpr case
+	g.Go(makeFactory()()) // want `errgroup.Group.Go\(\) closure should use context "ctx"`
+	_ = g.Wait()
+}

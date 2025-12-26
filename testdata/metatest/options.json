@@ -5,6 +5,10 @@
     "filefilter",
     "filefilterskip",
     "conc",
-    "errgroupderive"
+    "errgroup",
+    "spawner",
+    "errgroupderive",
+    "waitgroupderive",
+    "spawnerderive"
   ]
 }

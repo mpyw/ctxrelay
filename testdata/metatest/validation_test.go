@@ -171,8 +171,18 @@ func discoverTargets(excludeDirs []string) ([]string, error) {
 }
 
 func validateTest(t *testing.T, structure *Structure, testName string, test *Test) {
+	// Build excludeSet from options
+	excludeSet := make(map[string]bool)
+	for _, dir := range structure.Options.ExcludeDirs {
+		excludeSet[dir] = true
+	}
+
 	// Validate targets exist in discovered targets list
 	for _, target := range test.Targets {
+		// Skip excluded targets
+		if excludeSet[target] {
+			continue
+		}
 		if !contains(structure.targets, target) {
 			t.Errorf("Target %q not found in testdata/src (discovered targets: %v)", target, structure.targets)
 		}
@@ -197,8 +207,18 @@ func validateVariant(t *testing.T, structure *Structure, testName string, test *
 		return
 	}
 
+	// Build excludeSet from options
+	excludeSet := make(map[string]bool)
+	for _, dir := range structure.Options.ExcludeDirs {
+		excludeSet[dir] = true
+	}
+
 	// Get function name from variant.Functions
 	for _, target := range test.Targets {
+		// Skip excluded targets
+		if excludeSet[target] {
+			continue
+		}
 		// Skip waitgroup tests on Go < 1.25
 		if target == "waitgroup" && !supportsWaitgroupGo() {
 			t.Skipf("Skipping waitgroup test: sync.WaitGroup.Go() requires Go 1.25+")

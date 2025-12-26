@@ -231,3 +231,74 @@ func goodNonSpawnerFunction(ctx context.Context) {
 	normalHelper(g, fn) // OK - normalHelper is not marked as spawner
 	_ = g.Wait()
 }
+
+// ===== UNTRACEABLE PATTERNS (FUNCTION PARAMETERS) =====
+
+// [LIMITATION]: Function from parameter - cannot trace
+//
+// Function passed as parameter cannot be traced statically.
+// We assume it's OK (zero false positives policy).
+func limitationFuncFromParameter(ctx context.Context, fn func() error) {
+	g := new(errgroup.Group)
+	// fn comes from parameter - can't trace its body
+	runWithGroup(g, fn) // No error - can't trace parameter function
+	_ = g.Wait()
+}
+
+// [LIMITATION]: Function from variadic parameter - cannot trace
+//
+// Functions passed as variadic parameter cannot be traced statically.
+func limitationFuncFromVariadicParameter(ctx context.Context, fns ...func()) {
+	var wg sync.WaitGroup
+	for _, fn := range fns {
+		runWithWaitGroup(&wg, fn) // No error - can't trace parameter function
+	}
+	wg.Wait()
+}
+
+// ===== IIFE FACTORY PATTERNS =====
+
+// [LIMITATION]: IIFE factory with parentheses - not traced
+//
+// Parenthesized IIFE pattern cannot be traced (ParenExpr not handled).
+func limitationIIFEFactoryWithParentheses(ctx context.Context) {
+	g := new(errgroup.Group)
+	// (func() ...)() wrapped in parens - ParenExpr not traced
+	runWithGroup(g, (func() func() error {
+		return func() error {
+			fmt.Println("no ctx")
+			return nil
+		}
+	})()) // No error - ParenExpr not handled
+	_ = g.Wait()
+}
+
+// [GOOD]: Inline factory variable with context
+//
+// Inline factory variable that captures context.
+func goodInlineFactoryVariableWithCtx(ctx context.Context) {
+	g := new(errgroup.Group)
+	makeWorker := func() func() error {
+		return func() error {
+			_ = ctx
+			return nil
+		}
+	}
+	runWithGroup(g, makeWorker())
+	_ = g.Wait()
+}
+
+// [BAD]: Inline factory variable without context
+//
+// Inline factory variable that does not capture context.
+func badInlineFactoryVariableWithoutCtx(ctx context.Context) {
+	g := new(errgroup.Group)
+	makeWorker := func() func() error {
+		return func() error {
+			fmt.Println("no ctx")
+			return nil
+		}
+	}
+	runWithGroup(g, makeWorker()) // want `runWithGroup\(\) func argument should use context "ctx"`
+	_ = g.Wait()
+}
