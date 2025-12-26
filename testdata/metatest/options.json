@@ -4,6 +4,11 @@
     "golang.org",
     "filefilter",
     "filefilterskip",
-    "conc"
+    "conc",
+    "errgroup",
+    "spawner",
+    "errgroupderive",
+    "waitgroupderive",
+    "spawnerderive"
   ]
 }
