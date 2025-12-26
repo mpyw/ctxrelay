@@ -843,3 +843,78 @@ func badNestedFactoryWithoutCtx(ctx context.Context) {
 	g.Go(makeFactory()()) // want `errgroup.Group.Go\(\) closure should use context "ctx"`
 	_ = g.Wait()
 }
+
+// ===== CONDITIONAL REASSIGNMENT PATTERNS =====
+// These patterns test conditional reassignment of function variables.
+// ALL assignments from last unconditional onwards must capture context.
+
+var conditionFlag bool
+
+// [BAD]: Conditional reassignment - first uses ctx, conditional doesn't
+//
+// First assignment uses context, but conditional reassignment doesn't.
+//
+// See also:
+//   goroutine: badConditionalReassignFirstUsesCtx
+//   waitgroup: badConditionalReassignFirstUsesCtx
+func badConditionalReassignFirstUsesCtx(ctx context.Context) {
+	g := new(errgroup.Group)
+	fn := func() error {
+		_ = ctx
+		return nil
+	}
+	if conditionFlag {
+		fn = func() error {
+			fmt.Println("no ctx")
+			return nil
+		}
+	}
+	g.Go(fn) // want `errgroup.Group.Go\(\) closure should use context "ctx"`
+	_ = g.Wait()
+}
+
+// [BAD]: Conditional reassignment - first doesn't use ctx, conditional does
+//
+// First assignment ignores context, conditional reassignment uses it.
+//
+// See also:
+//   goroutine: badConditionalReassignFirstNoCtx
+//   waitgroup: badConditionalReassignFirstNoCtx
+func badConditionalReassignFirstNoCtx(ctx context.Context) {
+	g := new(errgroup.Group)
+	fn := func() error {
+		fmt.Println("no ctx")
+		return nil
+	}
+	if conditionFlag {
+		fn = func() error {
+			_ = ctx
+			return nil
+		}
+	}
+	g.Go(fn) // want `errgroup.Group.Go\(\) closure should use context "ctx"`
+	_ = g.Wait()
+}
+
+// [GOOD]: Conditional reassignment - all paths use ctx
+//
+// All assignments use context, so all paths propagate it.
+//
+// See also:
+//   goroutine: goodConditionalReassignAllUseCtx
+//   waitgroup: goodConditionalReassignAllUseCtx
+func goodConditionalReassignAllUseCtx(ctx context.Context) {
+	g := new(errgroup.Group)
+	fn := func() error {
+		_ = ctx
+		return nil
+	}
+	if conditionFlag {
+		fn = func() error {
+			_ = ctx
+			return nil
+		}
+	}
+	g.Go(fn) // OK - all assignments use ctx
+	_ = g.Wait()
+}
