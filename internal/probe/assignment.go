@@ -24,6 +24,26 @@ func (c *Context) FuncLitOfIdent(ident *ast.Ident) *ast.FuncLit {
 	return c.FuncLitAssignedTo(v, token.NoPos)
 }
 
+// FuncLitsOfIdent returns ALL func literals assigned to the identifier's variable.
+// This is needed for conditional reassignment patterns where different branches
+// assign different closures to the same variable.
+func (c *Context) FuncLitsOfIdent(ident *ast.Ident) []*ast.FuncLit {
+	v := c.VarOf(ident)
+	if v == nil {
+		return nil
+	}
+	return c.FuncLitsAssignedTo(v, token.NoPos)
+}
+
+// FuncLitAssignmentsOfIdent returns ALL func literal assignments with conditionality info.
+func (c *Context) FuncLitAssignmentsOfIdent(ident *ast.Ident) []FuncLitAssignment {
+	v := c.VarOf(ident)
+	if v == nil {
+		return nil
+	}
+	return c.FuncLitAssignmentsTo(v, token.NoPos)
+}
+
 // FuncLitAssignedTo searches for the func literal assigned to the variable.
 // If beforePos is token.NoPos, returns the LAST assignment found.
 // If beforePos is set, returns the last assignment BEFORE that position.
@@ -51,13 +71,32 @@ func (c *Context) FuncLitAssignedTo(v *types.Var, beforePos token.Pos) *ast.Func
 	return result
 }
 
-// FuncLitAssignmentsOfIdent returns ALL func literal assignments with conditionality info.
-func (c *Context) FuncLitAssignmentsOfIdent(ident *ast.Ident) []FuncLitAssignment {
-	v := c.VarOf(ident)
-	if v == nil {
+// FuncLitsAssignedTo searches for ALL func literals assigned to the variable.
+// If beforePos is token.NoPos, returns ALL assignments found.
+// If beforePos is set, returns all assignments BEFORE that position.
+// This is needed for conditional reassignment patterns.
+func (c *Context) FuncLitsAssignedTo(v *types.Var, beforePos token.Pos) []*ast.FuncLit {
+	f := c.FileOf(v.Pos())
+	if f == nil {
 		return nil
 	}
-	return c.FuncLitAssignmentsTo(v, token.NoPos)
+
+	var results []*ast.FuncLit
+	ast.Inspect(f, func(n ast.Node) bool {
+		assign, ok := n.(*ast.AssignStmt)
+		if !ok {
+			return true
+		}
+		if beforePos != token.NoPos && assign.Pos() >= beforePos {
+			return true
+		}
+		if fl := c.funcLitInAssignment(assign, v); fl != nil {
+			results = append(results, fl)
+		}
+		return true
+	})
+
+	return results
 }
 
 // FuncLitAssignmentsTo searches for ALL func literal assignments with conditionality info.
